@@ -1,22 +1,79 @@
 import React from 'react';
-import { Chart } from '@/components/Chart';
+import { Chart } from '../Chart';
+import { useTheme } from '../../hooks/useTheme';
 
 interface RadarChartProps {
   title: string;
   categories: string[];
   series: { name: string; data: number[] }[];
+  variant?: 'teal' | 'lavender' | 'lime' | 'coral';
 }
 
-export function RadarChart({ title, categories, series }: RadarChartProps) {
-  const [isDark] = React.useState(document.documentElement.classList.contains('dark'));
+export function RadarChart({ title, categories, series, variant = 'lavender' }: RadarChartProps) {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  const getContainerStyles = () => {
+    const baseStyles = `
+      p-6 rounded-xl backdrop-blur-sm border
+      transition-all duration-300
+      bg-gradient-glossy
+      shadow-glow hover:shadow-glow-hover
+    `;
+    
+    switch (variant) {
+      case 'teal':
+        return `${baseStyles} ${
+          isDark 
+            ? 'bg-ron-teal-400/10 border-ron-teal-400/20'
+            : 'bg-ron-teal-50 border-ron-teal-200'
+        }`;
+      case 'lavender':
+        return `${baseStyles} ${
+          isDark 
+            ? 'bg-violet-400/10 border-violet-400/20'
+            : 'bg-violet-50 border-violet-200'
+        }`;
+      case 'lime':
+        return `${baseStyles} ${
+          isDark 
+            ? 'bg-ron-lime-400/10 border-ron-lime-400/20'
+            : 'bg-ron-lime-50 border-ron-lime-200'
+        }`;
+      case 'coral':
+        return `${baseStyles} ${
+          isDark 
+            ? 'bg-ron-coral-400/10 border-ron-coral-400/20'
+            : 'bg-ron-coral-50 border-ron-coral-200'
+        }`;
+      default:
+        return `${baseStyles} ${
+          isDark 
+            ? 'bg-violet-400/10 border-violet-400/20'
+            : 'bg-violet-50 border-violet-200'
+        }`;
+    }
+  };
+
+  const getTitleStyles = () => {
+    switch (variant) {
+      case 'teal':
+        return isDark ? 'text-ron-teal-200' : 'text-ron-teal-700';
+      case 'lavender':
+        return isDark ? 'text-violet-200' : 'text-violet-700';
+      case 'lime':
+        return isDark ? 'text-ron-lime-200' : 'text-ron-lime-700';
+      case 'coral':
+        return isDark ? 'text-ron-coral-200' : 'text-ron-coral-700';
+      default:
+        return isDark ? 'text-violet-200' : 'text-violet-700';
+    }
+  };
 
   const options = {
     chart: {
       dropShadow: {
-        enabled: true,
-        blur: 1,
-        left: 1,
-        top: 1
+        enabled: false
       }
     },
     labels: categories,
@@ -24,39 +81,44 @@ export function RadarChart({ title, categories, series }: RadarChartProps) {
       radar: {
         size: 140,
         polygons: {
-          strokeColors: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 52, 78, 0.1)',
           strokeWidth: 1,
-          connectorColors: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 52, 78, 0.1)',
+          fill: {
+            colors: ['transparent']
+          }
         }
       }
     },
-    colors: ['#22c55e', '#06b6d4'],
-    markers: {
-      size: 4,
-      colors: ['#22c55e', '#06b6d4'],
-      strokeColors: isDark ? '#1a1a1a' : '#ffffff',
-      strokeWidth: 2,
-    },
-    tooltip: {
-      theme: isDark ? 'dark' : 'light'
-    },
     yaxis: {
-      show: false
+      show: false,
+      labels: {
+        style: {
+          fontSize: '12px'
+        },
+        maxWidth: 160 // Increased width for labels
+      }
+    },
+    xaxis: {
+      labels: {
+        style: {
+          fontSize: '12px'
+        },
+        trim: false, // Prevent text trimming
+        maxHeight: 100 // Allow more height for labels
+      }
     }
   };
 
   return (
-    <div className={`${
-      isDark ? 'bg-white/5' : 'bg-white'
-    } p-6 rounded-xl shadow-soft hover:shadow-glow transition-all duration-300 border border-ron-divider backdrop-blur-xl`}>
-      <h3 className={`text-lg font-medium mb-4 ${
-        isDark ? 'text-white' : 'text-ron-dark-navy'
-      }`}>{title}</h3>
+    <div className={getContainerStyles()}>
+      <h3 className={`text-lg font-medium mb-4 ${getTitleStyles()}`}>
+        {title}
+      </h3>
       <Chart
         type="radar"
         series={series}
         options={options}
         height={350}
+        variant={variant}
       />
     </div>
   );

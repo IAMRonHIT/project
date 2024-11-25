@@ -1,73 +1,88 @@
 import React from 'react';
-import { SystemOverview } from '@/components/SystemOverview';
-import { MetricCard } from '@/components/MetricCard';
-import { Activity, Brain, Clock, FileCheck2, Heart, Shield, Users, Zap } from 'lucide-react';
+import { SystemOverview } from '../../components/SystemOverview';
+import { MetricCard } from '../../components/MetricCard';
+import { BarChart } from '../../components/Dashboard/BarChart';
+import { PieChart } from '../../components/Dashboard/PieChart';
+import { RadarChart } from '../../components/Dashboard/RadarChart';
+import { ActiveCareJourneysChart } from '../../components/Dashboard/ActiveCareJourneysChart';
+import { DeterminationsChart } from '../../components/Dashboard/DeterminationsChart';
+import { TurnAroundTimeChart } from '../../components/Dashboard/TurnAroundTimeChart';
+import { useTheme } from '../../hooks/useTheme';
 
 export function Dashboard() {
-  const [isDark] = React.useState(document.documentElement.classList.contains('dark'));
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  // Existing metric data
+  const metricsData = {
+    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    series: [{
+      name: 'Workflows',
+      data: [12000, 12200, 12300, 12350, 12400, 12458]
+    }, {
+      name: 'Insights',
+      data: [11850, 12100, 12250, 12350, 12458, 12400, 12458]
+    }]
+  };
+
+  // Mock data for new visualizations
+  const careJourneysData = [
+    { 
+      category: 'Primary Care', 
+      stages: { 
+        'Referral': 50, 
+        'Authorization Pending': 30, 
+        'Active': 100, 
+        'Closed': 20 
+      } 
+    },
+    { 
+      category: 'Specialty Care', 
+      stages: { 
+        'Referral': 20, 
+        'Authorization Pending': 10, 
+        'Active': 50, 
+        'Closed': 15 
+      } 
+    }
+  ];
+
+  const determinationsData = [
+    { type: 'Approved', count: 200 },
+    { type: 'Denied', count: 50 },
+    { type: 'Pending', count: 75 },
+    { type: 'Reconsideration', count: 25 }
+  ];
+
+  const tatData = [
+    { stage: 'Initial Review', averageDays: 36 },
+    { stage: 'Peer Review', averageDays: 48 },
+    { stage: 'Final Approval', averageDays: 24 }
+  ];
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className={`text-2xl font-semibold ${
           isDark ? 'text-white' : 'text-ron-dark-navy'
-        }`}>Dashboard</h1>
-        <p className={`mt-1 ${
-          isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
         }`}>
-          Welcome back, Dr. Sarah Chen
-        </p>
+          Dashboard Overview
+        </h1>
       </div>
 
-      {/* Metrics Grid */}
+      {/* New Visualizations Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-        <MetricCard
-          title="Active Care Journeys"
-          value="1,284"
-          icon="Activity"
-          trend={{ value: 12, isPositive: true }}
-          isPriority
-          description="Currently active patient care plans"
+        <ActiveCareJourneysChart 
+          data={careJourneysData} 
+          timeIntervals={['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']} 
         />
-        <MetricCard
-          title="Team Members"
-          value="48"
-          icon="Users"
-          description="Healthcare professionals online"
+        <DeterminationsChart 
+          data={determinationsData} 
         />
-        <MetricCard
-          title="Avg. Response Time"
-          value="2.4 mins"
-          icon="Clock"
-          trend={{ value: 18, isPositive: true }}
-          isPriority
-          description="Real-time response metrics"
-        />
-        <MetricCard
-          title="Automated Workflows"
-          value="842"
-          icon="Zap"
-          trend={{ value: 24, isPositive: true }}
-          description="Active automated processes"
-        />
-        <MetricCard
-          title="Prior Auths Processed"
-          value="3,421"
-          icon="FileCheck2"
-          trend={{ value: 8, isPositive: true }}
-          isPriority
-          description="Monthly authorization volume"
-        />
-        <MetricCard
-          title="AI Insights Generated"
-          value="12,458"
-          icon="Brain"
-          trend={{ value: 32, isPositive: true }}
-          description="ML-powered recommendations"
+        <TurnAroundTimeChart 
+          data={tatData} 
         />
       </div>
-
-      <SystemOverview />
     </div>
   );
 }

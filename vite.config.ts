@@ -10,6 +10,11 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ['react-router-dom'],
+    include: ['react-router-dom', 'react-apexcharts', 'apexcharts'],
+  },
+  build: {
+    commonjsOptions: {
+      include: [/node_modules/],
+    },
   },
 });

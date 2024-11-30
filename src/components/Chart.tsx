@@ -1,8 +1,9 @@
 import React from 'react';
-import ReactApexChart from 'react-apexcharts';
 import { useTheme } from '../hooks/useTheme';
+// @ts-ignore
+import ReactApexChart from 'react-apexcharts';
 
-interface ChartProps {
+export interface ChartProps {
   type: 'area' | 'bar' | 'line' | 'radialBar' | 'donut' | 'radar' | 'pie';
   series: any[];
   options: any;
@@ -10,26 +11,26 @@ interface ChartProps {
   variant?: 'teal' | 'lavender' | 'lime' | 'coral';
 }
 
-type ColorVariant = 'teal' | 'lavender' | 'lime' | 'coral';
-
-type ColorConfig = {
-  base: string;
-  fill: string;
-  glow: string;
-  gradient: string;
-  gradientLight: string;
-};
-
-type ColorMap = {
-  [key in ColorVariant]: ColorConfig;
-};
-
-export function Chart({ type, series, options, height = 160, variant = 'teal' }: ChartProps) {
+export const Chart = React.forwardRef<HTMLDivElement, ChartProps>(({ 
+  type, 
+  series, 
+  options, 
+  height = 160, 
+  variant = 'teal' 
+}, ref) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
   // Enhanced color mappings with more electric colors
-  const colorMap: ColorMap = {
+  const colorMap: {
+    [K in 'teal' | 'lavender' | 'lime' | 'coral']: {
+      base: string;
+      fill: string;
+      glow: string;
+      gradient: string;
+      gradientLight: string;
+    };
+  } = {
     teal: {
       base: isDark ? '#00f2ea' : '#00d6d0',
       fill: isDark ? 'rgba(0, 242, 234, 0.3)' : 'rgba(0, 214, 208, 0.3)',
@@ -69,7 +70,7 @@ export function Chart({ type, series, options, height = 160, variant = 'teal' }:
     ? ['#00f2ea', '#c4b5fd']
     : ['#00d6d0', '#a78bfa'];
 
-  const radarColors = type === 'radar' && series.length > 1
+  const radarColors = type === 'radar' && Array.isArray(series) && series.length > 1
     ? [colorMap.lavender.base, colorMap.teal.base]  // Use teal for Target series
     : [colorMap.lavender.base];
 
@@ -81,7 +82,7 @@ export function Chart({ type, series, options, height = 160, variant = 'teal' }:
   const getGlowConfig = () => {
     const baseConfig = {
       enabled: true,
-      enabledOnSeries: undefined,
+      enabledOnSeries: undefined as undefined | number[],
       top: 3,
       left: 3,
       blur: 15,
@@ -108,13 +109,13 @@ export function Chart({ type, series, options, height = 160, variant = 'teal' }:
         ...baseConfig,
         blur: 25,
         opacity: 0.8,
-        color: series.length > 1 ? colorMap.teal.glow : colorMap.lavender.glow
+        color: Array.isArray(series) && series.length > 1 ? colorMap.teal.glow : colorMap.lavender.glow
       };
     }
     return baseConfig;
   };
 
-  const defaultOptions = {
+  const defaultOptions: any = {
     chart: {
       type,
       toolbar: { show: false },
@@ -137,7 +138,7 @@ export function Chart({ type, series, options, height = 160, variant = 'teal' }:
       }
     },
     theme: {
-      mode: isDark ? 'dark' : 'light'
+      mode: isDark ? 'dark' : 'light' as const
     },
     colors: colors,
     grid: {
@@ -152,7 +153,7 @@ export function Chart({ type, series, options, height = 160, variant = 'teal' }:
     stroke: {
       curve: 'smooth',
       width: type === 'pie' ? 3 :
-              type === 'radar' ? series.length > 1 ? [3, 4] : 3 : // Thicker stroke for Target series
+              type === 'radar' ? Array.isArray(series) && series.length > 1 ? [3, 4] : 3 :
               type === 'bar' ? 2 :
               2,
       colors: type === 'bar' ? undefined : 
@@ -164,7 +165,7 @@ export function Chart({ type, series, options, height = 160, variant = 'teal' }:
       type: (type === 'bar' || type === 'pie') ? 'gradient' : 'solid',
       opacity: type === 'pie' ? [0.85, 0.85, 0.85, 0.85] :
               type === 'bar' ? 0.85 :
-              type === 'radar' ? series.length > 1 ? [0.2, 0.3] : 0.2 : // Higher opacity for Target series
+              type === 'radar' ? Array.isArray(series) && series.length > 1 ? [0.2, 0.3] : 0.2 :
               0.15,
       gradient: {
         enabled: type === 'bar' || type === 'pie',
@@ -306,8 +307,7 @@ export function Chart({ type, series, options, height = 160, variant = 'teal' }:
     }
   };
 
-  // Deep merge default options with provided options
-  const mergedOptions = {
+  const mergedOptions: any = {
     ...defaultOptions,
     ...options,
     chart: { ...defaultOptions.chart, ...options.chart },
@@ -319,8 +319,10 @@ export function Chart({ type, series, options, height = 160, variant = 'teal' }:
     yaxis: { ...defaultOptions.yaxis, ...options.yaxis }
   };
 
+  console.log('Chart props:', { type, series, options: mergedOptions, height });
+
   return (
-    <div className="w-full h-full">
+    <div ref={ref} className="w-full h-full">
       <ReactApexChart
         type={type}
         series={series}
@@ -329,4 +331,6 @@ export function Chart({ type, series, options, height = 160, variant = 'teal' }:
       />
     </div>
   );
-}
+});
+
+Chart.displayName = 'Chart';

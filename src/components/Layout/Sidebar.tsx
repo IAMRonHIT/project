@@ -2,14 +2,17 @@ import React from 'react';
 import { 
   Users, Building2, Shield, ClipboardCheck, Heart, Activity,
   FileText, MessageSquareMore, BarChart3, Settings, GraduationCap,
-  HelpCircle, ShieldCheck, Home
+  HelpCircle, ShieldCheck, Home, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { NavItem } from './NavItem';
 import Logo from '../Logo';
+import { useTheme } from '../../hooks/useTheme';
 
 interface SidebarProps {
   open: boolean;
+  collapsed: boolean;
   onClose: () => void;
+  onToggleCollapse: () => void;
 }
 
 const mainNavItems = [
@@ -32,7 +35,10 @@ const secondaryNavItems = [
   { icon: HelpCircle, label: 'Support', to: '/support' },
 ];
 
-export function Sidebar({ open, onClose }: SidebarProps) {
+export function Sidebar({ open, collapsed, onClose, onToggleCollapse }: SidebarProps) {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   return (
     <>
       {/* Backdrop for mobile */}
@@ -46,63 +52,101 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       {/* Sidebar */}
       <div 
         className={`
-          fixed inset-y-0 left-0 z-50 w-72 
-          bg-gray-100 dark:bg-gray-900 
+          fixed inset-y-0 left-0 z-50
+          ${collapsed ? 'w-20' : 'w-72'}
+          bg-gradient-to-b from-gray-900/95 via-gray-900/90 to-gray-900/95
           backdrop-blur-xl shadow-lg
-          transform transition-transform duration-200 ease-in-out 
+          transform transition-all duration-300 ease-in-out 
           ${open ? 'translate-x-0' : '-translate-x-full'} 
           lg:translate-x-0
-          border-r border-gray-200 dark:border-gray-700
+          border-r border-ron-teal-400/20
         `}
       >
         <div className="h-full flex flex-col">
-          {/* Logo Section with Subtle Gradient */}
-          <div className="p-4 flex items-center justify-center 
-            bg-gradient-to-r from-gray-100 to-gray-200 
-            dark:from-gray-800 dark:to-gray-900
-            border-b border-gray-200 dark:border-gray-700
+          {/* Logo Section with Collapse Button */}
+          <div className="p-4 flex items-center justify-between 
+            bg-gradient-to-r from-gray-800/50 to-gray-900/50
+            border-b border-ron-teal-400/20
           ">
-            <Logo className="w-32 h-8 opacity-90 hover:opacity-100 transition-opacity" />
+            <Logo className={`
+              transition-all duration-300
+              ${collapsed ? 'w-8 h-8' : 'w-32 h-8'}
+              opacity-90 hover:opacity-100
+            `} />
+            
+            {/* Collapse Toggle Button */}
+            <button
+              onClick={onToggleCollapse}
+              className={`
+                p-2 rounded-lg
+                ${isDark ? 'bg-ron-teal-400/5 hover:bg-ron-teal-400/10' : 'bg-ron-teal-50/50 hover:bg-ron-teal-50'}
+                text-white/80 hover:text-white
+                transition-all duration-200
+                backdrop-blur-sm
+                hover:shadow-glow-teal
+                border border-transparent
+                hover:border-ron-teal-400/20
+                lg:block hidden
+              `}
+            >
+              {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+            </button>
           </div>
 
           <div className="flex-1 overflow-y-auto px-4 py-6">
             <div className="space-y-8">
-              {/* Main Navigation with Hover and Active States */}
+              {/* Main Navigation */}
               <nav className="space-y-2">
-                <h2 className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                <h2 className={`
+                  px-3 text-xs font-semibold text-gray-400 
+                  uppercase tracking-wider mb-2
+                  transition-opacity duration-200
+                  ${collapsed ? 'opacity-0' : 'opacity-100'}
+                `}>
                   Main Menu
                 </h2>
                 {mainNavItems.map((item) => (
                   <NavItem 
                     key={item.label} 
-                    {...item} 
-                    className="
+                    {...item}
+                    collapsed={collapsed}
+                    className={`
                       group transition-all duration-200 
-                      hover:bg-gray-200 dark:hover:bg-gray-800 
-                      hover:shadow-sm rounded-lg
-                      active:scale-95
-                    "
+                      hover:bg-ron-teal-400/10
+                      hover:shadow-glow-teal
+                      rounded-lg
+                      border border-transparent
+                      hover:border-ron-teal-400/20
+                    `}
                   />
                 ))}
               </nav>
 
-              {/* System Navigation with Notification Indicators */}
+              {/* System Navigation */}
               <div>
-                <h2 className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                <h2 className={`
+                  px-3 text-xs font-semibold text-gray-400 
+                  uppercase tracking-wider mb-2
+                  transition-opacity duration-200
+                  ${collapsed ? 'opacity-0' : 'opacity-100'}
+                `}>
                   System
                 </h2>
                 <nav className="space-y-2">
                   {secondaryNavItems.map((item, index) => (
                     <NavItem 
                       key={item.label} 
-                      {...item} 
-                      className="
+                      {...item}
+                      collapsed={collapsed}
+                      className={`
                         group transition-all duration-200 
-                        hover:bg-gray-200 dark:hover:bg-gray-800 
-                        hover:shadow-sm rounded-lg
+                        hover:bg-ron-teal-400/10
+                        hover:shadow-glow-teal
+                        rounded-lg
+                        border border-transparent
+                        hover:border-ron-teal-400/20
                         relative
-                      "
-                      // Add notification badge to specific items
+                      `}
                       badge={
                         index === 0 ? 3 : // Admin
                         index === 1 ? 1 : // Settings
@@ -115,14 +159,15 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             </div>
           </div>
 
-          {/* Footer Section with Subtle Separator */}
-          <div className="
-            p-4 border-t border-gray-200 dark:border-gray-700
-            bg-gradient-to-r from-gray-100 to-gray-200 
-            dark:from-gray-800 dark:to-gray-900
-          ">
+          {/* Footer Section */}
+          <div className={`
+            p-4 border-t border-ron-teal-400/20
+            bg-gradient-to-r from-gray-800/50 to-gray-900/50
+            transition-opacity duration-200
+            ${collapsed ? 'opacity-0' : 'opacity-100'}
+          `}>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600 dark:text-gray-300">
+              <span className="text-sm text-gray-400">
                 {new Date().getFullYear()} Ron Care
               </span>
             </div>

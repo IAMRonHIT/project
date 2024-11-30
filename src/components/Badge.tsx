@@ -7,6 +7,7 @@ interface BadgeProps {
   icon?: React.ReactNode;
   glow?: boolean;
   size?: 'sm' | 'md';
+  onClick?: () => void;
 }
 
 export function Badge({ 
@@ -15,7 +16,8 @@ export function Badge({
   className = '', 
   icon, 
   glow = false,
-  size = 'md'
+  size = 'md',
+  onClick
 }: BadgeProps) {
   const [isDark] = React.useState(document.documentElement.classList.contains('dark'));
 
@@ -34,6 +36,7 @@ export function Badge({
       transition-all duration-200
       bg-gradient-glossy
       ${glow ? 'shadow-glow hover:shadow-glow-hover' : ''}
+      ${onClick ? 'cursor-pointer hover:scale-[1.02]' : ''}
     `;
     
     switch (variant) {
@@ -71,7 +74,10 @@ export function Badge({
   };
 
   return (
-    <span className={`${getVariantStyles()} ${className} hover:scale-[1.02]`}>
+    <span 
+      className={`${getVariantStyles()} ${className}`}
+      onClick={onClick}
+    >
       {icon && <span className="mr-1.5">{icon}</span>}
       {children}
     </span>

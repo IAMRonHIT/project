@@ -1,87 +1,62 @@
-import React from 'react';
+import './Dashboard.css';
 import { SystemOverview } from '../../components/SystemOverview';
-import { MetricCard } from '../../components/MetricCard';
-import { BarChart } from '../../components/Dashboard/BarChart';
-import { PieChart } from '../../components/Dashboard/PieChart';
-import { RadarChart } from '../../components/Dashboard/RadarChart';
-import { ActiveCareJourneysChart } from '../../components/Dashboard/ActiveCareJourneysChart';
-import { DeterminationsChart } from '../../components/Dashboard/DeterminationsChart';
-import { TurnAroundTimeChart } from '../../components/Dashboard/TurnAroundTimeChart';
+import CommunicationHub from '../../components/Communication Hub/CommunicationHub';
+import { useState } from 'react';
+import { Badge } from '../../components/Badge';
 import { useTheme } from '../../hooks/useTheme';
+import { MessageSquare, Activity } from 'lucide-react';
 
 export function Dashboard() {
+  const [activeView, setActiveView] = useState<'overview' | 'communication'>('overview');
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Existing metric data
-  const metricsData = {
-    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    series: [{
-      name: 'Workflows',
-      data: [12000, 12200, 12300, 12350, 12400, 12458]
-    }, {
-      name: 'Insights',
-      data: [11850, 12100, 12250, 12350, 12458, 12400, 12458]
-    }]
-  };
-
-  // Mock data for new visualizations
-  const careJourneysData = [
-    { 
-      category: 'Primary Care', 
-      stages: { 
-        'Referral': 50, 
-        'Authorization Pending': 30, 
-        'Active': 100, 
-        'Closed': 20 
-      } 
-    },
-    { 
-      category: 'Specialty Care', 
-      stages: { 
-        'Referral': 20, 
-        'Authorization Pending': 10, 
-        'Active': 50, 
-        'Closed': 15 
-      } 
-    }
-  ];
-
-  const determinationsData = [
-    { type: 'Approved', count: 200 },
-    { type: 'Denied', count: 50 },
-    { type: 'Pending', count: 75 },
-    { type: 'Reconsideration', count: 25 }
-  ];
-
-  const tatData = [
-    { stage: 'Initial Review', averageDays: 36 },
-    { stage: 'Peer Review', averageDays: 48 },
-    { stage: 'Final Approval', averageDays: 24 }
-  ];
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className={`text-2xl font-semibold ${
-          isDark ? 'text-white' : 'text-ron-dark-navy'
-        }`}>
-          Dashboard Overview
-        </h1>
+    <div className="h-screen flex flex-col">
+      {/* Navigation Tabs */}
+      <div className={`
+        flex space-x-4 p-4
+        bg-gradient-to-r from-gray-900/50 via-transparent to-gray-900/50
+        backdrop-blur-sm border-b border-ron-teal-400/20
+      `}>
+        <Badge
+          variant={activeView === 'overview' ? 'success' : 'default'}
+          glow={activeView === 'overview'}
+          onClick={() => setActiveView('overview')}
+          className="cursor-pointer"
+          icon={<Activity size={16} />}
+        >
+          System Overview
+        </Badge>
+        <Badge
+          variant={activeView === 'communication' ? 'success' : 'default'}
+          glow={activeView === 'communication'}
+          onClick={() => setActiveView('communication')}
+          className="cursor-pointer"
+          icon={<MessageSquare size={16} />}
+        >
+          Communication Hub
+        </Badge>
       </div>
 
-      {/* New Visualizations Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-        <ActiveCareJourneysChart 
-          data={careJourneysData} 
-          timeIntervals={['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']} 
-        />
-        <DeterminationsChart 
-          data={determinationsData} 
-        />
-        <TurnAroundTimeChart 
-          data={tatData} 
-        />
+      {/* Main Content */}
+      <div className={`
+        flex-1 p-4 overflow-hidden
+        bg-gradient-to-br from-gray-900/50 via-transparent to-gray-900/50
+      `}>
+        <div className={`
+          h-full rounded-xl overflow-hidden
+          ${isDark 
+            ? 'bg-gray-900/50 backdrop-blur-xl border border-white/5' 
+            : 'bg-white/80 backdrop-blur-xl shadow-soft'
+          }
+        `}>
+          {activeView === 'overview' ? (
+            <SystemOverview />
+          ) : (
+            <CommunicationHub />
+          )}
+        </div>
       </div>
     </div>
   );

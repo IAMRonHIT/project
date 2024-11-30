@@ -1,16 +1,38 @@
-import React from 'react';
 import { Menu, Bell, Moon, Sun, Search, MessageSquare, Settings } from 'lucide-react';
 import { UserProfile } from './UserProfile';
+import { useTheme } from '../../hooks/useTheme';
+import { Badge } from '../Badge';
+import { LucideIcon } from 'lucide-react';
 
 interface TopBarProps {
   onMenuClick: () => void;
-  isDark: boolean;
-  setIsDark: () => void;
+  onThemeToggle: () => void;
 }
 
-export function TopBar({ onMenuClick, isDark, setIsDark }: TopBarProps) {
+interface ActionButtonProps {
+  icon: LucideIcon;
+  hasNotification?: boolean;
+  onClick?: () => void;
+}
+
+const ActionButton = ({ icon: Icon, hasNotification = false, onClick = () => {} }: ActionButtonProps) => (
+  <button
+    onClick={onClick}
+    className="relative p-2 rounded-lg bg-ron-teal-400/5 hover:bg-ron-teal-400/10 text-white/80 hover:text-white transition-all duration-200 backdrop-blur-sm hover:shadow-glow-teal border border-transparent hover:border-ron-teal-400/20"
+  >
+    <Icon className="h-5 w-5" />
+    {hasNotification && (
+      <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-ron-coral-400 shadow-glow-coral animate-pulse" />
+    )}
+  </button>
+);
+
+const TopBar: React.FC<TopBarProps> = ({ onMenuClick, onThemeToggle }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   return (
-    <header className="sticky top-0 z-40 flex-shrink-0 h-16 bg-ron-dark-navy/95 dark:bg-ron-dark-navy/95 backdrop-blur-xl border-b border-ron-divider/30">
+    <header className="sticky top-0 z-40 flex-shrink-0 h-16 bg-gradient-to-r from-ron-dark-navy/95 via-gray-900/95 to-ron-dark-navy/95 backdrop-blur-xl border-b border-ron-teal-400/20 shadow-glow-bottom">
       <div className="flex h-full items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Mobile menu button */}
         <button
@@ -22,48 +44,40 @@ export function TopBar({ onMenuClick, isDark, setIsDark }: TopBarProps) {
         </button>
 
         {/* Left side spacer for desktop */}
-        <div className="hidden lg:block lg:w-20" />
+        <div className="hidden lg:block lg:w-20">
+          <Badge variant="info" glow size="sm">RON AI</Badge>
+        </div>
 
-        {/* Center section - can be used for search or breadcrumbs */}
-        <div className="flex-1" />
+        {/* Center section - Search */}
+        <div className="flex-1 max-w-2xl mx-auto">
+          <div className={`relative rounded-lg overflow-hidden ${isDark ? 'bg-ron-dark-navy/50' : 'bg-white/50'} backdrop-blur-sm border ${isDark ? 'border-ron-teal-400/20 focus-within:border-ron-teal-400/40' : 'border-ron-teal-200/50 focus-within:border-ron-teal-400/60'} transition-all duration-200 focus-within:shadow-glow-teal`}>
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+              <Search className="h-4 w-4 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search..."
+              className={`block w-full pl-10 pr-3 py-2 bg-transparent text-sm ${isDark ? 'text-white' : 'text-gray-900'} placeholder:text-gray-400 focus:outline-none`}
+            />
+          </div>
+        </div>
 
         {/* Right side actions */}
-        <div className="flex items-center gap-4">
-          <button
-            type="button"
-            className="p-2 text-white/80 hover:text-white transition-colors"
-          >
-            <Search className="h-5 w-5" />
-          </button>
-          <button
-            type="button"
-            className="p-2 text-white/80 hover:text-white transition-colors"
-          >
-            <MessageSquare className="h-5 w-5" />
-          </button>
-          <button
-            type="button"
-            className="relative p-2 text-white/80 hover:text-white transition-colors"
-          >
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-ron-warning" />
-          </button>
-          <button
-            type="button"
-            className="p-2 text-white/80 hover:text-white transition-colors"
-          >
-            <Settings className="h-5 w-5" />
-          </button>
-          <button
-            type="button"
-            className="p-2 text-white/80 hover:text-white transition-colors"
-            onClick={setIsDark}
-          >
-            {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-          </button>
-          <UserProfile />
+        <div className="flex items-center gap-2">
+          <ActionButton icon={MessageSquare} />
+          <ActionButton icon={Bell} hasNotification />
+          <ActionButton icon={Settings} />
+          <ActionButton 
+            icon={isDark ? Sun : Moon} 
+            onClick={onThemeToggle}
+          />
+          <div className="ml-2">
+            <UserProfile />
+          </div>
         </div>
       </div>
     </header>
   );
-}
+};
+
+export default TopBar;

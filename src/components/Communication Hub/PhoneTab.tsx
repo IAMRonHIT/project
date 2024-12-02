@@ -49,7 +49,7 @@ const PhoneTab: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col min-h-0">
       {isCalling ? (
         <div className={`
           flex-1 flex flex-col items-center justify-center
@@ -88,8 +88,8 @@ const PhoneTab: React.FC = () => {
         </div>
       ) : (
         <>
-          <div className="flex-1 overflow-y-auto p-4">
-            <div className="space-y-2">
+          <div className="flex-1 overflow-y-auto min-h-0">
+            <div className="space-y-2 p-4">
               {callLogs.map((log, index) => (
                 <div
                   key={index}
@@ -140,25 +140,23 @@ const PhoneTab: React.FC = () => {
             </div>
           </div>
 
-          <div className={`
-            p-4 border-t border-ron-teal-400/20
-            ${isDark ? 'bg-gray-900/50' : 'bg-white/80'}
-            backdrop-blur-xl
-          `}>
-            <div className="flex justify-center">
-              <button
-                onClick={handleCall}
-                className={`
-                  p-4 rounded-full
-                  bg-ron-teal-400
-                  text-white
-                  transition-all duration-200
-                  hover:shadow-glow-teal
-                  border border-transparent
-                `}
-              >
-                <Phone size={24} />
-              </button>
+          <div className="flex-shrink-0 border-t border-ron-teal-400/20">
+            <div className="p-4">
+              <div className="flex justify-center">
+                <button
+                  onClick={handleCall}
+                  className={`
+                    p-4 rounded-full
+                    bg-ron-teal-400
+                    text-white
+                    transition-all duration-200
+                    hover:shadow-glow-teal
+                    border border-transparent
+                  `}
+                >
+                  <Phone size={24} />
+                </button>
+              </div>
             </div>
           </div>
         </>

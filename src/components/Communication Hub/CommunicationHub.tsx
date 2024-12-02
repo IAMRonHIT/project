@@ -54,16 +54,23 @@ const CommunicationHub: React.FC = () => {
   ];
 
   return (
-    <div className={`
-      h-full flex flex-col
-      ${isDark ? 'bg-gray-900/50' : 'bg-white/80'}
-      backdrop-blur-xl
-    `}>
+    <div className="h-full flex flex-col">
       <TopNav />
-      <div className="flex-1 flex overflow-hidden">
-        <LeftSideBar notifications={notifications} tasks={tasks} />
-        <CenterPanel />
-        <RightSideBar />
+      <div className="flex-1 flex min-h-0"> 
+        {/* Left Sidebar - Scrollable */}
+        <div className="w-80 min-h-0 overflow-y-auto">
+          <LeftSideBar notifications={notifications} tasks={tasks} />
+        </div>
+        
+        {/* Center Panel - Keep message bar in view */}
+        <div className="flex-1 flex flex-col min-h-0">
+          <CenterPanel />
+        </div>
+        
+        {/* Right Sidebar - Scrollable */}
+        <div className="w-80 min-h-0 overflow-y-auto">
+          <RightSideBar />
+        </div>
       </div>
     </div>
   );

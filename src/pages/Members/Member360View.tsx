@@ -1,16 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Activity, Heart, AlertCircle, Clock, ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { CareJourneysTable } from './components/CareJourneysTable';
 
 export function Member360View() {
   const navigate = useNavigate();
-  const [isDark] = useState(document.documentElement.classList.contains('dark'));
+  const { id } = useParams();
+  const [isDark] = React.useState(() => document.documentElement.classList.contains('dark'));
+
+  // In a real app, you would fetch member data based on the ID
+  // For now, we'll use Sarah Wilson's data since that's what we're testing
+  const memberData = {
+    id: '1',
+    name: 'Sarah Wilson',
+    healthPlan: 'Premium Care Plus',
+    riskScore: 41.13,
+    careStatus: 'Active',
+    lastUpdated: '2h ago'
+  };
 
   const metrics = [
     {
       title: 'Risk Score',
-      value: '41.13',
+      value: memberData.riskScore.toFixed(2),
       trend: { value: 3.2, isPositive: true },
       icon: Heart,
       color: 'emerald',
@@ -67,37 +79,36 @@ export function Member360View() {
             <div>
               <h1 className={`text-3xl font-light ${
                 isDark ? 'text-white' : 'text-ron-dark-navy'
-              }`}>Sarah Wilson</h1>
+              }`}>{memberData.name}</h1>
               <div className="flex items-center gap-4 mt-2">
                 <div className="flex items-center gap-2">
                   <span className="text-emerald-400">●</span>
                   <span className={`text-sm ${
                     isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
-                  }`}>Active Care Plan</span>
+                  }`}>{memberData.careStatus} Care Plan</span>
                 </div>
                 <span className={isDark ? 'text-white/20' : 'text-ron-dark-navy/20'}>|</span>
                 <span className={`text-sm ${
                   isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
-                }`}>ID: 89312</span>
+                }`}>ID: {id}</span>
                 <span className={isDark ? 'text-white/20' : 'text-ron-dark-navy/20'}>|</span>
                 <span className={`text-sm ${
                   isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
-                }`}>Last Updated: 2h ago</span>
+                }`}>Last Updated: {memberData.lastUpdated}</span>
               </div>
             </div>
           </div>
 
           {/* Metrics */}
-          <div className="grid grid-cols-4 gap-6 mt-8">
+          <div className="grid grid-cols-4 gap-4 mb-6">
             {metrics.map((metric, index) => (
               <div
                 key={index}
                 className={`${
-                  isDark
-                    ? 'bg-white/5 border-white/10'
-                    : 'bg-white border-ron-divider'
-                } rounded-xl p-6 border`}
+                  isDark ? 'bg-white/5' : 'bg-white'
+                } rounded-xl shadow-soft border border-ron-divider p-6`}
               >
+                <h2 className="text-lg font-semibold mb-4">{metric.title}</h2>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className={`text-sm font-medium ${
@@ -123,12 +134,15 @@ export function Member360View() {
               </div>
             ))}
           </div>
-        </div>
-      </div>
 
-      {/* Care Journeys Table */}
-      <div className="space-y-6">
-        <CareJourneysTable onMemberClick={handleJourneyClick} />
+          {/* Care Journeys */}
+          <div className={`${
+            isDark ? 'bg-white/5' : 'bg-white'
+          } rounded-xl shadow-soft border border-ron-divider p-6`}>
+            <h2 className="text-lg font-semibold mb-4">Care Journeys</h2>
+            <CareJourneysTable onMemberClick={handleJourneyClick} />
+          </div>
+        </div>
       </div>
     </div>
   );

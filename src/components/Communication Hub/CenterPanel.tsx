@@ -3,11 +3,12 @@ import ChatTab from './ChatTab';
 import EmailTab from './EmailTab';
 import PhoneTab from './PhoneTab';
 import VideoTab from './VideoTab';
+import DocumentsTab from './Documents';
 import { Badge } from '../Badge';
-import { MessageSquare, Mail, Phone, Video } from 'lucide-react';
+import { MessageSquare, Mail, Phone, Video, FileText } from 'lucide-react';
 import { useTheme } from '../../hooks/useTheme';
 
-type Tab = 'chat' | 'email' | 'phone' | 'video';
+type Tab = 'chat' | 'email' | 'phone' | 'video' | 'documents';
 
 interface TabConfig {
   id: Tab;
@@ -45,6 +46,12 @@ const CenterPanel: React.FC = () => {
       label: 'Video',
       icon: <Video size={16} />,
       component: <VideoTab />
+    },
+    {
+      id: 'documents',
+      label: 'Documents',
+      icon: <FileText size={16} />,
+      component: <DocumentsTab />
     }
   ];
 

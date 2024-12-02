@@ -107,106 +107,103 @@ const VideoTab: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <div className={`
-        flex-1 relative
-        ${isDark ? 'bg-gray-900/50' : 'bg-white/80'}
-        backdrop-blur-xl
-      `}>
-        {/* Main Video Area */}
-        <div className="absolute inset-0 rounded-lg overflow-hidden">
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            className={`
-              w-full h-full object-cover
-              ${isVideoOff ? 'hidden' : 'block'}
-            `}
-          />
-          {isVideoOff && (
-            <div className="w-full h-full flex items-center justify-center bg-gray-800">
-              <User size={64} className="text-gray-600" />
-            </div>
-          )}
-        </div>
-
-        {/* Participants List */}
-        <div className="absolute top-4 right-4 space-y-2">
-          {participants.map((participant, index) => (
-            <div
-              key={index}
+    <div className="flex flex-col min-h-0">
+      {/* Video area - Scrollable */}
+      <div className="flex-1 overflow-y-auto min-h-0">
+        <div className="relative h-full">
+          {/* Main Video Area */}
+          <div className="absolute inset-0 rounded-lg overflow-hidden">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
               className={`
-                flex items-center gap-2 p-2 rounded-lg
-                ${isDark ? 'bg-gray-800/80' : 'bg-white/80'}
-                backdrop-blur-sm
-                border border-ron-teal-400/20
-                ${participant.isSpeaking ? 'shadow-glow-teal' : ''}
+                w-full h-full object-cover
+                ${isVideoOff ? 'hidden' : 'block'}
               `}
-            >
-              <div className={`
-                w-8 h-8 rounded-full
-                bg-ron-teal-400/10
-                border border-ron-teal-400/20
-                flex items-center justify-center
-                ${participant.isSpeaking ? 'animate-pulse' : ''}
-              `}>
-                <User size={16} className="text-ron-teal-400" />
+            />
+            {isVideoOff && (
+              <div className="w-full h-full flex items-center justify-center bg-gray-800">
+                <User size={64} className="text-gray-600" />
               </div>
-              <div>
-                <p className="text-sm text-white">{participant.name}</p>
-                <p className="text-xs text-gray-400">{participant.role}</p>
-              </div>
-              <div className="flex gap-1">
-                {!participant.hasVideo && <VideoOff size={14} className="text-gray-400" />}
-                {!participant.hasMic && <MicOff size={14} className="text-gray-400" />}
-              </div>
-            </div>
-          ))}
-        </div>
+            )}
+          </div>
 
-        {/* Meeting Info */}
-        <div className="absolute top-4 left-4">
-          <Badge variant="success" glow size="sm">
-            <Users size={14} className="mr-1" />
-            {participants.length + 1} Participants
-          </Badge>
+          {/* Participants List */}
+          <div className="absolute top-4 right-4 space-y-2">
+            {participants.map((participant, index) => (
+              <div
+                key={index}
+                className={`
+                  flex items-center gap-2 p-2 rounded-lg
+                  ${isDark ? 'bg-gray-800/80' : 'bg-white/80'}
+                  backdrop-blur-sm
+                  border border-ron-teal-400/20
+                  ${participant.isSpeaking ? 'shadow-glow-teal' : ''}
+                `}
+              >
+                <div className={`
+                  w-8 h-8 rounded-full
+                  bg-ron-teal-400/10
+                  border border-ron-teal-400/20
+                  flex items-center justify-center
+                  ${participant.isSpeaking ? 'animate-pulse' : ''}
+                `}>
+                  <User size={16} className="text-ron-teal-400" />
+                </div>
+                <div>
+                  <p className="text-sm text-white">{participant.name}</p>
+                  <p className="text-xs text-gray-400">{participant.role}</p>
+                </div>
+                <div className="flex gap-1">
+                  {!participant.hasVideo && <VideoOff size={14} className="text-gray-400" />}
+                  {!participant.hasMic && <MicOff size={14} className="text-gray-400" />}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Meeting Info */}
+          <div className="absolute top-4 left-4">
+            <Badge variant="success" glow size="sm">
+              <Users size={14} className="mr-1" />
+              {participants.length + 1} Participants
+            </Badge>
+          </div>
         </div>
       </div>
 
-      {/* Controls */}
-      <div className={`
-        p-4 border-t border-ron-teal-400/20
-        ${isDark ? 'bg-gray-900/50' : 'bg-white/80'}
-        backdrop-blur-xl
-      `}>
-        <div className="flex justify-center gap-4">
-          <ActionButton
-            icon={isMuted ? <MicOff size={20} /> : <Mic size={20} />}
-            label={isMuted ? 'Unmute' : 'Mute'}
-            onClick={() => setIsMuted(!isMuted)}
-            active={!isMuted}
-          />
-          <ActionButton
-            icon={isVideoOff ? <VideoOff size={20} /> : <Video size={20} />}
-            label={isVideoOff ? 'Start Video' : 'Stop Video'}
-            onClick={() => setIsVideoOff(!isVideoOff)}
-            active={!isVideoOff}
-          />
-          <ActionButton
-            icon={<ScreenShare size={20} />}
-            label="Share Screen"
-          />
-          <ActionButton
-            icon={<Layout size={20} />}
-            label="Layout"
-          />
-          <ActionButton
-            icon={<PhoneOff size={20} />}
-            label="Leave"
-            variant="danger"
-            onClick={stopVideo}
-          />
+      {/* Controls - Fixed at bottom */}
+      <div className="flex-shrink-0 border-t border-ron-teal-400/20">
+        <div className="p-4">
+          <div className="flex justify-center gap-4">
+            <ActionButton
+              icon={isMuted ? <MicOff size={20} /> : <Mic size={20} />}
+              label={isMuted ? 'Unmute' : 'Mute'}
+              onClick={() => setIsMuted(!isMuted)}
+              active={!isMuted}
+            />
+            <ActionButton
+              icon={isVideoOff ? <VideoOff size={20} /> : <Video size={20} />}
+              label={isVideoOff ? 'Start Video' : 'Stop Video'}
+              onClick={() => setIsVideoOff(!isVideoOff)}
+              active={!isVideoOff}
+            />
+            <ActionButton
+              icon={<ScreenShare size={20} />}
+              label="Share Screen"
+            />
+            <ActionButton
+              icon={<Layout size={20} />}
+              label="Layout"
+            />
+            <ActionButton
+              icon={<PhoneOff size={20} />}
+              label="Leave"
+              variant="danger"
+              onClick={stopVideo}
+            />
+          </div>
         </div>
       </div>
     </div>

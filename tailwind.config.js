@@ -90,12 +90,15 @@ export default {
       boxShadow: {
         'soft': '0 2px 8px 0 rgba(0, 52, 78, 0.06), 0 1px 2px -1px rgba(0, 52, 78, 0.06)',
         'hover': '0 4px 12px 0 rgba(0, 52, 78, 0.08), 0 2px 4px -2px rgba(0, 52, 78, 0.08)',
-        'glow': '0 0 10px rgba(74, 190, 190, 0.3)', // Reduced glow with blue hue
+        'glow': '0 0 10px rgba(255, 255, 255, 0.1)',
+        'glow-white': '0 0 15px rgba(255, 255, 255, 0.2)',
+        'glow-primary': '0 0 15px rgba(var(--ron-primary), 0.2)',
         'glow-hover': '0 0 15px rgba(74, 190, 190, 0.4)', // Reduced hover glow
       },
       backgroundImage: {
         'gradient-soft': 'linear-gradient(60deg, var(--tw-gradient-stops))',
         'gradient-glossy': 'linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 100%)',
+        'gradient-to-r': 'linear-gradient(to right, var(--tw-gradient-stops))',
       }
     }
   },

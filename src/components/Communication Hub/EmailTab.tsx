@@ -54,8 +54,9 @@ const EmailTab: React.FC = () => {
   );
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto">
+    <div className="flex flex-col min-h-0">
+      {/* Email list - Scrollable */}
+      <div className="flex-1 overflow-y-auto min-h-0">
         <div className="space-y-2 p-4">
           {emails.map((email, index) => (
             <div
@@ -121,56 +122,54 @@ const EmailTab: React.FC = () => {
         </div>
       </div>
 
-      {/* Compose Section */}
-      <div className={`
-        p-4 border-t border-ron-teal-400/20
-        ${isDark ? 'bg-gray-900/50' : 'bg-white/80'}
-        backdrop-blur-xl
-      `}>
-        <div className="flex gap-2 mb-4">
-          <ActionButton icon={<Reply size={16} />} label="Reply" />
-          <ActionButton icon={<ReplyAll size={16} />} label="Reply All" />
-          <ActionButton icon={<Forward size={16} />} label="Forward" />
-          <ActionButton icon={<Paperclip size={16} />} label="Attach" />
-        </div>
-        <div className="flex gap-2">
-          <div className={`
-            flex-1 relative rounded-lg overflow-hidden
-            ${isDark ? 'bg-gray-800/50' : 'bg-white/50'}
-            backdrop-blur-sm
-            border
-            ${isDark 
-              ? 'border-ron-teal-400/20 focus-within:border-ron-teal-400/40' 
-              : 'border-ron-teal-200/50 focus-within:border-ron-teal-400/60'
-            }
-            transition-all duration-200
-            focus-within:shadow-glow-teal
-          `}>
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              <Mail className="h-4 w-4 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              placeholder="Compose your email..."
-              className={`
-                block w-full pl-10 pr-3 py-2
-                bg-transparent text-sm
-                ${isDark ? 'text-white' : 'text-gray-900'}
-                placeholder:text-gray-400
-                focus:outline-none
-              `}
-            />
+      {/* Compose Section - Fixed at bottom */}
+      <div className="flex-shrink-0 border-t border-ron-teal-400/20">
+        <div className="p-4">
+          <div className="flex gap-2 mb-4">
+            <ActionButton icon={<Reply size={16} />} label="Reply" />
+            <ActionButton icon={<ReplyAll size={16} />} label="Reply All" />
+            <ActionButton icon={<Forward size={16} />} label="Forward" />
+            <ActionButton icon={<Paperclip size={16} />} label="Attach" />
           </div>
-          <button className={`
-            p-2 rounded-lg
-            bg-ron-teal-400
-            text-white
-            transition-all duration-200
-            hover:shadow-glow-teal
-            border border-transparent
-          `}>
-            <Send size={20} />
-          </button>
+          <div className="flex gap-2">
+            <div className={`
+              flex-1 relative rounded-lg overflow-hidden
+              ${isDark ? 'bg-gray-800/50' : 'bg-white/50'}
+              backdrop-blur-sm
+              border
+              ${isDark 
+                ? 'border-ron-teal-400/20 focus-within:border-ron-teal-400/40' 
+                : 'border-ron-teal-200/50 focus-within:border-ron-teal-400/60'
+              }
+              transition-all duration-200
+              focus-within:shadow-glow-teal
+            `}>
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                <Mail className="h-4 w-4 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Compose your email..."
+                className={`
+                  block w-full pl-10 pr-3 py-2
+                  bg-transparent text-sm
+                  ${isDark ? 'text-white' : 'text-gray-900'}
+                  placeholder:text-gray-400
+                  focus:outline-none
+                `}
+              />
+            </div>
+            <button className={`
+              p-2 rounded-lg
+              bg-ron-teal-400
+              text-white
+              transition-all duration-200
+              hover:shadow-glow-teal
+              border border-transparent
+            `}>
+              <Send size={20} />
+            </button>
+          </div>
         </div>
       </div>
     </div>

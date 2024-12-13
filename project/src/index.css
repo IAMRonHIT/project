@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-white dark:bg-[#001219] font-inter;
+  }
+  
+  .font-inter {
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* Custom scrollbar for dark mode */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-cyan-500/20 rounded-full hover:bg-cyan-500/30 transition-colors;
+  }
+
+  /* Circuit pattern background */
+  .circuit-pattern {
+    background-image: radial-gradient(circle at 2px 2px, rgba(0, 255, 255, 0.02) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Cyberpunk text glow */
+  .text-glow {
+    text-shadow: 0 0 8px rgba(0, 255, 255, 0.3);
+  }
+
+  /* Priority colors */
+  .priority-low {
+    @apply bg-[#29FFAD]/10 text-[#29FFAD];
+  }
+  .priority-medium {
+    @apply bg-yellow-500/10 text-yellow-400;
+  }
+  .priority-high {
+    @apply bg-[#FF4B82]/10 text-[#FF4B82];
+  }
+}

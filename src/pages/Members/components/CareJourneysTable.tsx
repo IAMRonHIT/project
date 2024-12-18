@@ -1,8 +1,8 @@
 import React from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { PriorityBadge } from '@/components/PriorityBadge';
-import { AdherenceBadge } from '@/components/AdherenceBadge';
+import { PriorityBadge } from '../../../components/PriorityBadge';
+import { AdherenceBadge } from '../../../components/AdherenceBadge';
 
 interface CareJourney {
   id: string;

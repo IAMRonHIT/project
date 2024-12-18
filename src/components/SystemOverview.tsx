@@ -2,6 +2,7 @@ import React from 'react';
 import { Tooltip } from './Tooltip';
 import { Shield, Activity, Brain } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme.tsx';
+import { MetricsGrid } from './Dashboard/MetricsGrid';
 
 interface ProgressBarProps {
   value: number;
@@ -17,9 +18,9 @@ function ProgressBar({ value, variant }: ProgressBarProps) {
       case 'lavender':
         return isDark ? 'rgba(196, 181, 253, 0.8)' : 'rgba(167, 139, 250, 0.8)';
       case 'coral':
-        return isDark ? 'rgba(255, 107, 157, 0.8)' : 'rgba(255, 77, 140, 0.8)'; // Matching fluorescent pink/coral
+        return isDark ? 'rgba(255, 107, 157, 0.8)' : 'rgba(255, 77, 140, 0.8)';
       case 'teal':
-        return isDark ? 'rgba(0, 242, 234, 0.8)' : 'rgba(0, 214, 208, 0.8)'; // Matching electric teal
+        return isDark ? 'rgba(0, 242, 234, 0.8)' : 'rgba(0, 214, 208, 0.8)';
       case 'lime':
         return isDark ? 'rgba(163, 230, 53, 0.8)' : 'rgba(132, 204, 22, 0.8)';
       default:
@@ -32,9 +33,9 @@ function ProgressBar({ value, variant }: ProgressBarProps) {
       case 'lavender':
         return isDark ? '#c4b5fd' : '#a78bfa';
       case 'coral':
-        return isDark ? '#ff6b9d' : '#ff4d8c'; // Matching fluorescent pink/coral
+        return isDark ? '#ff6b9d' : '#ff4d8c';
       case 'teal':
-        return isDark ? '#00f2ea' : '#00d6d0'; // Matching electric teal
+        return isDark ? '#00f2ea' : '#00d6d0';
       case 'lime':
         return isDark ? '#a3e635' : '#84cc16';
       default:
@@ -215,40 +216,48 @@ export function SystemOverview() {
   ];
 
   return (
-    <div className={`
-      ${isDark ? 'bg-white/5' : 'bg-white'} 
-      backdrop-blur-xl rounded-xl p-8 
-      shadow-soft hover:shadow-glow 
-      transition-all duration-300 
-      relative overflow-hidden 
-      border ${isDark ? 'border-white/10' : 'border-ron-divider'}
-    `}>
-      <div className="absolute inset-0 bg-gradient-glossy from-violet-400/5 via-transparent to-transparent" />
-      
-      <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-ron-dark-navy'} mb-8 relative`}>
-        System Overview
-      </h2>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative">
-        <div>
-          <h3 className={`font-medium mb-6 pb-2 border-b ${isDark ? 'text-white border-white/10' : 'text-ron-dark-navy border-ron-divider'}`}>
-            Active Workflows
-          </h3>
-          <div className="space-y-6">
-            {workflows.map((workflow) => (
-              <MetricRow key={workflow.name} {...workflow} />
-            ))}
-          </div>
-        </div>
-        
-        <div>
-          <h3 className={`font-medium mb-6 pb-2 border-b ${isDark ? 'text-white border-white/10' : 'text-ron-dark-navy border-ron-divider'}`}>
-            System Health
-          </h3>
-          <div className="space-y-6">
-            {metrics.map((metric) => (
-              <MetricRow key={metric.name} {...metric} />
-            ))}
+    <div className="h-[calc(100vh-4rem)] overflow-y-auto">
+      <div className="space-y-8 p-8">
+        {/* Metrics Grid with Charts */}
+        <MetricsGrid />
+
+        {/* System Metrics */}
+        <div className={`
+          ${isDark ? 'bg-white/5' : 'bg-white'} 
+          backdrop-blur-xl rounded-xl p-8 
+          shadow-soft hover:shadow-glow 
+          transition-all duration-300 
+          relative overflow-hidden 
+          border ${isDark ? 'border-white/10' : 'border-ron-divider'}
+        `}>
+          <div className="absolute inset-0 bg-gradient-glossy from-violet-400/5 via-transparent to-transparent" />
+          
+          <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-ron-dark-navy'} mb-8 relative`}>
+            System Metrics
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative">
+            <div>
+              <h3 className={`font-medium mb-6 pb-2 border-b ${isDark ? 'text-white border-white/10' : 'text-ron-dark-navy border-ron-divider'}`}>
+                Active Workflows
+              </h3>
+              <div className="space-y-6">
+                {workflows.map((workflow) => (
+                  <MetricRow key={workflow.name} {...workflow} />
+                ))}
+              </div>
+            </div>
+            
+            <div>
+              <h3 className={`font-medium mb-6 pb-2 border-b ${isDark ? 'text-white border-white/10' : 'text-ron-dark-navy border-ron-divider'}`}>
+                System Health
+              </h3>
+              <div className="space-y-6">
+                {metrics.map((metric) => (
+                  <MetricRow key={metric.name} {...metric} />
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>

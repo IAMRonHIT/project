@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ClinicalReviewsTable } from './ClinicalReviewsTable';
 import { PlansOfCare } from './PlansOfCare';
 import { Claims } from './Claims';
-import { Activity, AlertCircle, FileText, MessageSquare } from 'lucide-react';
+import { Overview } from './Overview';
+import { Activity, AlertCircle, FileText, MessageSquare, ArrowLeft } from 'lucide-react';
 
 const TABS = {
   OVERVIEW: 'overview',
@@ -11,111 +12,174 @@ const TABS = {
   PLANS_OF_CARE: 'plans-of-care',
   CLAIMS: 'claims',
   COMMUNICATIONS: 'communications'
-};
+} as const;
 
-export function EnhancedCareJourney() {
-  const { careJourneyId } = useParams();
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState(TABS.OVERVIEW);
-  const [showNewReviewModal, setShowNewReviewModal] = useState(false);
-  const [isDark] = useState(document.documentElement.classList.contains('dark'));
+type TabType = typeof TABS[keyof typeof TABS];
 
-  // Mock data for a specific care journey
-  const careJourney = {
-    id: careJourneyId,
-    title: 'Cardiac Care Journey',
+interface ClinicalReviewsTableProps {
+  careJourneyId: string;
+  onNewReview: () => void;
+}
+
+interface PlansOfCareProps {
+  careJourneyId: string;
+}
+
+interface ClaimsProps {
+  careJourneyId: string;
+}
+
+interface CareJourney {
+  id: string;
+  title: string;
+  startDate: string;
+  status: string;
+  primaryCondition: string;
+  riskLevel: string;
+  lastUpdated: string;
+  metrics: {
+    reviews: number;
+    activePlans: number;
+    claims: number;
+    communications: number;
+  };
+}
+
+interface CareJourneyMap {
+  [key: string]: CareJourney;
+}
+
+// Mock data for care journeys
+const mockCareJourneys: CareJourneyMap = {
+  'CJ001': {
+    id: 'CJ001',
+    title: 'Diabetes Management',
     startDate: '2024-01-15',
     status: 'Active',
-    primaryCondition: 'Congestive Heart Failure',
+    primaryCondition: 'Type 2 Diabetes',
     riskLevel: 'High',
     lastUpdated: '2024-03-15',
-    summary: 'Patient admitted for CHF exacerbation. Currently following treatment plan with medication adjustments.',
     metrics: {
       reviews: 8,
       activePlans: 3,
       claims: 12,
       communications: 25
     }
+  },
+  'CJ002': {
+    id: 'CJ002',
+    title: 'Hypertension Control',
+    startDate: '2024-02-01',
+    status: 'Active',
+    primaryCondition: 'Hypertension',
+    riskLevel: 'Medium',
+    lastUpdated: '2024-03-14',
+    metrics: {
+      reviews: 5,
+      activePlans: 2,
+      claims: 8,
+      communications: 15
+    }
+  },
+  'CJ003': {
+    id: 'CJ003',
+    title: 'Weight Management',
+    startDate: '2024-02-15',
+    status: 'Active',
+    primaryCondition: 'Obesity',
+    riskLevel: 'Medium',
+    lastUpdated: '2024-03-13',
+    metrics: {
+      reviews: 4,
+      activePlans: 2,
+      claims: 6,
+      communications: 12
+    }
+  },
+  'CJ004': {
+    id: 'CJ004',
+    title: 'Cardiac Rehabilitation',
+    startDate: '2024-01-30',
+    status: 'Active',
+    primaryCondition: 'Coronary Artery Disease',
+    riskLevel: 'High',
+    lastUpdated: '2024-03-15',
+    metrics: {
+      reviews: 10,
+      activePlans: 4,
+      claims: 15,
+      communications: 30
+    }
+  },
+  'CJ005': {
+    id: 'CJ005',
+    title: 'Nutrition Counseling',
+    startDate: '2024-02-10',
+    status: 'Active',
+    primaryCondition: 'Dietary Management',
+    riskLevel: 'Low',
+    lastUpdated: '2024-03-12',
+    metrics: {
+      reviews: 3,
+      activePlans: 1,
+      claims: 4,
+      communications: 8
+    }
+  }
+};
+
+export function EnhancedCareJourney() {
+  const { journeyId, id: memberId } = useParams<{ journeyId: string; id: string }>();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<TabType>(TABS.OVERVIEW);
+  const [showNewReviewModal, setShowNewReviewModal] = useState(false);
+  const [isDark] = useState(document.documentElement.classList.contains('dark'));
+
+  // Get the care journey data
+  const careJourney = journeyId ? mockCareJourneys[journeyId] : null;
+
+  if (!careJourney || !journeyId) {
+    return (
+      <div className={`p-6 text-center ${isDark ? 'text-white' : 'text-ron-dark-navy'}`}>
+        Care Journey not found. Please select a valid care journey.
+      </div>
+    );
+  }
+
+  const handleBack = () => {
+    navigate(`/members/${memberId}`);
   };
 
   const renderTabContent = () => {
     switch (activeTab) {
       case TABS.CLINICAL_REVIEWS:
-        return <ClinicalReviewsTable careJourneyId={careJourneyId} onNewReview={() => setShowNewReviewModal(true)} />;
+        return <ClinicalReviewsTable 
+          careJourneyId={careJourney.id} 
+          onNewReview={() => setShowNewReviewModal(true)} 
+        />;
       case TABS.PLANS_OF_CARE:
-        return <PlansOfCare careJourneyId={careJourneyId} />;
+        return <PlansOfCare careJourneyId={careJourney.id} />;
       case TABS.CLAIMS:
-        return <Claims careJourneyId={careJourneyId} />;
+        return <Claims careJourneyId={careJourney.id} />;
       case TABS.OVERVIEW:
       default:
-        return (
-          <div className={`p-6 ${isDark ? 'text-white' : 'text-ron-dark-navy'}`}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div className={`p-4 rounded-xl ${isDark ? 'bg-white/5' : 'bg-white'} border ${isDark ? 'border-white/10' : 'border-ron-divider'}`}>
-                <h3 className="text-lg font-medium mb-4">Journey Details</h3>
-                <div className="space-y-3">
-                  <div>
-                    <label className={`text-sm ${isDark ? 'text-white/60' : 'text-ron-dark-navy/60'}`}>Primary Condition</label>
-                    <p className="font-medium">{careJourney.primaryCondition}</p>
-                  </div>
-                  <div>
-                    <label className={`text-sm ${isDark ? 'text-white/60' : 'text-ron-dark-navy/60'}`}>Risk Level</label>
-                    <p className="font-medium">{careJourney.riskLevel}</p>
-                  </div>
-                  <div>
-                    <label className={`text-sm ${isDark ? 'text-white/60' : 'text-ron-dark-navy/60'}`}>Start Date</label>
-                    <p className="font-medium">{careJourney.startDate}</p>
-                  </div>
-                  <div>
-                    <label className={`text-sm ${isDark ? 'text-white/60' : 'text-ron-dark-navy/60'}`}>Last Updated</label>
-                    <p className="font-medium">{careJourney.lastUpdated}</p>
-                  </div>
-                </div>
-              </div>
-              <div className={`p-4 rounded-xl ${isDark ? 'bg-white/5' : 'bg-white'} border ${isDark ? 'border-white/10' : 'border-ron-divider'}`}>
-                <h3 className="text-lg font-medium mb-4">Journey Summary</h3>
-                <p className={`text-sm ${isDark ? 'text-white/80' : 'text-ron-dark-navy/80'}`}>
-                  {careJourney.summary}
-                </p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className={`p-4 rounded-xl ${isDark ? 'bg-white/5' : 'bg-white'} border ${isDark ? 'border-white/10' : 'border-ron-divider'}`}>
-                <div className="flex items-center gap-2 mb-2">
-                  <Activity className={isDark ? 'text-[#CCFF00]' : 'text-ron-primary'} />
-                  <h4 className="font-medium">Clinical Reviews</h4>
-                </div>
-                <p className="text-2xl font-semibold">{careJourney.metrics.reviews}</p>
-              </div>
-              <div className={`p-4 rounded-xl ${isDark ? 'bg-white/5' : 'bg-white'} border ${isDark ? 'border-white/10' : 'border-ron-divider'}`}>
-                <div className="flex items-center gap-2 mb-2">
-                  <FileText className={isDark ? 'text-[#CCFF00]' : 'text-ron-primary'} />
-                  <h4 className="font-medium">Active Plans</h4>
-                </div>
-                <p className="text-2xl font-semibold">{careJourney.metrics.activePlans}</p>
-              </div>
-              <div className={`p-4 rounded-xl ${isDark ? 'bg-white/5' : 'bg-white'} border ${isDark ? 'border-white/10' : 'border-ron-divider'}`}>
-                <div className="flex items-center gap-2 mb-2">
-                  <AlertCircle className={isDark ? 'text-[#CCFF00]' : 'text-ron-primary'} />
-                  <h4 className="font-medium">Claims</h4>
-                </div>
-                <p className="text-2xl font-semibold">{careJourney.metrics.claims}</p>
-              </div>
-              <div className={`p-4 rounded-xl ${isDark ? 'bg-white/5' : 'bg-white'} border ${isDark ? 'border-white/10' : 'border-ron-divider'}`}>
-                <div className="flex items-center gap-2 mb-2">
-                  <MessageSquare className={isDark ? 'text-[#CCFF00]' : 'text-ron-primary'} />
-                  <h4 className="font-medium">Communications</h4>
-                </div>
-                <p className="text-2xl font-semibold">{careJourney.metrics.communications}</p>
-              </div>
-            </div>
-          </div>
-        );
+        return <Overview careJourneyId={careJourney.id} />;
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="px-6 py-8">
+      {/* Back Button */}
+      <button
+        onClick={handleBack}
+        className={`flex items-center gap-2 mb-4 ${
+          isDark ? 'text-white/60 hover:text-white' : 'text-ron-dark-navy/60 hover:text-ron-dark-navy'
+        } transition-colors`}
+      >
+        <ArrowLeft className="w-4 h-4" />
+        <span>Back to Member</span>
+      </button>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

@@ -99,6 +99,32 @@ export default {
         'gradient-soft': 'linear-gradient(60deg, var(--tw-gradient-stops))',
         'gradient-glossy': 'linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 100%)',
         'gradient-to-r': 'linear-gradient(to right, var(--tw-gradient-stops))',
+      },
+      keyframes: {
+        'fade-in-up': {
+          '0%': {
+            opacity: '0',
+            transform: 'translateY(20px)'
+          },
+          '100%': {
+            opacity: '1',
+            transform: 'translateY(0)'
+          }
+        },
+        'grow-up': {
+          '0%': {
+            opacity: '0',
+            transform: 'scaleY(0)'
+          },
+          '100%': {
+            opacity: '1',
+            transform: 'scaleY(1)'
+          }
+        }
+      },
+      animation: {
+        'fade-in-up': 'fade-in-up 0.5s ease-out forwards',
+        'grow-up': 'grow-up 0.5s ease-out forwards'
       }
     }
   },

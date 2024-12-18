@@ -51,6 +51,7 @@ const clinicalReviews: ClinicalReview[] = [
 ];
 
 interface ClinicalReviewsTableProps {
+  careJourneyId: string;
   onNewReview: () => void;
 }
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { MetricCard } from '@/components/MetricCard';
+import { MetricCard } from '@/components/DashboardCard';
 import { SystemOverview } from '@/components/SystemOverview';
 import { PieChart } from '@/components/Dashboard/PieChart';
 import { BarChart } from '@/components/Dashboard/BarChart';

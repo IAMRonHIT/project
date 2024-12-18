@@ -1,90 +1,64 @@
 import React, { useState } from 'react';
-import { Activity, AlertCircle, ArrowUpRight, DollarSign, FileText, Filter, Plus, Search } from 'lucide-react';
+import { AlertCircle, DollarSign, Calendar, Building, FileText } from 'lucide-react';
+import { Badge } from '../../../../../components/Badge';
 
-interface Claim {
-  id: string;
-  careJourneyId: string;
-  submissionDate: string;
-  status: 'processed' | 'pending' | 'denied';
-  service: string;
-  provider: string;
-  billedAmount: number;
-  paidAmount: number | null;
-  cptCodes: string[];
-  denialReason?: string;
-}
-
-interface ClaimsProps {
+export interface ClaimsProps {
   careJourneyId: string;
 }
 
-const mockClaims: Claim[] = [
-  {
-    id: 'CLM-001',
-    careJourneyId: 'CJ-001',
-    submissionDate: '2024-03-01',
-    status: 'processed',
-    service: 'Cardiac Catheterization',
-    provider: 'Memorial Hospital',
-    billedAmount: 12500,
-    paidAmount: 8750,
-    cptCodes: ['93458', '93459']
-  },
-  {
-    id: 'CLM-002',
-    careJourneyId: 'CJ-001',
-    submissionDate: '2024-03-05',
-    status: 'denied',
-    service: 'Follow-up Consultation',
-    provider: 'Dr. Sarah Chen',
-    billedAmount: 350,
-    paidAmount: null,
-    cptCodes: ['99214'],
-    denialReason: 'Service not covered under current plan'
-  },
-  {
-    id: 'CLM-003',
-    careJourneyId: 'CJ-001',
-    submissionDate: '2024-03-10',
-    status: 'pending',
-    service: 'Stress Test',
-    provider: 'Cardiology Associates',
-    billedAmount: 1200,
-    paidAmount: null,
-    cptCodes: ['93015', '93016']
-  }
-];
-
-export function Claims({ careJourneyId }: ClaimsProps) {
+export function Claims(_props: ClaimsProps) {
   const [isDark] = useState(document.documentElement.classList.contains('dark'));
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedClaim, setSelectedClaim] = useState<string | null>(null);
 
-  // Filter claims for this care journey
-  const journeyClaims = mockClaims.filter(claim => claim.careJourneyId === careJourneyId);
+  // Mock data for claims
+  const claims = [
+    {
+      id: 'CLM001',
+      date: '2024-03-15',
+      provider: 'City General Hospital',
+      type: 'Emergency Room Visit',
+      status: 'Processed',
+      amount: 2500.00,
+      covered: 2000.00,
+      patientResponsibility: 500.00,
+      codes: ['99285', 'J0630'],
+      description: 'Emergency room visit, high severity'
+    },
+    {
+      id: 'CLM002',
+      date: '2024-03-10',
+      provider: 'Dr. Michael Chen',
+      type: 'Office Visit',
+      status: 'Pending',
+      amount: 350.00,
+      covered: 280.00,
+      patientResponsibility: 70.00,
+      codes: ['99214'],
+      description: 'Follow-up visit, moderate complexity'
+    },
+    {
+      id: 'CLM003',
+      date: '2024-03-05',
+      provider: 'MedLab Diagnostics',
+      type: 'Laboratory Services',
+      status: 'Paid',
+      amount: 180.00,
+      covered: 180.00,
+      patientResponsibility: 0.00,
+      codes: ['80053', '85025'],
+      description: 'Comprehensive metabolic panel, CBC'
+    }
+  ];
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
+  const getStatusVariant = (status: string) => {
+    switch (status.toLowerCase()) {
       case 'processed':
-        return {
-          bg: isDark ? 'bg-emerald-400/10' : 'bg-emerald-50',
-          text: isDark ? 'text-emerald-400' : 'text-emerald-500'
-        };
+        return 'warning';
       case 'pending':
-        return {
-          bg: isDark ? 'bg-amber-400/10' : 'bg-amber-50',
-          text: isDark ? 'text-amber-400' : 'text-amber-500'
-        };
-      case 'denied':
-        return {
-          bg: isDark ? 'bg-red-400/10' : 'bg-red-50',
-          text: isDark ? 'text-red-400' : 'text-red-500'
-        };
+        return 'info';
+      case 'paid':
+        return 'success';
       default:
-        return {
-          bg: '',
-          text: ''
-        };
+        return 'default';
     }
   };
 
@@ -96,161 +70,160 @@ export function Claims({ careJourneyId }: ClaimsProps) {
   };
 
   return (
-    <div className={`${
-      isDark
-        ? 'bg-white/5 backdrop-blur-lg border-white/10'
-        : 'bg-white border-ron-divider'
-    } rounded-xl shadow-soft`}>
-      {/* Header */}
-      <div className="p-6 border-b border-ron-divider">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className={`text-lg font-medium flex items-center gap-2 ${
-            isDark ? 'text-white' : 'text-ron-dark-navy'
-          }`}>
-            <DollarSign className="w-4 h-4 text-ron-primary dark:text-[#CCFF00]" />
-            Claims
-          </h3>
-          <div className="flex items-center gap-2">
-            <button
-              className={`p-2 rounded-lg ${
-                isDark ? 'hover:bg-white/10' : 'hover:bg-ron-primary/10'
-              } transition-colors`}
-            >
-              <Filter className={`w-4 h-4 ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
-              }`} />
-            </button>
-            <button
-              className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-                isDark
-                  ? 'bg-[#CCFF00] text-ron-dark-navy hover:bg-[#CCFF00]/90'
-                  : 'bg-ron-primary text-white hover:bg-ron-primary/90'
-              } transition-colors`}
-            >
-              <Plus className="w-4 h-4" />
-              New Claim
-            </button>
-          </div>
-        </div>
-
-        <div className="relative">
-          <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${
-            isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
-          }`} />
-          <input
-            type="text"
-            placeholder="Search claims..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className={`w-full pl-10 pr-4 py-2 rounded-lg ${
-              isDark
-                ? 'bg-white/5 text-white placeholder-white/40 border-white/10'
-                : 'bg-ron-primary/5 text-ron-dark-navy placeholder-ron-dark-navy/40 border-ron-divider'
-            } border focus:outline-none focus:ring-2 focus:ring-ron-primary/20`}
-          />
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className={`text-lg font-medium ${isDark ? 'text-white' : 'text-ron-dark-navy'}`}>
+          Claims History
+        </h3>
+        <div className="flex items-center gap-2">
+          <span className={`text-sm ${isDark ? 'text-white/60' : 'text-ron-dark-navy/60'}`}>
+            Total Claims: {claims.length}
+          </span>
         </div>
       </div>
 
-      {/* Claims Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className={`border-b ${isDark ? 'border-white/10' : 'border-ron-divider'}`}>
-              <th className={`px-6 py-3 text-left text-xs font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
-              } uppercase tracking-wider`}>Claim ID</th>
-              <th className={`px-6 py-3 text-left text-xs font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
-              } uppercase tracking-wider`}>Date</th>
-              <th className={`px-6 py-3 text-left text-xs font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
-              } uppercase tracking-wider`}>Service</th>
-              <th className={`px-6 py-3 text-left text-xs font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
-              } uppercase tracking-wider`}>Provider</th>
-              <th className={`px-6 py-3 text-left text-xs font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
-              } uppercase tracking-wider`}>Amount</th>
-              <th className={`px-6 py-3 text-left text-xs font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
-              } uppercase tracking-wider`}>Status</th>
-              <th className={`px-6 py-3 text-left text-xs font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
-              } uppercase tracking-wider`}>Actions</th>
-            </tr>
-          </thead>
-          <tbody className={`divide-y ${isDark ? 'divide-white/10' : 'divide-ron-divider'}`}>
-            {journeyClaims.map((claim) => {
-              const statusColors = getStatusColor(claim.status);
-              
-              return (
-                <tr
-                  key={claim.id}
-                  onClick={() => setSelectedClaim(selectedClaim === claim.id ? null : claim.id)}
-                  className={`${
-                    isDark ? 'hover:bg-white/5' : 'hover:bg-ron-primary/5'
-                  } transition-colors cursor-pointer`}
-                >
-                  <td className={`px-6 py-4 text-sm font-medium ${
-                    isDark ? 'text-white' : 'text-ron-dark-navy'
-                  }`}>{claim.id}</td>
-                  <td className={`px-6 py-4 text-sm ${
-                    isDark ? 'text-white' : 'text-ron-dark-navy'
-                  }`}>{claim.submissionDate}</td>
-                  <td className={`px-6 py-4 text-sm ${
-                    isDark ? 'text-white' : 'text-ron-dark-navy'
+      <div className="grid grid-cols-1 gap-6">
+        {claims.map((claim) => (
+          <div
+            key={claim.id}
+            className={`p-6 rounded-xl border ${
+              isDark ? 'bg-white/5 border-white/10' : 'bg-white border-ron-divider'
+            }`}
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h4 className={`text-lg font-medium mb-1 ${
+                  isDark ? 'text-white' : 'text-ron-dark-navy'
+                }`}>
+                  {claim.type}
+                </h4>
+                <div className="flex items-center gap-4">
+                  <Badge 
+                    variant={getStatusVariant(claim.status)} 
+                    size="sm"
+                    glow
+                  >
+                    {claim.status}
+                  </Badge>
+                  <span className={`text-sm ${
+                    isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
                   }`}>
-                    <div>
-                      <p>{claim.service}</p>
-                      <p className={`text-xs mt-1 ${
-                        isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
-                      }`}>CPT: {claim.cptCodes.join(', ')}</p>
-                    </div>
-                  </td>
-                  <td className={`px-6 py-4 text-sm ${
-                    isDark ? 'text-white' : 'text-ron-dark-navy'
-                  }`}>{claim.provider}</td>
-                  <td className={`px-6 py-4 text-sm ${
-                    isDark ? 'text-white' : 'text-ron-dark-navy'
-                  }`}>
-                    <div>
-                      <p>Billed: {formatCurrency(claim.billedAmount)}</p>
-                      {claim.paidAmount !== null && (
-                        <p className={`text-xs mt-1 ${
-                          isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
-                        }`}>Paid: {formatCurrency(claim.paidAmount)}</p>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      statusColors.bg
-                    } ${statusColors.text}`}>
-                      {claim.status.charAt(0).toUpperCase() + claim.status.slice(1)}
-                    </span>
-                    {claim.denialReason && (
-                      <p className={`text-xs mt-1 flex items-center gap-1 ${
-                        isDark ? 'text-red-400' : 'text-red-500'
-                      }`}>
-                        <AlertCircle className="w-3 h-3" />
-                        {claim.denialReason}
-                      </p>
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
-                    <button className={`p-2 rounded-lg ${
-                      isDark ? 'hover:bg-white/10' : 'hover:bg-ron-primary/10'
-                    } transition-colors`}>
-                      <ArrowUpRight className={`w-4 h-4 ${
-                        isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
-                      }`} />
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    Claim ID: {claim.id}
+                  </span>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className={`text-lg font-medium ${
+                  isDark ? 'text-white' : 'text-ron-dark-navy'
+                }`}>
+                  {formatCurrency(claim.amount)}
+                </div>
+                <div className={`text-sm ${
+                  isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                }`}>
+                  Total Amount
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
+              <div>
+                <label className={`text-sm ${
+                  isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                }`}>
+                  Date of Service
+                </label>
+                <div className="flex items-center gap-2 mt-1">
+                  <Calendar className={`w-4 h-4 ${
+                    isDark ? 'text-[#CCFF00]' : 'text-ron-primary'
+                  }`} />
+                  <span className={isDark ? 'text-white' : 'text-ron-dark-navy'}>
+                    {claim.date}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <label className={`text-sm ${
+                  isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                }`}>
+                  Provider
+                </label>
+                <div className="flex items-center gap-2 mt-1">
+                  <Building className={`w-4 h-4 ${
+                    isDark ? 'text-[#CCFF00]' : 'text-ron-primary'
+                  }`} />
+                  <span className={isDark ? 'text-white' : 'text-ron-dark-navy'}>
+                    {claim.provider}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <label className={`text-sm ${
+                  isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                }`}>
+                  Covered Amount
+                </label>
+                <div className="flex items-center gap-2 mt-1">
+                  <DollarSign className={`w-4 h-4 ${
+                    isDark ? 'text-[#CCFF00]' : 'text-ron-primary'
+                  }`} />
+                  <span className={isDark ? 'text-white' : 'text-ron-dark-navy'}>
+                    {formatCurrency(claim.covered)}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <label className={`text-sm ${
+                  isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                }`}>
+                  Patient Responsibility
+                </label>
+                <div className="flex items-center gap-2 mt-1">
+                  <DollarSign className={`w-4 h-4 ${
+                    isDark ? 'text-[#CCFF00]' : 'text-ron-primary'
+                  }`} />
+                  <span className={isDark ? 'text-white' : 'text-ron-dark-navy'}>
+                    {formatCurrency(claim.patientResponsibility)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <label className={`text-sm ${
+                  isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                }`}>
+                  Description
+                </label>
+                <p className={`mt-1 text-sm ${
+                  isDark ? 'text-white/80' : 'text-ron-dark-navy/80'
+                }`}>
+                  {claim.description}
+                </p>
+              </div>
+              <div>
+                <label className={`text-sm ${
+                  isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                }`}>
+                  Procedure Codes
+                </label>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {claim.codes.map((code, index) => (
+                    <Badge 
+                      key={index}
+                      variant="default" 
+                      size="sm"
+                      glow
+                    >
+                      {code}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

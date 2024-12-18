@@ -51,11 +51,6 @@ export function Member360View() {
     }
   ];
 
-  const handleJourneyClick = (journeyId: string) => {
-    // Handle journey click - can be expanded later to show detailed view
-    console.log('Journey clicked:', journeyId);
-  };
-
   return (
     <div className="relative min-h-screen">
       {/* Header */}
@@ -100,7 +95,7 @@ export function Member360View() {
           </div>
 
           {/* Metrics */}
-          <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
             {metrics.map((metric, index) => (
               <div
                 key={index}
@@ -136,11 +131,13 @@ export function Member360View() {
           </div>
 
           {/* Care Journeys */}
-          <div className={`${
+          <div className={`mt-6 ${
             isDark ? 'bg-white/5' : 'bg-white'
           } rounded-xl shadow-soft border border-ron-divider p-6`}>
-            <h2 className="text-lg font-semibold mb-4">Care Journeys</h2>
-            <CareJourneysTable onMemberClick={handleJourneyClick} />
+            <h2 className={`text-lg font-semibold mb-4 ${
+              isDark ? 'text-white' : 'text-ron-dark-navy'
+            }`}>Care Journeys</h2>
+            <CareJourneysTable />
           </div>
         </div>
       </div>

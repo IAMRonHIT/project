@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { Activity, Users, Clock, FileCheck } from 'lucide-react';
 import { DashboardCard } from '../DashboardCard';
 import { PieChart } from './PieChart';

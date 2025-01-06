@@ -50,15 +50,15 @@ export function MetricCard({
       </div>
       <div className="mt-4">
         <div className="flex items-center gap-2">
-          <h3 className="text-base font-medium text-ron-dark-navy dark:text-white">
+          <h3 className="text-base font-medium text-dark-gun-metal dark:text-white">
             {title}
           </h3>
         </div>
-        <p className="mt-2 text-2xl font-semibold text-ron-dark-navy dark:text-white tracking-tight">
+        <p className="mt-2 text-2xl font-semibold text-dark-gun-metal dark:text-white tracking-tight">
           {value}
         </p>
         {description && (
-          <p className="mt-2 text-sm text-ron-dark-navy/60 dark:text-white/60">
+          <p className="mt-2 text-sm text-dark-gun-metal/60 dark:text-white/60">
             {description}
           </p>
         )}

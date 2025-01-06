@@ -33,7 +33,7 @@ export function CareTimeline() {
       <div className="p-6 border-b border-ron-divider">
         <div className="flex items-center justify-between mb-4">
           <h3 className={`text-lg font-medium ${
-            isDark ? 'text-white' : 'text-ron-dark-navy'
+            isDark ? 'text-white' : 'text-dark-gun-metal'
           }`}>Care Journey Timeline</h3>
           <button
             onClick={() => setShowFilters(!showFilters)}
@@ -55,7 +55,7 @@ export function CareTimeline() {
 
         <div className="relative">
           <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${
-            isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
+            isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
           }`} />
           <input
             type="text"
@@ -65,7 +65,7 @@ export function CareTimeline() {
             className={`w-full pl-10 pr-4 py-2 rounded-lg ${
               isDark
                 ? 'bg-white/5 text-white placeholder-white/40 border-white/10'
-                : 'bg-ron-primary/5 text-ron-dark-navy placeholder-ron-dark-navy/40 border-ron-divider'
+                : 'bg-ron-primary/5 text-dark-gun-metal placeholder-dark-gun-metal/40 border-ron-divider'
             } border focus:outline-none focus:ring-2 focus:ring-ron-primary/20`}
           />
         </div>

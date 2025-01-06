@@ -1,17 +1,27 @@
 import React from 'react';
 import { TaskCard } from './TaskCard';
-import type { Task } from '../../../src/types/task';
-import type { themes } from '../../../src/lib/themes';
+import type { Task } from '../../../types/task';
+import type { themes } from '../../../lib/themes';
 
 interface KanbanColumnProps {
   title: string;
   tasks: Task[];
   status: Task['status'];
   onTaskMove: (taskId: string, newStatus: Task['status']) => void;
+  onTaskEdit: (taskId: string, updates: Partial<Task>) => void;
+  onTaskDelete: (taskId: string) => void;
   theme: typeof themes[keyof typeof themes];
 }
 
-export function KanbanColumn({ title, tasks, status, onTaskMove, theme }: KanbanColumnProps) {
+export function KanbanColumn({ 
+  title, 
+  tasks, 
+  status, 
+  onTaskMove, 
+  onTaskEdit,
+  onTaskDelete,
+  theme 
+}: KanbanColumnProps) {
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     const column = e.currentTarget;
@@ -41,7 +51,7 @@ export function KanbanColumn({ title, tasks, status, onTaskMove, theme }: Kanban
       <div className="mb-4 p-4 relative backdrop-blur-sm z-10">
         <div className="flex items-center justify-between">
           <h2 className={`text-xl font-semibold ${theme.columnText}`}>
-            <span className={theme === 'dark' ? 'text-[#00FFFF] text-glow' : 'text-cyan-500'}>
+            <span className={theme.name === 'Dark' ? 'text-[#00FFFF] text-glow' : 'text-cyan-500'}>
               {title}
             </span>
           </h2>
@@ -61,7 +71,13 @@ export function KanbanColumn({ title, tasks, status, onTaskMove, theme }: Kanban
         onDrop={handleDrop}
       >
         {tasks.map(task => (
-          <TaskCard key={task.id} task={task} theme={theme} />
+          <TaskCard 
+            key={task.id} 
+            task={task} 
+            onEdit={onTaskEdit}
+            onDelete={onTaskDelete}
+            theme={theme} 
+          />
         ))}
       </div>
     </div>

@@ -1,8 +1,7 @@
 import React from 'react';
-import { Users, Search, Book, Circle } from 'lucide-react';
+import { Users, Search, Book } from 'lucide-react';
 import AIInsights from './AIInsight';
 import KnowledgeBase from './KnowledgeBase';
-import { Badge } from '../Badge';
 import { useTheme } from '../../hooks/useTheme';
 
 const RightSideBar: React.FC = () => {
@@ -47,7 +46,7 @@ const RightSideBar: React.FC = () => {
   return (
     <div className={`
       w-80 p-4 overflow-y-auto
-      ${isDark ? 'bg-gray-900/50' : 'bg-white/80'}
+      ${isDark ? 'bg-black' : 'bg-white/80'}
       backdrop-blur-xl
       border-l border-ron-teal-400/20
     `}>
@@ -65,7 +64,7 @@ const RightSideBar: React.FC = () => {
               key={index}
               className={`
                 flex items-center gap-3 p-2 rounded-lg cursor-pointer
-                ${isDark ? 'hover:bg-gray-800/50' : 'hover:bg-white/50'}
+                ${isDark ? 'hover:bg-black/50' : 'hover:bg-white/50'}
                 transition-colors
               `}
             >
@@ -115,7 +114,7 @@ const RightSideBar: React.FC = () => {
       <Section title="Knowledge Base" icon={<Book size={20} className="text-ron-teal-400" />}>
         <div className={`
           relative rounded-lg overflow-hidden mb-4
-          ${isDark ? 'bg-gray-800/50' : 'bg-white/50'}
+          ${isDark ? 'bg-black/50' : 'bg-white/50'}
           backdrop-blur-sm
           border
           ${isDark 
@@ -146,7 +145,7 @@ const RightSideBar: React.FC = () => {
               key={index}
               className={`
                 flex items-center gap-2 p-2 rounded-lg cursor-pointer
-                ${isDark ? 'hover:bg-gray-800/50' : 'hover:bg-white/50'}
+                ${isDark ? 'hover:bg-black/50' : 'hover:bg-white/50'}
                 transition-colors
               `}
             >

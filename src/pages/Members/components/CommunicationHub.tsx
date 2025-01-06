@@ -213,10 +213,10 @@ export function CommunicationHub() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className={`text-lg font-medium ${
-                isDark ? 'text-white' : 'text-ron-dark-navy'
+                isDark ? 'text-white' : 'text-dark-gun-metal'
               }`}>Communication Hub</h3>
               <div className="flex items-center gap-2 mt-1">
-                <span className={`text-sm ${isDark ? 'text-white/60' : 'text-ron-dark-navy/60'}`}>
+                <span className={`text-sm ${isDark ? 'text-white/60' : 'text-dark-gun-metal/60'}`}>
                   Ticket #{activeTicket.id}
                 </span>
                 <span className={`text-sm ${
@@ -235,14 +235,14 @@ export function CommunicationHub() {
                 isDark ? 'hover:bg-white/10' : 'hover:bg-ron-primary/10'
               }`}>
                 <Video className={`w-5 h-5 ${
-                  isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                  isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                 }`} />
               </button>
               <button className={`p-2 rounded-lg transition-colors ${
                 isDark ? 'hover:bg-white/10' : 'hover:bg-ron-primary/10'
               }`}>
                 <Calendar className={`w-5 h-5 ${
-                  isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                  isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                 }`} />
               </button>
             </div>
@@ -259,17 +259,17 @@ export function CommunicationHub() {
               <div className="flex items-start justify-between mb-2">
                 <div>
                   <h4 className={`font-medium ${
-                    isDark ? 'text-white' : 'text-ron-dark-navy'
+                    isDark ? 'text-white' : 'text-dark-gun-metal'
                   }`}>{message.sender}</h4>
                   <p className={`text-sm ${
-                    isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                    isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                   }`}>{message.role}</p>
                 </div>
                 <span className={`text-sm ${
-                  isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
+                  isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
                 }`}>{message.time}</span>
               </div>
-              <p className={isDark ? 'text-white/80' : 'text-ron-dark-navy/80'}>
+              <p className={isDark ? 'text-white/80' : 'text-dark-gun-metal/80'}>
                 {message.message}
               </p>
             </div>
@@ -288,7 +288,7 @@ export function CommunicationHub() {
                 className={`w-full px-4 py-2 rounded-lg ${
                   isDark
                     ? 'bg-white/5 text-white placeholder-white/40 border-white/10'
-                    : 'bg-ron-primary/5 text-ron-dark-navy placeholder-ron-dark-navy/40 border-ron-divider'
+                    : 'bg-ron-primary/5 text-dark-gun-metal placeholder-dark-gun-metal/40 border-ron-divider'
                 } border focus:outline-none focus:ring-2 focus:ring-ron-primary/20`}
               />
               <button 
@@ -297,7 +297,7 @@ export function CommunicationHub() {
                 }`}
               >
                 <Paperclip className={`w-4 h-4 ${
-                  isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                  isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                 }`} />
               </button>
             </div>

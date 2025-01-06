@@ -81,7 +81,7 @@ const ChatTab: React.FC = () => {
   const ActionButton: React.FC<{ icon: React.ReactNode }> = ({ icon }) => (
     <button className={`
       p-2 rounded-lg
-      ${isDark ? 'hover:bg-gray-800/50' : 'hover:bg-white/50'}
+      ${isDark ? 'hover:"bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10"-800/50' : 'hover:bg-white/50'}
       text-gray-400 hover:text-ron-teal-400
       transition-all duration-200
       hover:shadow-glow-teal
@@ -100,7 +100,7 @@ const ChatTab: React.FC = () => {
               {/* Avatar */}
               <div className={`
                 w-8 h-8 rounded-lg flex-shrink-0
-                ${isDark ? 'bg-gray-800/50' : 'bg-white/50'}
+                ${isDark ? '"bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10"-800/50' : 'bg-white/50'}
                 backdrop-blur-sm
                 border border-ron-teal-400/20
                 flex items-center justify-center
@@ -117,7 +117,7 @@ const ChatTab: React.FC = () => {
                     ? 'bg-ron-teal-400/10 border-ron-teal-400/20'
                     : 'bg-ron-teal-50/80 border-ron-teal-200/50'
                   : isDark
-                    ? 'bg-gray-800/50 border-gray-700/50'
+                    ? '"bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10"-800/50 border-gray-700/50'
                     : 'bg-white/50 border-gray-200/50'
                 }
                 backdrop-blur-sm border
@@ -151,7 +151,7 @@ const ChatTab: React.FC = () => {
         <div className="p-4">
           <div className={`
             flex items-center
-            ${isDark ? 'bg-gray-800/50' : 'bg-white/50'}
+            ${isDark ? '"bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10"-800/50' : 'bg-white/50'}
             rounded-lg border
             ${isDark ? 'border-gray-700/50' : 'border-gray-200/50'}
             shadow-inner
@@ -182,7 +182,7 @@ const ChatTab: React.FC = () => {
                 transition-all duration-200
                 ${input.trim() 
                   ? 'bg-ron-teal-400 text-white hover:shadow-glow-teal' 
-                  : `${isDark ? 'bg-gray-800/50' : 'bg-gray-100/50'} text-gray-400`
+                  : `${isDark ? '"bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10"-800/50' : '"bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10"-100/50'} text-gray-400`
                 }
               `}
               onClick={handleSend}

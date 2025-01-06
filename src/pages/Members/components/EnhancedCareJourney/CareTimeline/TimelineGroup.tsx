@@ -22,18 +22,18 @@ export function TimelineGroup({ group }: TimelineGroupProps) {
         <div className="flex items-center gap-3">
           {isExpanded ? (
             <ChevronDown className={`w-4 h-4 ${
-              isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
+              isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
             }`} />
           ) : (
             <ChevronRight className={`w-4 h-4 ${
-              isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
+              isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
             }`} />
           )}
           <span className={`text-sm font-medium ${
-            isDark ? 'text-white' : 'text-ron-dark-navy'
+            isDark ? 'text-white' : 'text-dark-gun-metal'
           }`}>{group.month}</span>
           <span className={`text-sm ${
-            isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
+            isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
           }`}>{group.events.length} events</span>
         </div>
       </button>

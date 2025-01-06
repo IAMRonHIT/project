@@ -56,7 +56,7 @@ export function Task({ task }: TaskProps) {
     >
       <div className="flex items-start justify-between mb-3">
         <h4 className={`font-medium ${
-          isDark ? 'text-white' : 'text-ron-dark-navy'
+          isDark ? 'text-white' : 'text-dark-gun-metal'
         }`}>{task.title}</h4>
         <AlertCircle className={`w-4 h-4 ${getPriorityColor(task.priority)}`} />
       </div>
@@ -65,10 +65,10 @@ export function Task({ task }: TaskProps) {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1">
             <Calendar className={`w-4 h-4 ${
-              isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
+              isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
             }`} />
             <span className={`text-xs ${
-              isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
+              isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
             }`}>
               {new Date(task.dueDate).toLocaleDateString('en-US', {
                 month: 'short',
@@ -78,10 +78,10 @@ export function Task({ task }: TaskProps) {
           </div>
           <div className="flex items-center gap-1">
             <User className={`w-4 h-4 ${
-              isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
+              isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
             }`} />
             <span className={`text-xs ${
-              isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
+              isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
             }`}>
               {task.assignee}
             </span>

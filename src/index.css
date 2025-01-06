@@ -8,7 +8,7 @@
   }
 
   body {
-    @apply bg-white dark:bg-ron-dark-navy text-ron-dark-navy dark:text-white antialiased;
+    @apply bg-black dark:bg-black text-black dark:text-white antialiased;
   }
 
   /* Custom scrollbar */

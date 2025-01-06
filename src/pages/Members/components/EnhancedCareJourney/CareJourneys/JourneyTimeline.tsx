@@ -46,7 +46,7 @@ export function JourneyTimeline({ journey }: JourneyTimelineProps) {
         };
       default:
         return {
-          bg: isDark ? 'bg-gray-400/10' : 'bg-gray-50',
+          bg: isDark ? '"bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10"-400/10' : '"bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10"-50',
           border: isDark ? 'border-gray-400/20' : 'border-gray-100',
           text: 'text-gray-400',
         };
@@ -75,23 +75,23 @@ export function JourneyTimeline({ journey }: JourneyTimelineProps) {
                   <div className="flex items-center gap-2 mb-2">
                     <Icon className={`w-4 h-4 ${styles.text}`} />
                     <h4 className={`font-medium ${
-                      isDark ? 'text-white' : 'text-ron-dark-navy'
+                      isDark ? 'text-white' : 'text-dark-gun-metal'
                     }`}>{event.title}</h4>
                   </div>
                   
                   <p className={`text-sm ${
-                    isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                    isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                   }`}>{event.description}</p>
 
                   <div className="flex items-center gap-4 mt-2">
                     <span className={`text-xs ${
-                      isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
+                      isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
                     }`}>{event.date}</span>
                     {event.provider && (
                       <>
-                        <span className={isDark ? 'text-white/20' : 'text-ron-dark-navy/20'}>•</span>
+                        <span className={isDark ? 'text-white/20' : 'text-dark-gun-metal/20'}>•</span>
                         <span className={`text-xs ${
-                          isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
+                          isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
                         }`}>{event.provider}</span>
                       </>
                     )}

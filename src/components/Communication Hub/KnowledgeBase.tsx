@@ -79,7 +79,7 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ ticketContent }) => {
       {/* Search Bar */}
       <div className={`
         relative rounded-lg overflow-hidden mb-4
-        ${isDark ? 'bg-gray-800/50' : 'bg-white/50'}
+        ${isDark ? 'bg-black/50' : 'bg-white/50'}
         backdrop-blur-sm
         border
         ${isDark 
@@ -115,7 +115,7 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ ticketContent }) => {
               key={article.id}
               className={`
                 p-4 rounded-lg
-                ${isDark ? 'bg-gray-800/50' : 'bg-white/50'}
+                ${isDark ? 'bg-black/50' : 'bg-white/50'}
                 backdrop-blur-sm
                 border border-ron-teal-400/20
                 transition-all duration-200
@@ -189,7 +189,7 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ ticketContent }) => {
         ) : (
           <div className={`
             p-4 rounded-lg text-center
-            ${isDark ? 'bg-gray-800/50' : 'bg-white/50'}
+            ${isDark ? 'bg-black/50' : 'bg-white/50'}
             backdrop-blur-sm
             border border-ron-teal-400/20
           `}>

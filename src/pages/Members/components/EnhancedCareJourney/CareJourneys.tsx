@@ -43,7 +43,7 @@ export function CareJourneys() {
       <div className="p-6 border-b border-ron-divider">
         <div className="flex items-center justify-between">
           <h3 className={`text-lg font-medium flex items-center gap-2 ${
-            isDark ? 'text-white' : 'text-ron-dark-navy'
+            isDark ? 'text-white' : 'text-dark-gun-metal'
           }`}>
             <Activity className="w-4 h-4 text-ron-primary dark:text-[#CCFF00]" />
             Care Journeys
@@ -55,13 +55,13 @@ export function CareJourneys() {
               className={`p-2 rounded-lg ${
                 isDark
                   ? 'hover:bg-white/10 disabled:text-white/20'
-                  : 'hover:bg-ron-primary/10 disabled:text-ron-dark-navy/20'
+                  : 'hover:bg-ron-primary/10 disabled:text-dark-gun-metal/20'
               } transition-colors disabled:cursor-not-allowed`}
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <span className={`text-sm ${
-              isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+              isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
             }`}>
               Page {currentPage + 1} of {totalPages}
             </span>
@@ -71,7 +71,7 @@ export function CareJourneys() {
               className={`p-2 rounded-lg ${
                 isDark
                   ? 'hover:bg-white/10 disabled:text-white/20'
-                  : 'hover:bg-ron-primary/10 disabled:text-ron-dark-navy/20'
+                  : 'hover:bg-ron-primary/10 disabled:text-dark-gun-metal/20'
               } transition-colors disabled:cursor-not-allowed`}
             >
               <ChevronRight className="w-4 h-4" />
@@ -101,23 +101,23 @@ export function CareJourneys() {
                 </div>
                 <div className="text-left">
                   <h4 className={`font-medium ${
-                    isDark ? 'text-white' : 'text-ron-dark-navy'
+                    isDark ? 'text-white' : 'text-dark-gun-metal'
                   }`}>{journey.title}</h4>
                   <div className="flex items-center gap-4 mt-1">
                     <div className="flex items-center gap-1">
                       <Clock className={`w-4 h-4 ${
-                        isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
+                        isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
                       }`} />
                       <span className={`text-sm ${
-                        isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
+                        isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
                       }`}>{journey.startDate}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <FileText className={`w-4 h-4 ${
-                        isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
+                        isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
                       }`} />
                       <span className={`text-sm ${
-                        isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
+                        isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
                       }`}>{journey.provider}</span>
                     </div>
                   </div>
@@ -148,11 +148,11 @@ export function CareJourneys() {
                 </div>
                 <div className="flex items-center gap-2">
                   <ArrowUpRight className={`w-4 h-4 ${
-                    isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
+                    isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
                   }`} />
                   <ChevronDown className={`w-4 h-4 transition-transform ${
                     selectedJourney === journey.id ? 'rotate-180' : ''
-                  } ${isDark ? 'text-white/40' : 'text-ron-dark-navy/40'}`} />
+                  } ${isDark ? 'text-white/40' : 'text-dark-gun-metal/40'}`} />
                 </div>
               </div>
             </button>

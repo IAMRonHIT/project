@@ -22,7 +22,7 @@ const CenterPanel: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  const tabs: TabConfig[] = [
+  const tabs: TabConfig[] = React.useMemo(() => [
     {
       id: 'chat',
       label: 'Chat',
@@ -53,17 +53,17 @@ const CenterPanel: React.FC = () => {
       icon: <FileText size={16} />,
       component: <DocumentsTab />
     }
-  ];
+  ], []); // Memoize tabs configuration
 
   return (
     <div className={`
       flex-1 flex flex-col
-      ${isDark ? 'bg-gray-900/50' : 'bg-white/80'}
+      ${isDark ? 'bg-black' : 'bg-white/80'}
       backdrop-blur-xl
     `}>
       <div className={`
         flex space-x-4 p-4
-        bg-gradient-to-r from-gray-900/50 via-transparent to-gray-900/50
+        bg-gradient-to-r from-black/50 via-transparent to-black/50
         backdrop-blur-sm border-b border-ron-teal-400/20
       `}>
         {tabs.map((tab) => (
@@ -80,8 +80,13 @@ const CenterPanel: React.FC = () => {
           </Badge>
         ))}
       </div>
-      <div className="flex-1 p-4 bg-gradient-to-b from-gray-900/50 to-transparent">
-        {tabs.find(tab => tab.id === activeTab)?.component}
+      <div className="flex-1 p-4 bg-gradient-to-b from-black/50 to-transparent">
+        {/* Keep video component mounted to prevent unnecessary reinitializations */}
+        {tabs.map(tab => (
+          <div key={tab.id} style={{ display: activeTab === tab.id ? 'block' : 'none' }}>
+            {tab.component}
+          </div>
+        ))}
       </div>
     </div>
   );

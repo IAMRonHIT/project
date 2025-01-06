@@ -1,11 +1,13 @@
 import React from 'react';
-import { Users, Activity, Heart, Star, Brain, Shield, Clock } from 'lucide-react';
 import { Chart } from '@/components/Chart';
 
 interface MetricCardProps {
   title: string;
   value: string;
-  trend?: { value: number; isPositive: boolean };
+  trend?: {
+    value: number;
+    isPositive: boolean;
+  };
   icon: React.ElementType;
   chartData?: {
     data: number[];
@@ -13,7 +15,13 @@ interface MetricCardProps {
   };
 }
 
-const MetricCard: React.FC<MetricCardProps> = ({ title, value, trend, icon: Icon, chartData }) => {
+const MetricCard: React.FC<MetricCardProps> = ({
+  title,
+  value,
+  trend,
+  icon: Icon,
+  chartData,
+}: MetricCardProps) => {
   const [isDark] = React.useState(document.documentElement.classList.contains('dark'));
 
   const chartOptions = chartData ? {
@@ -65,10 +73,10 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, trend, icon: Icon
         <div className="flex justify-between items-start mb-4">
           <div>
             <p className={`text-sm font-medium ${
-              isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+              isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
             }`}>{title}</p>
             <h3 className={`text-2xl font-semibold mt-1 ${
-              isDark ? 'text-white' : 'text-ron-dark-navy'
+              isDark ? 'text-white' : 'text-dark-gun-metal'
             }`}>{value}</h3>
             {trend && (
               <p className={`text-sm mt-1 ${trend.isPositive ? 'text-ron-success' : 'text-ron-error'}`}>
@@ -101,84 +109,15 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, trend, icon: Icon
 };
 
 export function MembersMetrics() {
-  const metrics = [
-    {
-      title: 'Total Members',
-      value: '24,892',
-      trend: { value: 12, isPositive: true },
-      icon: Users,
-      chartData: {
-        data: [30, 40, 35, 50, 49, 60, 70, 91, 125],
-        color: '#22c55e'
-      }
-    },
-    {
-      title: 'Active Care Journeys',
-      value: '1,284',
-      trend: { value: 8, isPositive: true },
-      icon: Activity,
-      chartData: {
-        data: [45, 52, 38, 45, 19, 23, 32, 45, 56],
-        color: '#06b6d4'
-      }
-    },
-    {
-      title: 'Care Management Needed',
-      value: '486',
-      trend: { value: 5, isPositive: false },
-      icon: Heart,
-      chartData: {
-        data: [35, 41, 62, 42, 13, 18, 29, 37, 36],
-        color: '#f43f5e'
-      }
-    },
-    {
-      title: 'Member Satisfaction',
-      value: '94%',
-      trend: { value: 3, isPositive: true },
-      icon: Star,
-      chartData: {
-        data: [85, 88, 90, 89, 92, 93, 91, 94, 94],
-        color: '#eab308'
-      }
-    },
-    {
-      title: 'AI Insights Generated',
-      value: '12,458',
-      trend: { value: 15, isPositive: true },
-      icon: Brain,
-      chartData: {
-        data: [78, 81, 80, 45, 34, 12, 40, 85, 91],
-        color: '#8b5cf6'
-      }
-    },
-    {
-      title: 'Risk Assessments',
-      value: '892',
-      trend: { value: 7, isPositive: true },
-      icon: Shield,
-      chartData: {
-        data: [25, 30, 45, 35, 55, 40, 60, 75, 85],
-        color: '#ec4899'
-      }
-    },
-    {
-      title: 'Avg. Response Time',
-      value: '2.4m',
-      trend: { value: 12, isPositive: true },
-      icon: Clock,
-      chartData: {
-        data: [15, 20, 25, 30, 25, 20, 15, 20, 25],
-        color: '#14b8a6'
-      }
-    }
-  ];
-
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {metrics.map((metric, index) => (
-        <MetricCard key={index} {...metric} />
-      ))}
+    <div>
+      <MetricCard
+        title="Example Title"
+        value="Example Value"
+        trend={{ value: 10, isPositive: true }}
+        icon={() => <div>Example Icon</div>}
+        chartData={{ data: [1, 2, 3], color: 'red' }}
+      />
     </div>
   );
 }

@@ -42,7 +42,7 @@ export function TimelineFilters({ activeFilters, onFilterChange }: TimelineFilte
                   : `bg-${option.color}-50 text-${option.color}-600`
                 : isDark
                   ? 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
-                  : 'bg-ron-primary/5 text-ron-dark-navy/60 hover:bg-ron-primary/10 hover:text-ron-dark-navy'
+                  : 'bg-ron-primary/5 text-dark-gun-metal/60 hover:bg-ron-primary/10 hover:text-dark-gun-metal'
             }`}
           >
             <Icon className="w-4 h-4" />

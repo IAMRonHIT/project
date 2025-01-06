@@ -72,11 +72,11 @@ export function Claims(_props: ClaimsProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className={`text-lg font-medium ${isDark ? 'text-white' : 'text-ron-dark-navy'}`}>
+        <h3 className={`text-lg font-medium ${isDark ? 'text-white' : 'text-dark-gun-metal'}`}>
           Claims History
         </h3>
         <div className="flex items-center gap-2">
-          <span className={`text-sm ${isDark ? 'text-white/60' : 'text-ron-dark-navy/60'}`}>
+          <span className={`text-sm ${isDark ? 'text-white/60' : 'text-dark-gun-metal/60'}`}>
             Total Claims: {claims.length}
           </span>
         </div>
@@ -93,7 +93,7 @@ export function Claims(_props: ClaimsProps) {
             <div className="flex items-start justify-between mb-4">
               <div>
                 <h4 className={`text-lg font-medium mb-1 ${
-                  isDark ? 'text-white' : 'text-ron-dark-navy'
+                  isDark ? 'text-white' : 'text-dark-gun-metal'
                 }`}>
                   {claim.type}
                 </h4>
@@ -106,7 +106,7 @@ export function Claims(_props: ClaimsProps) {
                     {claim.status}
                   </Badge>
                   <span className={`text-sm ${
-                    isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                    isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                   }`}>
                     Claim ID: {claim.id}
                   </span>
@@ -114,12 +114,12 @@ export function Claims(_props: ClaimsProps) {
               </div>
               <div className="text-right">
                 <div className={`text-lg font-medium ${
-                  isDark ? 'text-white' : 'text-ron-dark-navy'
+                  isDark ? 'text-white' : 'text-dark-gun-metal'
                 }`}>
                   {formatCurrency(claim.amount)}
                 </div>
                 <div className={`text-sm ${
-                  isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                  isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                 }`}>
                   Total Amount
                 </div>
@@ -129,7 +129,7 @@ export function Claims(_props: ClaimsProps) {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
               <div>
                 <label className={`text-sm ${
-                  isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                  isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                 }`}>
                   Date of Service
                 </label>
@@ -137,14 +137,14 @@ export function Claims(_props: ClaimsProps) {
                   <Calendar className={`w-4 h-4 ${
                     isDark ? 'text-[#CCFF00]' : 'text-ron-primary'
                   }`} />
-                  <span className={isDark ? 'text-white' : 'text-ron-dark-navy'}>
+                  <span className={isDark ? 'text-white' : 'text-dark-gun-metal'}>
                     {claim.date}
                   </span>
                 </div>
               </div>
               <div>
                 <label className={`text-sm ${
-                  isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                  isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                 }`}>
                   Provider
                 </label>
@@ -152,14 +152,14 @@ export function Claims(_props: ClaimsProps) {
                   <Building className={`w-4 h-4 ${
                     isDark ? 'text-[#CCFF00]' : 'text-ron-primary'
                   }`} />
-                  <span className={isDark ? 'text-white' : 'text-ron-dark-navy'}>
+                  <span className={isDark ? 'text-white' : 'text-dark-gun-metal'}>
                     {claim.provider}
                   </span>
                 </div>
               </div>
               <div>
                 <label className={`text-sm ${
-                  isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                  isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                 }`}>
                   Covered Amount
                 </label>
@@ -167,14 +167,14 @@ export function Claims(_props: ClaimsProps) {
                   <DollarSign className={`w-4 h-4 ${
                     isDark ? 'text-[#CCFF00]' : 'text-ron-primary'
                   }`} />
-                  <span className={isDark ? 'text-white' : 'text-ron-dark-navy'}>
+                  <span className={isDark ? 'text-white' : 'text-dark-gun-metal'}>
                     {formatCurrency(claim.covered)}
                   </span>
                 </div>
               </div>
               <div>
                 <label className={`text-sm ${
-                  isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                  isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                 }`}>
                   Patient Responsibility
                 </label>
@@ -182,7 +182,7 @@ export function Claims(_props: ClaimsProps) {
                   <DollarSign className={`w-4 h-4 ${
                     isDark ? 'text-[#CCFF00]' : 'text-ron-primary'
                   }`} />
-                  <span className={isDark ? 'text-white' : 'text-ron-dark-navy'}>
+                  <span className={isDark ? 'text-white' : 'text-dark-gun-metal'}>
                     {formatCurrency(claim.patientResponsibility)}
                   </span>
                 </div>
@@ -192,19 +192,19 @@ export function Claims(_props: ClaimsProps) {
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <label className={`text-sm ${
-                  isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                  isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                 }`}>
                   Description
                 </label>
                 <p className={`mt-1 text-sm ${
-                  isDark ? 'text-white/80' : 'text-ron-dark-navy/80'
+                  isDark ? 'text-white/80' : 'text-dark-gun-metal/80'
                 }`}>
                   {claim.description}
                 </p>
               </div>
               <div>
                 <label className={`text-sm ${
-                  isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                  isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                 }`}>
                   Procedure Codes
                 </label>

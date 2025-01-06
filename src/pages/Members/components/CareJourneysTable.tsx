@@ -81,35 +81,35 @@ export function CareJourneysTable() {
           <tr className="border-b border-ron-divider">
             <th
               className={`px-6 py-4 text-left text-sm font-semibold ${
-                isDark ? 'text-white/90' : 'text-ron-dark-navy/90'
+                isDark ? 'text-white/90' : 'text-dark-gun-metal/90'
               }`}
             >
               Journey
             </th>
             <th
               className={`px-6 py-4 text-left text-sm font-semibold ${
-                isDark ? 'text-white/90' : 'text-ron-dark-navy/90'
+                isDark ? 'text-white/90' : 'text-dark-gun-metal/90'
               }`}
             >
               Provider
             </th>
             <th
               className={`px-6 py-4 text-left text-sm font-semibold ${
-                isDark ? 'text-white/90' : 'text-ron-dark-navy/90'
+                isDark ? 'text-white/90' : 'text-dark-gun-metal/90'
               }`}
             >
               Priority
             </th>
             <th
               className={`px-6 py-4 text-left text-sm font-semibold ${
-                isDark ? 'text-white/90' : 'text-ron-dark-navy/90'
+                isDark ? 'text-white/90' : 'text-dark-gun-metal/90'
               }`}
             >
               Adherence
             </th>
             <th
               className={`px-6 py-4 text-left text-sm font-semibold ${
-                isDark ? 'text-white/90' : 'text-ron-dark-navy/90'
+                isDark ? 'text-white/90' : 'text-dark-gun-metal/90'
               }`}
             >
               Actions
@@ -126,21 +126,21 @@ export function CareJourneysTable() {
             >
               <td className="px-6 py-4" onClick={() => handleJourneyClick(journey.id)}>
                 <div className={`font-medium text-base ${
-                  isDark ? 'text-white/90' : 'text-ron-dark-navy/90'
+                  isDark ? 'text-white/90' : 'text-dark-gun-metal/90'
                 }`}>
                   {journey.title}
                 </div>
                 <div className="flex items-center gap-4 mt-1">
                   <span className={`text-sm ${
-                    isDark ? 'text-white/80' : 'text-ron-dark-navy/80'
+                    isDark ? 'text-white/80' : 'text-dark-gun-metal/80'
                   }`}>
                     {journey.startDate}
                   </span>
                   {journey.endDate && (
                     <React.Fragment>
-                      <span className={isDark ? 'text-white/40' : 'text-ron-dark-navy/40'}>→</span>
+                      <span className={isDark ? 'text-white/40' : 'text-dark-gun-metal/40'}>→</span>
                       <span className={`text-sm ${
-                        isDark ? 'text-white/80' : 'text-ron-dark-navy/80'
+                        isDark ? 'text-white/80' : 'text-dark-gun-metal/80'
                       }`}>
                         {journey.endDate}
                       </span>
@@ -151,7 +151,7 @@ export function CareJourneysTable() {
               <td className="px-6 py-4" onClick={() => handleJourneyClick(journey.id)}>
                 <div
                   className={`text-base ${
-                    isDark ? 'text-white/90' : 'text-ron-dark-navy/90'
+                    isDark ? 'text-white/90' : 'text-dark-gun-metal/90'
                   }`}
                 >
                   {journey.provider}

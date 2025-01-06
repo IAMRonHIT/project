@@ -53,7 +53,7 @@ export function ClinicalReviewsTable({ careJourneyId, onNewReview }: ClinicalRev
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h3 className={`text-lg font-medium ${isDark ? 'text-white' : 'text-ron-dark-navy'}`}>
+        <h3 className={`text-lg font-medium ${isDark ? 'text-white' : 'text-dark-gun-metal'}`}>
           Clinical Reviews
         </h3>
         <button
@@ -75,19 +75,19 @@ export function ClinicalReviewsTable({ careJourneyId, onNewReview }: ClinicalRev
           <thead>
             <tr className={`border-b ${isDark ? 'border-white/10' : 'border-ron-divider'}`}>
               <th className={`px-6 py-4 text-left text-sm font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               }`}>Date</th>
               <th className={`px-6 py-4 text-left text-sm font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               }`}>Type</th>
               <th className={`px-6 py-4 text-left text-sm font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               }`}>Reviewer</th>
               <th className={`px-6 py-4 text-left text-sm font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               }`}>Status</th>
               <th className={`px-6 py-4 text-left text-sm font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               }`}>Findings</th>
             </tr>
           </thead>
@@ -97,10 +97,10 @@ export function ClinicalReviewsTable({ careJourneyId, onNewReview }: ClinicalRev
                 key={review.id}
                 className={`${isDark ? 'hover:bg-white/5' : 'hover:bg-ron-primary/5'}`}
               >
-                <td className={`px-6 py-4 text-sm ${isDark ? 'text-white' : 'text-ron-dark-navy'}`}>
+                <td className={`px-6 py-4 text-sm ${isDark ? 'text-white' : 'text-dark-gun-metal'}`}>
                   {review.date}
                 </td>
-                <td className={`px-6 py-4 text-sm ${isDark ? 'text-white' : 'text-ron-dark-navy'}`}>
+                <td className={`px-6 py-4 text-sm ${isDark ? 'text-white' : 'text-dark-gun-metal'}`}>
                   <div className="flex items-center gap-2">
                     <FileText className={`w-4 h-4 ${
                       isDark ? 'text-[#CCFF00]' : 'text-ron-primary'
@@ -108,7 +108,7 @@ export function ClinicalReviewsTable({ careJourneyId, onNewReview }: ClinicalRev
                     {review.type}
                   </div>
                 </td>
-                <td className={`px-6 py-4 text-sm ${isDark ? 'text-white' : 'text-ron-dark-navy'}`}>
+                <td className={`px-6 py-4 text-sm ${isDark ? 'text-white' : 'text-dark-gun-metal'}`}>
                   {review.reviewer}
                 </td>
                 <td className={`px-6 py-4 text-sm`}>
@@ -121,7 +121,7 @@ export function ClinicalReviewsTable({ careJourneyId, onNewReview }: ClinicalRev
                   </Badge>
                 </td>
                 <td className={`px-6 py-4 text-sm ${
-                  isDark ? 'text-white/80' : 'text-ron-dark-navy/80'
+                  isDark ? 'text-white/80' : 'text-dark-gun-metal/80'
                 }`}>
                   {review.findings}
                 </td>

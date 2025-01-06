@@ -65,7 +65,7 @@ export function ProgressBar({
       {showValue && (
         <span className={`
           absolute right-0 -top-6 text-sm font-medium
-          ${isDark ? 'text-white/60' : 'text-ron-dark-navy/60'}
+          ${isDark ? 'text-white/60' : 'text-dark-gun-metal/60'}
         `}>
           {percentage.toFixed(0)}%
         </span>

@@ -20,13 +20,13 @@ export function SearchAndFilters({
     <div className="mb-6 flex items-center gap-4">
       <div className="relative flex-1">
         <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${
-          isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
+          isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
         }`} />
         <input
           className={`w-full pl-10 pr-4 py-2 rounded-lg ${
             isDark
               ? 'bg-white/5 text-white placeholder-white/40 border-white/10'
-              : 'bg-white text-ron-dark-navy placeholder-ron-dark-navy/40 border-ron-divider'
+              : 'bg-white text-dark-gun-metal placeholder-dark-gun-metal/40 border-ron-divider'
           } border focus:outline-none focus:ring-2 focus:ring-ron-primary/20`}
           placeholder="Search by patient name, ID, or CPT code"
           value={searchTerm}
@@ -45,7 +45,7 @@ export function SearchAndFilters({
 
       <button className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
         isDark
-          ? 'bg-[#CCFF00] text-ron-dark-navy hover:bg-[#CCFF00]/90'
+          ? 'bg-[#CCFF00] text-dark-gun-metal hover:bg-[#CCFF00]/90'
           : 'bg-ron-primary text-white hover:bg-ron-primary/90'
       } transition-colors`}>
         <Plus className="h-4 w-4" />

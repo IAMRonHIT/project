@@ -10,7 +10,7 @@ const TopNav: React.FC = () => {
   return (
     <div className={`
       flex items-center px-6 py-3
-      bg-gradient-to-r from-gray-900/50 via-transparent to-gray-900/50
+      bg-gradient-to-r from-black/50 via-transparent to-black/50
       backdrop-blur-sm border-b border-ron-teal-400/20
     `}>
       <div className="flex items-center gap-4">
@@ -21,7 +21,7 @@ const TopNav: React.FC = () => {
         <div className="relative w-full max-w-2xl">
           <div className={`
             relative rounded-lg overflow-hidden
-            ${isDark ? 'bg-ron-dark-navy/50' : 'bg-white/50'}
+            ${isDark ? 'bg-black/50' : 'bg-white/50'}
             backdrop-blur-sm
             border
             ${isDark 

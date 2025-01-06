@@ -4,10 +4,11 @@ import CommunicationHub from '../../components/Communication Hub/CommunicationHu
 import { useState } from 'react';
 import { Badge } from '../../components/Badge';
 import { useTheme } from '../../hooks/useTheme';
-import { MessageSquare, Activity } from 'lucide-react';
+import { MessageSquare, Activity, ClipboardCheck } from 'lucide-react';
+import { TasksView } from '../../components/TasksView/TasksView';
 
 export function Dashboard() {
-  const [activeView, setActiveView] = useState<'overview' | 'communication'>('overview');
+  const [activeView, setActiveView] = useState<'overview' | 'communication' | 'tasks'>('overview');
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
@@ -16,7 +17,7 @@ export function Dashboard() {
       {/* Navigation Tabs */}
       <div className={`
         flex space-x-4 p-4
-        bg-gradient-to-r from-gray-900/50 via-transparent to-gray-900/50
+        bg-gradient-to-r from-black/50 via-transparent to-black/50
         backdrop-blur-sm border-b border-ron-teal-400/20
       `}>
         <Badge
@@ -37,24 +38,35 @@ export function Dashboard() {
         >
           Communication Hub
         </Badge>
+        <Badge
+          variant={activeView === 'tasks' ? 'success' : 'default'}
+          glow={activeView === 'tasks'}
+          onClick={() => setActiveView('tasks')}
+          className="cursor-pointer"
+          icon={<ClipboardCheck size={16} />}
+        >
+          Tasks
+        </Badge>
       </div>
 
       {/* Main Content */}
       <div className={`
         flex-1 p-4 overflow-hidden
-        bg-gradient-to-br from-gray-900/50 via-transparent to-gray-900/50
+        bg-gradient-to-br from-black/50 via-transparent to-black/50
       `}>
         <div className={`
           h-full rounded-xl overflow-hidden
           ${isDark 
-            ? 'bg-gray-900/50 backdrop-blur-xl border border-white/5' 
+            ? 'bg-black backdrop-blur-xl border border-white/10' 
             : 'bg-white/80 backdrop-blur-xl shadow-soft'
           }
         `}>
           {activeView === 'overview' ? (
             <SystemOverview />
-          ) : (
+          ) : activeView === 'communication' ? (
             <CommunicationHub />
+          ) : (
+            <TasksView />
           )}
         </div>
       </div>

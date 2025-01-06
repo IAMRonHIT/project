@@ -18,7 +18,7 @@ export function AppShell({ children }: AppShellProps) {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-ron-dark-base">
+    <div className="min-h-screen bg-white dark:bg-black">
       <div className="flex min-h-screen">
         {/* Sidebar */}
         <Sidebar 

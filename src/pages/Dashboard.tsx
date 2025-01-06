@@ -9,8 +9,8 @@ export function Dashboard() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-ron-dark-navy dark:text-white">Dashboard</h1>
-        <p className="text-ron-dark-navy/60 dark:text-white/60 mt-1">
+        <h1 className="text-2xl font-semibold text-dark-gun-metal dark:text-white">Dashboard</h1>
+        <p className="text-dark-gun-metal/60 dark:text-white/60 mt-1">
           Welcome back, Dr. Sarah Chen
         </p>
       </div>

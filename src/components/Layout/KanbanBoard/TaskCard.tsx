@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { MoreVertical, User, Pencil, Users, UserCircle, Trash2 } from 'lucide-react';
-import type { Task } from '../../../src/types/task';
-import type { themes } from '../../../src/lib/themes';
-import { taskTypeConfig } from '../../../src/utils/taskTypeConfig';
+import type { Task } from '../../../types/task';
+import type { themes } from '../../../lib/themes';
+import { taskTypeConfig } from '../../../utils/taskTypeConfig';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,10 +13,12 @@ import {
 
 interface TaskCardProps {
   task: Task;
+  onEdit: (taskId: string, updates: Partial<Task>) => void;
+  onDelete: (taskId: string) => void;
   theme: typeof themes[keyof typeof themes];
 }
 
-export function TaskCard({ task, theme }: TaskCardProps) {
+export function TaskCard({ task, onEdit, onDelete, theme }: TaskCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -37,7 +39,7 @@ export function TaskCard({ task, theme }: TaskCardProps) {
       className={`
         relative w-full min-h-[180px]
         rounded-lg p-5 border cursor-move backdrop-blur-sm
-        ${theme === 'dark' ? 'bg-[#1E293B] hover:bg-[#1E293B]/90' : 'bg-white hover:bg-white/90'}
+        ${theme.name === 'Dark' ? 'bg-[#1E293B] hover:bg-[#1E293B]/90' : 'bg-white hover:bg-white/90'}
         ${isDragging 
           ? 'shadow-[0_0_30px_rgba(0,255,255,0.3)] border-[#00FFFF]/60 scale-[1.02] rotate-1' 
           : 'border-gray-200 dark:border-[#1E3448]/50 hover:scale-[1.02] hover:shadow-lg'
@@ -77,29 +79,37 @@ export function TaskCard({ task, theme }: TaskCardProps) {
               <MoreVertical className="w-5 h-5 text-cyan-400" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem className="gap-2">
-                <Pencil className="w-4 h-4" />
-                <span>Edit</span>
+              <DropdownMenuItem onClick={(e) => {
+                e.stopPropagation();
+                // Handle edit action
+                onEdit(task.id, {});
+              }}>
+                <Pencil className="w-4 h-4 mr-2" />
+                Edit
               </DropdownMenuItem>
-              <DropdownMenuItem className="gap-2">
-                <Users className="w-4 h-4" />
-                <span>Reassign</span>
+              <DropdownMenuItem>
+                <Users className="w-4 h-4 mr-2" />
+                Reassign
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="gap-2">
-                <UserCircle className="w-4 h-4" />
-                <span>Patient Profile</span>
+              <DropdownMenuItem>
+                <UserCircle className="w-4 h-4 mr-2" />
+                Patient Profile
               </DropdownMenuItem>
-              <DropdownMenuItem className="gap-2">
-                <Users className="w-4 h-4" />
-                <span>View Stakeholders</span>
+              <DropdownMenuItem>
+                <Users className="w-4 h-4 mr-2" />
+                View Stakeholders
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem 
-                className="gap-2 text-red-400 focus:text-red-300 focus:bg-red-900/20"
+                className="text-red-600"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(task.id);
+                }}
               >
-                <Trash2 className="w-4 h-4" />
-                <span>Delete Issue</span>
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

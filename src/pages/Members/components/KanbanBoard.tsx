@@ -66,7 +66,7 @@ export function KanbanBoard() {
         : 'bg-white border-ron-divider'
     } rounded-xl p-4 border`}>
       <div className="flex items-center justify-between mb-4">
-        <h3 className={`font-medium ${isDark ? 'text-white' : 'text-ron-dark-navy'}`}>
+        <h3 className={`font-medium ${isDark ? 'text-white' : 'text-dark-gun-metal'}`}>
           {title}
           <span className={`ml-2 px-2 py-0.5 rounded-full text-sm ${
             isDark ? 'bg-white/10' : 'bg-ron-primary/10'
@@ -78,7 +78,7 @@ export function KanbanBoard() {
           isDark ? 'hover:bg-white/10' : 'hover:bg-ron-primary/10'
         }`}>
           <Plus className={`w-5 h-5 ${
-            isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+            isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
           }`} />
         </button>
       </div>

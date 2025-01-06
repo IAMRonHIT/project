@@ -32,7 +32,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick, onThemeToggle }) => {
   const isDark = theme === 'dark';
 
   return (
-    <header className="sticky top-0 z-40 flex-shrink-0 h-16 bg-gradient-to-r from-ron-dark-navy/95 via-gray-900/95 to-ron-dark-navy/95 backdrop-blur-xl border-b border-ron-teal-400/20 shadow-glow-bottom">
+    <header className="sticky top-0 z-40 flex-shrink-0 h-16 bg-black border-b border-ron-teal-400/20 shadow-glow-bottom">
       <div className="flex h-full items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Mobile menu button */}
         <button
@@ -50,7 +50,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick, onThemeToggle }) => {
 
         {/* Center section - Search */}
         <div className="flex-1 max-w-2xl mx-auto">
-          <div className={`relative rounded-lg overflow-hidden ${isDark ? 'bg-ron-dark-navy/50' : 'bg-white/50'} backdrop-blur-sm border ${isDark ? 'border-ron-teal-400/20 focus-within:border-ron-teal-400/40' : 'border-ron-teal-200/50 focus-within:border-ron-teal-400/60'} transition-all duration-200 focus-within:shadow-glow-teal`}>
+          <div className={`relative rounded-lg overflow-hidden ${isDark ? 'bg-[#1F252A]' : 'bg-white/50'} backdrop-blur-sm border ${isDark ? 'border-ron-teal-400/20 focus-within:border-ron-teal-400/40' : 'border-ron-teal-200/50 focus-within:border-ron-teal-400/60'} transition-all duration-200 focus-within:shadow-glow-teal`}>
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
               <Search className="h-4 w-4 text-gray-400" />
             </div>

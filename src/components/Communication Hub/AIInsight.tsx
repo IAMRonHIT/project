@@ -57,7 +57,7 @@ const AIInsights: React.FC<AIInsightsProps> = ({ ticketContent }) => {
       <Section title="AI Analysis" icon={<Brain className="text-ron-teal-400" />}>
         <div className={`
           p-4 rounded-lg space-y-3
-          ${isDark ? 'bg-gray-800/50' : 'bg-white/50'}
+          ${isDark ? 'bg-black/50' : 'bg-white/50'}
           backdrop-blur-sm
           border border-ron-teal-400/20
         `}>
@@ -73,7 +73,7 @@ const AIInsights: React.FC<AIInsightsProps> = ({ ticketContent }) => {
       <Section title="Patient Sentiment" icon={<TrendingUp className="text-ron-coral-400" />}>
         <div className={`
           p-4 rounded-lg space-y-3
-          ${isDark ? 'bg-gray-800/50' : 'bg-white/50'}
+          ${isDark ? 'bg-black/50' : 'bg-white/50'}
           backdrop-blur-sm
           border border-ron-coral-400/20
         `}>
@@ -93,7 +93,7 @@ const AIInsights: React.FC<AIInsightsProps> = ({ ticketContent }) => {
               key={index}
               className={`
                 p-3 rounded-lg
-                ${isDark ? 'bg-gray-800/50' : 'bg-white/50'}
+                ${isDark ? 'bg-black/50' : 'bg-white/50'}
                 backdrop-blur-sm
                 border border-ron-teal-400/20
                 transition-all duration-200
@@ -125,7 +125,7 @@ const AIInsights: React.FC<AIInsightsProps> = ({ ticketContent }) => {
               href={article.link}
               className={`
                 flex items-center gap-2 p-2 rounded-lg
-                ${isDark ? 'hover:bg-gray-800/50' : 'hover:bg-white/50'}
+                ${isDark ? 'hover:bg-black/50' : 'hover:bg-white/50'}
                 transition-colors
                 cursor-pointer
               `}
@@ -145,14 +145,14 @@ const AIInsights: React.FC<AIInsightsProps> = ({ ticketContent }) => {
               key={index}
               className={`
                 flex items-center gap-2 p-2 rounded-lg
-                ${isDark ? 'hover:bg-gray-800/50' : 'hover:bg-white/50'}
+                ${isDark ? 'hover:bg-black/50' : 'hover:bg-white/50'}
                 transition-colors
                 cursor-pointer
               `}
             >
               <div className={`
                 w-6 h-6 rounded-full flex items-center justify-center text-xs
-                ${isDark ? 'bg-gray-800/50' : 'bg-white/50'}
+                ${isDark ? 'bg-black/50' : 'bg-white/50'}
                 border border-ron-teal-400/20
               `}>
                 {index + 1}

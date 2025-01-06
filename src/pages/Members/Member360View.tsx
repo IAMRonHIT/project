@@ -63,7 +63,7 @@ export function Member360View() {
           <button
             onClick={() => navigate('/members')}
             className={`flex items-center gap-2 mb-4 ${
-              isDark ? 'text-white/60 hover:text-white' : 'text-ron-dark-navy/60 hover:text-ron-dark-navy'
+              isDark ? 'text-white/60 hover:text-white' : 'text-dark-gun-metal/60 hover:text-dark-gun-metal'
             } transition-colors`}
           >
             <ArrowLeft className="w-4 h-4" />
@@ -73,22 +73,22 @@ export function Member360View() {
           <div className="flex items-start justify-between">
             <div>
               <h1 className={`text-3xl font-light ${
-                isDark ? 'text-white' : 'text-ron-dark-navy'
+                isDark ? 'text-white' : 'text-dark-gun-metal'
               }`}>{memberData.name}</h1>
               <div className="flex items-center gap-4 mt-2">
                 <div className="flex items-center gap-2">
                   <span className="text-emerald-400">●</span>
                   <span className={`text-sm ${
-                    isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                    isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                   }`}>{memberData.careStatus} Care Plan</span>
                 </div>
-                <span className={isDark ? 'text-white/20' : 'text-ron-dark-navy/20'}>|</span>
+                <span className={isDark ? 'text-white/20' : 'text-dark-gun-metal/20'}>|</span>
                 <span className={`text-sm ${
-                  isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                  isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                 }`}>ID: {id}</span>
-                <span className={isDark ? 'text-white/20' : 'text-ron-dark-navy/20'}>|</span>
+                <span className={isDark ? 'text-white/20' : 'text-dark-gun-metal/20'}>|</span>
                 <span className={`text-sm ${
-                  isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                  isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                 }`}>Last Updated: {memberData.lastUpdated}</span>
               </div>
             </div>
@@ -107,10 +107,10 @@ export function Member360View() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className={`text-sm font-medium ${
-                      isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                      isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                     }`}>{metric.title}</p>
                     <p className={`text-3xl font-light mt-1 ${
-                      isDark ? 'text-white' : 'text-ron-dark-navy'
+                      isDark ? 'text-white' : 'text-dark-gun-metal'
                     }`}>{metric.value}</p>
                   </div>
                   <div className={`w-12 h-12 rounded-full bg-${metric.color}-500/20 flex items-center justify-center`}>
@@ -122,7 +122,7 @@ export function Member360View() {
                     isDark ? 'border-white/10' : 'border-ron-divider'
                   }`}>
                     <p className={`text-sm ${
-                      isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
+                      isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
                     }`}>{metric.details}</p>
                   </div>
                 )}
@@ -135,7 +135,7 @@ export function Member360View() {
             isDark ? 'bg-white/5' : 'bg-white'
           } rounded-xl shadow-soft border border-ron-divider p-6`}>
             <h2 className={`text-lg font-semibold mb-4 ${
-              isDark ? 'text-white' : 'text-ron-dark-navy'
+              isDark ? 'text-white' : 'text-dark-gun-metal'
             }`}>Care Journeys</h2>
             <CareJourneysTable />
           </div>

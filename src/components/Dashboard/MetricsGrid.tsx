@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import { Activity, Users, Clock, FileCheck } from 'lucide-react';
 import { DashboardCard } from '../DashboardCard';
 import { PieChart } from './PieChart';
@@ -7,8 +6,9 @@ import { LineChart } from './LineChart';
 import { MultiSelect } from '../Multiselect';
 
 export function MetricsGrid() {
-  const [periodType, setPeriodType] = useState<string | null>(null);
-  const [selectedPeriods, setSelectedPeriods] = useState<string[]>([]);
+  const [periodType, setPeriodType] = useState<string>('Week');
+  const [selectedPeriods, setSelectedPeriods] = useState<string[]>(['Week 1', 'Week 2', 'Week 3']);
+  const [showingPeriods, setShowingPeriods] = useState(false);
   
   const pieChartData = [
     { label: 'Primary Care', value: 45, color: '#00F0FF' },
@@ -39,13 +39,8 @@ export function MetricsGrid() {
     ]
   };
 
-  // Get options based on current state
-  const getOptions = () => {
-    if (!periodType) {
-      return ['Week', 'Month', 'Quarter'];
-    }
-
-    switch (periodType) {
+  const getPeriodOptions = (type: string) => {
+    switch (type) {
       case 'Week':
         return Array.from({ length: 52 }, (_, i) => `Week ${i + 1}`);
       case 'Month':
@@ -60,16 +55,33 @@ export function MetricsGrid() {
     }
   };
 
+  // Get current options based on view state
+  const getCurrentOptions = () => {
+    if (!showingPeriods) {
+      return ['Week', 'Month', 'Quarter'];
+    }
+    return getPeriodOptions(periodType);
+  };
+
   // Handle selection changes
   const handleSelectionChange = (selected: string[]) => {
-    if (!periodType) {
-      if (selected.length === 1) {
-        setPeriodType(selected[0]);
-        setSelectedPeriods([]);
+    if (!showingPeriods) {
+      // When selecting a view type
+      const newType = selected[0];
+      setPeriodType(newType);
+      setShowingPeriods(true);
+      if (newType !== periodType) {
+        setSelectedPeriods(newType === 'Week' ? ['Week 1', 'Week 2', 'Week 3'] : []);
       }
     } else {
+      // When selecting periods
       setSelectedPeriods(selected);
     }
+  };
+
+  // Handle back to views
+  const handleBack = () => {
+    setShowingPeriods(false);
   };
 
   // Generate bar chart data based on selection
@@ -82,12 +94,6 @@ export function MetricsGrid() {
         { label: 'Pending', value: Math.floor(Math.random() * 15) + 10, color: '#008299' }
       ]
     }));
-  };
-
-  // Reset period type
-  const handleReset = () => {
-    setPeriodType(null);
-    setSelectedPeriods([]);
   };
 
   return (
@@ -120,7 +126,7 @@ export function MetricsGrid() {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Care Distribution Chart */}
-        <div className="bg-white/5 backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10">
+        <div className="bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10">
           <div className="absolute inset-0 bg-gradient-glossy from-violet-400/5 via-transparent to-transparent" />
           <div className="relative">
             <div className="flex items-center gap-3 mb-6">
@@ -132,7 +138,7 @@ export function MetricsGrid() {
         </div>
 
         {/* Care Progress Chart */}
-        <div className="bg-white/5 backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10">
+        <div className="bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10">
           <div className="absolute inset-0 bg-gradient-glossy from-violet-400/5 via-transparent to-transparent" />
           <div className="relative">
             <div className="flex items-center justify-between mb-6">
@@ -140,23 +146,15 @@ export function MetricsGrid() {
                 <Clock className="w-6 h-6 text-[#00F0FF]" />
                 <h2 className="text-xl font-bold text-white">Care Progress</h2>
               </div>
-              <div className="flex items-center gap-4">
-                {periodType && (
-                  <button
-                    onClick={handleReset}
-                    className="text-sm text-[#00F0FF] hover:text-[#00d6d0] transition-colors"
-                  >
-                    Change {periodType}
-                  </button>
-                )}
-                <div className="w-48">
-                  <MultiSelect
-                    options={getOptions()}
-                    selected={periodType ? selectedPeriods : periodType ? [periodType] : []}
-                    onChange={handleSelectionChange}
-                    placeholder={periodType ? `Select ${periodType.toLowerCase()}s` : "Select period type"}
-                  />
-                </div>
+              <div className="w-48 relative">
+                <MultiSelect
+                  options={getCurrentOptions()}
+                  selected={showingPeriods ? selectedPeriods : [periodType]}
+                  onChange={handleSelectionChange}
+                  placeholder={showingPeriods ? `Select ${periodType.toLowerCase()}s` : `${periodType} View`}
+                  showBack={showingPeriods}
+                  onBack={handleBack}
+                />
               </div>
             </div>
             <StackedBarChart data={getBarChartData()} height={350} />
@@ -164,7 +162,7 @@ export function MetricsGrid() {
         </div>
 
         {/* Authorization Metrics Chart */}
-        <div className="bg-white/5 backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10">
+        <div className="bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10">
           <div className="absolute inset-0 bg-gradient-glossy from-violet-400/5 via-transparent to-transparent" />
           <div className="relative">
             <div className="flex items-center gap-3 mb-6">

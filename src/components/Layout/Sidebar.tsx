@@ -1,4 +1,3 @@
-import React from 'react';
 import { 
   Users, Building2, Shield, ClipboardCheck, Heart, Activity,
   FileText, MessageSquareMore, BarChart3, Settings, GraduationCap,
@@ -54,8 +53,7 @@ export function Sidebar({ open, collapsed, onClose, onToggleCollapse }: SidebarP
         className={`
           fixed inset-y-0 left-0 z-50
           ${collapsed ? 'w-20' : 'w-72'}
-          bg-gradient-to-b from-gray-900/95 via-gray-900/90 to-gray-900/95
-          backdrop-blur-xl shadow-lg
+          bg-black shadow-lg
           transform transition-all duration-300 ease-in-out 
           ${open ? 'translate-x-0' : '-translate-x-full'} 
           lg:translate-x-0
@@ -65,7 +63,7 @@ export function Sidebar({ open, collapsed, onClose, onToggleCollapse }: SidebarP
         <div className="h-full flex flex-col">
           {/* Logo Section with Collapse Button */}
           <div className="p-4 flex items-center justify-between 
-            bg-gradient-to-r from-gray-800/50 to-gray-900/50
+            bg-black
             border-b border-ron-teal-400/20
           ">
             <Logo className={`
@@ -162,7 +160,7 @@ export function Sidebar({ open, collapsed, onClose, onToggleCollapse }: SidebarP
           {/* Footer Section */}
           <div className={`
             p-4 border-t border-ron-teal-400/20
-            bg-gradient-to-r from-gray-800/50 to-gray-900/50
+            bg-black
             transition-opacity duration-200
             ${collapsed ? 'opacity-0' : 'opacity-100'}
           `}>

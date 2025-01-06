@@ -35,7 +35,7 @@ const LeftSideBar: React.FC<LeftSideBarProps> = ({ notifications, tasks }) => {
   return (
     <div className={`
       w-80 p-4 overflow-y-auto
-      ${isDark ? 'bg-gray-900/50' : 'bg-white/80'}
+      ${isDark ? 'bg-black' : 'bg-white/80'}
       backdrop-blur-xl
       border-r border-ron-teal-400/20
     `}>
@@ -43,7 +43,7 @@ const LeftSideBar: React.FC<LeftSideBarProps> = ({ notifications, tasks }) => {
       <Section title="Request Details">
         <div className={`
           p-4 rounded-lg space-y-4
-          ${isDark ? 'bg-gray-800/50' : 'bg-white/50'}
+          ${isDark ? 'bg-black/50' : 'bg-white/50'}
           backdrop-blur-sm
           border border-ron-teal-400/20
         `}>
@@ -102,7 +102,7 @@ const LeftSideBar: React.FC<LeftSideBarProps> = ({ notifications, tasks }) => {
               key={index}
               className={`
                 p-3 rounded-lg
-                ${isDark ? 'bg-gray-800/50' : 'bg-white/50'}
+                ${isDark ? 'bg-black/50' : 'bg-white/50'}
                 backdrop-blur-sm
                 border border-ron-teal-400/20
                 transition-all duration-200
@@ -124,7 +124,7 @@ const LeftSideBar: React.FC<LeftSideBarProps> = ({ notifications, tasks }) => {
               key={index}
               className={`
                 p-3 rounded-lg cursor-pointer
-                ${isDark ? 'bg-gray-800/50' : 'bg-white/50'}
+                ${isDark ? 'bg-black/50' : 'bg-white/50'}
                 backdrop-blur-sm
                 border border-ron-teal-400/20
                 transition-all duration-200
@@ -163,7 +163,7 @@ const LeftSideBar: React.FC<LeftSideBarProps> = ({ notifications, tasks }) => {
               key={index}
               className={`
                 flex items-center gap-2 p-2 rounded-lg cursor-pointer
-                ${isDark ? 'hover:bg-gray-800/50' : 'hover:bg-white/50'}
+                ${isDark ? 'hover:bg-black/50' : 'hover:bg-white/50'}
                 transition-colors
               `}
             >

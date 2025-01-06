@@ -23,10 +23,10 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, trend, icon: Icon
       <div className="flex justify-between items-start mb-4">
         <div>
           <p className={`text-sm font-medium ${
-            isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+            isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
           }`}>{title}</p>
           <h3 className={`text-2xl font-semibold mt-1 ${
-            isDark ? 'text-white' : 'text-ron-dark-navy'
+            isDark ? 'text-white' : 'text-dark-gun-metal'
           }`}>{value}</h3>
           {trend && (
             <p className={`text-sm mt-1 ${trend.isPositive ? 'text-ron-success' : 'text-ron-error'}`}>

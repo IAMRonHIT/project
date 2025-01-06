@@ -83,7 +83,7 @@ export function MembersTable({ onMemberClick }: MembersTableProps) {
       <div className="p-4 border-b border-ron-divider">
         <div className="relative">
           <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
-            isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
+            isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
           }`} />
           <input
             type="text"
@@ -93,7 +93,7 @@ export function MembersTable({ onMemberClick }: MembersTableProps) {
             className={`w-full pl-10 pr-4 py-2 rounded-lg ${
               isDark
                 ? 'bg-white/5 text-white placeholder-white/40 border-white/10'
-                : 'bg-ron-primary/5 text-ron-dark-navy placeholder-ron-dark-navy/40 border-ron-divider'
+                : 'bg-ron-primary/5 text-dark-gun-metal placeholder-dark-gun-metal/40 border-ron-divider'
             } border focus:outline-none focus:ring-2 focus:ring-ron-primary/20`}
           />
         </div>
@@ -104,22 +104,22 @@ export function MembersTable({ onMemberClick }: MembersTableProps) {
           <thead>
             <tr className="border-b border-ron-divider">
               <th className={`px-6 py-4 text-left text-sm font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               }`}>Member Name</th>
               <th className={`px-6 py-4 text-left text-sm font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               }`}>Health Plan</th>
               <th className={`px-6 py-4 text-left text-sm font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               }`}>Risk Score</th>
               <th className={`px-6 py-4 text-left text-sm font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               }`}>Care Status</th>
               <th className={`px-6 py-4 text-left text-sm font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               }`}>Last Contact</th>
               <th className={`px-6 py-4 text-left text-sm font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               }`}>Next Appointment</th>
             </tr>
           </thead>
@@ -143,13 +143,13 @@ export function MembersTable({ onMemberClick }: MembersTableProps) {
                         {row.name.split(' ').map(n => n[0]).join('')}
                       </span>
                     </div>
-                    <span className={isDark ? 'text-white' : 'text-ron-dark-navy'}>
+                    <span className={isDark ? 'text-white' : 'text-dark-gun-metal'}>
                       {row.name}
                     </span>
                   </div>
                 </td>
                 <td className={`px-6 py-4 ${
-                  isDark ? 'text-white' : 'text-ron-dark-navy'
+                  isDark ? 'text-white' : 'text-dark-gun-metal'
                 }`}>{row.healthPlan}</td>
                 <td className="px-6 py-4">
                   <RiskScoreTooltip score={row.riskScore}>
@@ -160,10 +160,10 @@ export function MembersTable({ onMemberClick }: MembersTableProps) {
                   <CareStatusBadge status={row.careStatus} />
                 </td>
                 <td className={`px-6 py-4 ${
-                  isDark ? 'text-white' : 'text-ron-dark-navy'
+                  isDark ? 'text-white' : 'text-dark-gun-metal'
                 }`}>{row.lastContact}</td>
                 <td className={`px-6 py-4 ${
-                  isDark ? 'text-white' : 'text-ron-dark-navy'
+                  isDark ? 'text-white' : 'text-dark-gun-metal'
                 }`}>{row.nextAppointment}</td>
               </tr>
             ))}

@@ -1,5 +1,3 @@
-export type Theme = 'light' | 'dark';
-
 export const themes = {
   light: {
     name: 'Light',
@@ -38,3 +36,5 @@ export const themes = {
     glowEffect: 'shadow-[0_0_30px_rgba(0,255,255,0.3)]'
   },
 } as const;
+
+export type Theme = typeof themes[keyof typeof themes];

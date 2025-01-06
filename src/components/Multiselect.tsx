@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Check, ChevronDown } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { CheckCircle, ChevronRight, ChevronLeft } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
 
 interface MultiSelectProps {
@@ -7,9 +7,11 @@ interface MultiSelectProps {
   selected: string[];
   onChange: (selected: string[]) => void;
   placeholder?: string;
+  showBack?: boolean;
+  onBack?: () => void;
 }
 
-export function MultiSelect({ options, selected, onChange, placeholder }: MultiSelectProps) {
+export function MultiSelect({ options, selected, onChange, placeholder, showBack, onBack }: MultiSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
@@ -27,43 +29,65 @@ export function MultiSelect({ options, selected, onChange, placeholder }: MultiS
   }, []);
 
   const toggleOption = (option: string) => {
-    const newSelected = selected.includes(option)
-      ? selected.filter(item => item !== option)
-      : [...selected, option];
-    onChange(newSelected);
+    if (!showBack) {
+      // When selecting a view type, just update selection and keep dropdown open
+      onChange([option]);
+    } else {
+      // When selecting periods, update selection and close dropdown
+      const newSelected = selected.includes(option)
+        ? selected.filter(item => item !== option)
+        : [...selected, option];
+      onChange(newSelected);
+    }
   };
 
   return (
     <div className="relative" ref={ref}>
       <button
         className={`
-          w-full px-4 py-2 text-left rounded-lg flex items-center justify-between
+          w-full px-3 py-2 text-left rounded-lg flex items-center justify-between
           transition-colors border border-white/10
-          ${isDark ? 'bg-gray-900/80' : 'bg-white/80'}
+          ${isDark ? 'bg-black/90' : 'bg-white/90'} backdrop-blur-sm
           hover:border-ron-teal-400/40
         `}
         onClick={() => setIsOpen(!isOpen)}
       >
         <span className={isDark ? 'text-white/60' : 'text-gray-600'}>
-          {selected.length > 0 
-            ? `${selected.length} selected`
-            : placeholder || 'Select options'}
+          {placeholder}
         </span>
-        <ChevronDown className={`w-4 h-4 ${isDark ? 'text-white/60' : 'text-gray-600'}`} />
+        <ChevronRight className={`w-4 h-4 ${isDark ? 'text-white/60' : 'text-gray-600'} transform transition-transform ${isOpen ? 'rotate-90' : ''}`} />
       </button>
 
       {isOpen && (
         <div className={`
-          absolute z-50 w-full mt-2 rounded-lg shadow-lg max-h-60 overflow-auto
+          absolute z-[9999] w-full mt-2 rounded-lg shadow-lg overflow-hidden left-0
           border border-white/10
-          ${isDark ? 'bg-gray-900/80 backdrop-blur-xl' : 'bg-white/80 backdrop-blur-xl'}
+          ${isDark ? 'bg-black/90' : 'bg-white/90'} backdrop-blur-xl
         `}>
+          {showBack && (
+            <button
+              className={`
+                w-full px-3 py-2 text-left flex items-center gap-2 group
+                transition-colors hover:bg-ron-teal-400/10 border-b border-white/10
+                font-medium
+              `}
+              onClick={() => {
+                onBack?.();
+              }}
+            >
+              <ChevronLeft className={`w-4 h-4 ${isDark ? 'text-white/60' : 'text-gray-600'}`} />
+              <span className={isDark ? 'text-white/60' : 'text-gray-600'}>
+                Back to Views
+              </span>
+            </button>
+          )}
           {options.map(option => (
             <button
               key={option}
               className={`
-                w-full px-4 py-2 text-left flex items-center justify-between group
-                transition-colors hover:bg-ron-teal-400/10
+                w-full px-3 py-2 text-left flex items-center justify-between group
+                transition-colors hover:bg-ron-teal-400/10 first:rounded-t-lg last:rounded-b-lg
+                font-medium
               `}
               onClick={() => toggleOption(option)}
             >
@@ -71,7 +95,7 @@ export function MultiSelect({ options, selected, onChange, placeholder }: MultiS
                 {option}
               </span>
               {selected.includes(option) && (
-                <Check className="w-4 h-4 text-ron-teal-400" />
+                <CheckCircle className="w-4 h-4 text-ron-teal-400" />
               )}
             </button>
           ))}

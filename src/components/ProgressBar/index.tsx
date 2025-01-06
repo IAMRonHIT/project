@@ -23,12 +23,12 @@ export function ProgressBar({
       {showLabel && (
         <div className="flex justify-between items-center mb-1">
           <span className={`text-xs font-medium ${
-            isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+            isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
           }`}>
             Progress
           </span>
           <span className={`text-xs font-medium ${
-            isDark ? 'text-white' : 'text-ron-dark-navy'
+            isDark ? 'text-white' : 'text-dark-gun-metal'
           }`}>
             {normalizedProgress}%
           </span>

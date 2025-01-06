@@ -87,7 +87,7 @@ export function NavItem({
         <div className={`
           absolute left-full ml-2 px-2 py-1 
           min-w-max rounded-lg
-          bg-gray-900/90 backdrop-blur-sm
+          "bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10"-900/90 backdrop-blur-sm
           border border-ron-teal-400/20
           text-white text-sm
           opacity-0 group-hover:opacity-100

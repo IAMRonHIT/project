@@ -16,9 +16,9 @@ export default {
           
           // Dark mode colors
           'dark': {
-            'base': '#001C2B',
-            'navy': '#001C2B',
-            'surface': '#003B59',
+            'base': '#000000', // Jet Black
+            'navy': '#000000', // Jet Black
+            'surface': '#2A3439', // Dark Gun Metal
           },
           
           // Light mode colors

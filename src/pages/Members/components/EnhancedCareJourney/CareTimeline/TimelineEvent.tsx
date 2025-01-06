@@ -60,10 +60,10 @@ export function TimelineEvent({ event, isLast }: TimelineEventProps) {
         <div className="flex items-start justify-between mb-2">
           <div>
             <h4 className={`font-medium ${
-              isDark ? 'text-white' : 'text-ron-dark-navy'
+              isDark ? 'text-white' : 'text-dark-gun-metal'
             }`}>{event.title}</h4>
             <p className={`text-sm ${
-              isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+              isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
             }`}>{event.description}</p>
           </div>
           <button className={`p-1 rounded-lg ${
@@ -76,13 +76,13 @@ export function TimelineEvent({ event, isLast }: TimelineEventProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <span className={`text-xs ${
-              isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
+              isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
             }`}>{event.time}</span>
             {event.provider && (
               <>
-                <span className={isDark ? 'text-white/20' : 'text-ron-dark-navy/20'}>•</span>
+                <span className={isDark ? 'text-white/20' : 'text-dark-gun-metal/20'}>•</span>
                 <span className={`text-xs ${
-                  isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
+                  isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
                 }`}>{event.provider}</span>
               </>
             )}

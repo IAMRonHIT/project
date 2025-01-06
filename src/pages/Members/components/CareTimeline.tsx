@@ -110,7 +110,7 @@ const getEventStyles = (type: TimelineEvent['type'], isDark: boolean) => {
       };
     default:
       return {
-        bg: isDark ? 'bg-gray-500/20' : 'bg-gray-50',
+        bg: isDark ? '"bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10"-500/20' : '"bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10"-50',
         border: isDark ? 'border-gray-500/20' : 'border-gray-100',
         text: 'text-gray-500',
       };
@@ -127,7 +127,7 @@ export function CareTimeline() {
         : 'bg-white border-ron-divider'
     } rounded-xl p-6 shadow-soft h-[600px] overflow-y-auto`}>
       <h3 className={`text-lg font-medium mb-8 ${
-        isDark ? 'text-white' : 'text-ron-dark-navy'
+        isDark ? 'text-white' : 'text-dark-gun-metal'
       }`}>Care Timeline</h3>
 
       <div className="relative">
@@ -143,7 +143,7 @@ export function CareTimeline() {
             return (
               <div key={event.id} className="relative flex gap-6">
                 <div className={`w-16 flex-shrink-0 ${
-                  isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
+                  isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
                 } text-sm`}>
                   {new Date(event.date).toLocaleDateString('en-US', {
                     month: 'short',
@@ -161,14 +161,14 @@ export function CareTimeline() {
                   <div className="flex items-start justify-between">
                     <div>
                       <h4 className={`font-medium ${
-                        isDark ? 'text-white' : 'text-ron-dark-navy'
+                        isDark ? 'text-white' : 'text-dark-gun-metal'
                       }`}>{event.title}</h4>
                       <p className={`text-sm mt-1 ${
-                        isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                        isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                       }`}>{event.description}</p>
                     </div>
                     <span className={`text-sm ${
-                      isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
+                      isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
                     }`}>{event.time}</span>
                   </div>
                 </div>

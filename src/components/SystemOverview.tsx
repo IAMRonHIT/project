@@ -1,4 +1,3 @@
-import React from 'react';
 import { Tooltip } from './Tooltip';
 import { Shield, Activity, Brain } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme.tsx';
@@ -86,7 +85,7 @@ function ProgressBar({ value, variant }: ProgressBarProps) {
   return (
     <div className={`
       w-32 rounded-full h-2.5 overflow-hidden
-      ${isDark ? 'bg-white/5' : 'bg-ron-primary/5'}
+      ${isDark ? 'bg-black/50' : 'bg-ron-primary/5'}
       backdrop-blur-sm
     `}>
       <div 
@@ -150,7 +149,7 @@ function MetricRow({ icon: Icon, name, value, tooltip, variant }: MetricRowProps
             <Icon className="w-4 h-4" />
           </div>
           <span className={`
-            ${isDark ? 'text-white/80' : 'text-ron-dark-navy/80'}
+            ${isDark ? 'text-white/80' : 'text-dark-gun-metal/80'}
             group-hover:text-white dark:group-hover:text-white 
             transition-colors
           `}>
@@ -223,7 +222,7 @@ export function SystemOverview() {
 
         {/* System Metrics */}
         <div className={`
-          ${isDark ? 'bg-white/5' : 'bg-white'} 
+          ${isDark ? 'bg-black' : 'bg-white'} 
           backdrop-blur-xl rounded-xl p-8 
           shadow-soft hover:shadow-glow 
           transition-all duration-300 
@@ -232,13 +231,13 @@ export function SystemOverview() {
         `}>
           <div className="absolute inset-0 bg-gradient-glossy from-violet-400/5 via-transparent to-transparent" />
           
-          <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-ron-dark-navy'} mb-8 relative`}>
+          <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-dark-gun-metal'} mb-8 relative`}>
             System Metrics
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative">
             <div>
-              <h3 className={`font-medium mb-6 pb-2 border-b ${isDark ? 'text-white border-white/10' : 'text-ron-dark-navy border-ron-divider'}`}>
+              <h3 className={`font-medium mb-6 pb-2 border-b ${isDark ? 'text-white border-white/10' : 'text-dark-gun-metal border-ron-divider'}`}>
                 Active Workflows
               </h3>
               <div className="space-y-6">
@@ -249,7 +248,7 @@ export function SystemOverview() {
             </div>
             
             <div>
-              <h3 className={`font-medium mb-6 pb-2 border-b ${isDark ? 'text-white border-white/10' : 'text-ron-dark-navy border-ron-divider'}`}>
+              <h3 className={`font-medium mb-6 pb-2 border-b ${isDark ? 'text-white border-white/10' : 'text-dark-gun-metal border-ron-divider'}`}>
                 System Health
               </h3>
               <div className="space-y-6">

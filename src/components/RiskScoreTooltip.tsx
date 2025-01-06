@@ -22,7 +22,7 @@ export function RiskScoreTooltip({ score, children }: RiskScoreTooltipProps) {
           px-3 py-2 rounded-lg text-xs
           ${isDark 
             ? 'bg-white/10 backdrop-blur-lg border border-white/10 text-white'
-            : 'bg-white border border-ron-divider text-ron-dark-navy shadow-lg'
+            : 'bg-white border border-ron-divider text-dark-gun-metal shadow-lg'
           }
         `}>
           <div className="font-medium">Risk Score</div>

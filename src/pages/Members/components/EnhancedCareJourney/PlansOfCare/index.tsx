@@ -66,7 +66,7 @@ export function PlansOfCare({ careJourneyId }: PlansOfCareProps) {
 
   return (
     <div className="space-y-6">
-      <h3 className={`text-lg font-medium ${isDark ? 'text-white' : 'text-ron-dark-navy'}`}>
+      <h3 className={`text-lg font-medium ${isDark ? 'text-white' : 'text-dark-gun-metal'}`}>
         Active Care Plans
       </h3>
 
@@ -81,7 +81,7 @@ export function PlansOfCare({ careJourneyId }: PlansOfCareProps) {
             <div className="flex items-start justify-between mb-4">
               <div>
                 <h4 className={`text-lg font-medium mb-1 ${
-                  isDark ? 'text-white' : 'text-ron-dark-navy'
+                  isDark ? 'text-white' : 'text-dark-gun-metal'
                 }`}>
                   {plan.title}
                 </h4>
@@ -90,7 +90,7 @@ export function PlansOfCare({ careJourneyId }: PlansOfCareProps) {
                     {plan.status}
                   </Badge>
                   <span className={`text-sm ${
-                    isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                    isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                   }`}>
                     Updated {plan.lastUpdated}
                   </span>
@@ -108,7 +108,7 @@ export function PlansOfCare({ careJourneyId }: PlansOfCareProps) {
             <div className="grid grid-cols-2 gap-6 mb-6">
               <div>
                 <label className={`text-sm ${
-                  isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                  isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                 }`}>
                   Duration
                 </label>
@@ -116,14 +116,14 @@ export function PlansOfCare({ careJourneyId }: PlansOfCareProps) {
                   <Calendar className={`w-4 h-4 ${
                     isDark ? 'text-[#CCFF00]' : 'text-ron-primary'
                   }`} />
-                  <span className={isDark ? 'text-white' : 'text-ron-dark-navy'}>
+                  <span className={isDark ? 'text-white' : 'text-dark-gun-metal'}>
                     {plan.startDate} - {plan.endDate}
                   </span>
                 </div>
               </div>
               <div>
                 <label className={`text-sm ${
-                  isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                  isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                 }`}>
                   Provider
                 </label>
@@ -131,7 +131,7 @@ export function PlansOfCare({ careJourneyId }: PlansOfCareProps) {
                   <FileText className={`w-4 h-4 ${
                     isDark ? 'text-[#CCFF00]' : 'text-ron-primary'
                   }`} />
-                  <span className={isDark ? 'text-white' : 'text-ron-dark-navy'}>
+                  <span className={isDark ? 'text-white' : 'text-dark-gun-metal'}>
                     {plan.provider}
                   </span>
                 </div>
@@ -140,7 +140,7 @@ export function PlansOfCare({ careJourneyId }: PlansOfCareProps) {
 
             <div>
               <label className={`text-sm ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               }`}>
                 Goals & Objectives
               </label>
@@ -151,7 +151,7 @@ export function PlansOfCare({ careJourneyId }: PlansOfCareProps) {
                       isDark ? 'bg-[#CCFF00]' : 'bg-ron-primary'
                     }`} />
                     <span className={`text-sm ${
-                      isDark ? 'text-white/80' : 'text-ron-dark-navy/80'
+                      isDark ? 'text-white/80' : 'text-dark-gun-metal/80'
                     }`}>
                       {goal}
                     </span>

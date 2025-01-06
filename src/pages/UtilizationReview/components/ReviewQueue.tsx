@@ -105,7 +105,7 @@ export function ReviewQueue({ searchTerm, selectedFilters }: ReviewQueueProps) {
     } rounded-xl shadow-soft border border-ron-divider`}>
       <div className="p-6 border-b border-ron-divider">
         <h2 className={`text-lg font-medium ${
-          isDark ? 'text-white' : 'text-ron-dark-navy'
+          isDark ? 'text-white' : 'text-dark-gun-metal'
         }`}>Review Queue</h2>
       </div>
 
@@ -114,22 +114,22 @@ export function ReviewQueue({ searchTerm, selectedFilters }: ReviewQueueProps) {
           <thead>
             <tr className="border-b border-ron-divider">
               <th className={`px-6 py-4 text-left text-sm font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               }`}>Case Details</th>
               <th className={`px-6 py-4 text-left text-sm font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               }`}>Service</th>
               <th className={`px-6 py-4 text-left text-sm font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               }`}>Provider</th>
               <th className={`px-6 py-4 text-left text-sm font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               }`}>Status</th>
               <th className={`px-6 py-4 text-left text-sm font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               }`}>Deadline</th>
               <th className={`px-6 py-4 text-left text-sm font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               }`}>Action</th>
             </tr>
           </thead>
@@ -140,26 +140,26 @@ export function ReviewQueue({ searchTerm, selectedFilters }: ReviewQueueProps) {
               } transition-colors`}>
                 <td className="px-6 py-4">
                   <div className={`font-medium ${
-                    isDark ? 'text-white' : 'text-ron-dark-navy'
+                    isDark ? 'text-white' : 'text-dark-gun-metal'
                   }`}>{case_.patientName}</div>
                   <div className={`text-sm ${
-                    isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                    isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                   }`}>ID: {case_.patientId}</div>
                 </td>
                 <td className="px-6 py-4">
-                  <div className={isDark ? 'text-white' : 'text-ron-dark-navy'}>
+                  <div className={isDark ? 'text-white' : 'text-dark-gun-metal'}>
                     {case_.serviceRequested}
                   </div>
                   <div className={`text-sm ${
-                    isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                    isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                   }`}>CPT: {case_.cptCode}</div>
                 </td>
                 <td className="px-6 py-4">
-                  <div className={isDark ? 'text-white' : 'text-ron-dark-navy'}>
+                  <div className={isDark ? 'text-white' : 'text-dark-gun-metal'}>
                     {case_.provider}
                   </div>
                   <div className={`text-sm ${
-                    isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                    isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                   }`}>{case_.specialty}</div>
                 </td>
                 <td className="px-6 py-4">
@@ -170,10 +170,10 @@ export function ReviewQueue({ searchTerm, selectedFilters }: ReviewQueueProps) {
                 </td>
                 <td className="px-6 py-4">
                   <div className={`font-medium ${
-                    isDark ? 'text-white' : 'text-ron-dark-navy'
+                    isDark ? 'text-white' : 'text-dark-gun-metal'
                   }`}>{case_.deadline}</div>
                   <div className={`text-sm ${
-                    isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                    isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                   }`}>Submitted: {case_.submittedDate}</div>
                 </td>
                 <td className="px-6 py-4">

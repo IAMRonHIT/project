@@ -12,7 +12,7 @@ export function ProviderMap({ searchTerm, selectedFilters }: ProviderMapProps) {
     <div className={`${
       isDark ? 'bg-white/5' : 'bg-white'
     } rounded-xl shadow-soft border border-ron-divider h-[600px] flex items-center justify-center`}>
-      <p className={isDark ? 'text-white/60' : 'text-ron-dark-navy/60'}>
+      <p className={isDark ? 'text-white/60' : 'text-dark-gun-metal/60'}>
         Provider Map View - Coming Soon
       </p>
     </div>

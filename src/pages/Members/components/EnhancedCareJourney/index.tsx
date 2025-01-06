@@ -140,7 +140,7 @@ export function EnhancedCareJourney() {
 
   if (!careJourney || !journeyId) {
     return (
-      <div className={`p-6 text-center ${isDark ? 'text-white' : 'text-ron-dark-navy'}`}>
+      <div className={`p-6 text-center ${isDark ? 'text-white' : 'text-dark-gun-metal'}`}>
         Care Journey not found. Please select a valid care journey.
       </div>
     );
@@ -173,7 +173,7 @@ export function EnhancedCareJourney() {
       <button
         onClick={handleBack}
         className={`flex items-center gap-2 mb-4 ${
-          isDark ? 'text-white/60 hover:text-white' : 'text-ron-dark-navy/60 hover:text-ron-dark-navy'
+          isDark ? 'text-white/60 hover:text-white' : 'text-dark-gun-metal/60 hover:text-dark-gun-metal'
         } transition-colors`}
       >
         <ArrowLeft className="w-4 h-4" />
@@ -183,7 +183,7 @@ export function EnhancedCareJourney() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className={`text-2xl font-semibold mb-1 ${isDark ? 'text-white' : 'text-ron-dark-navy'}`}>
+          <h2 className={`text-2xl font-semibold mb-1 ${isDark ? 'text-white' : 'text-dark-gun-metal'}`}>
             {careJourney.title}
           </h2>
           <div className="flex items-center gap-2">
@@ -192,7 +192,7 @@ export function EnhancedCareJourney() {
             }`}>
               {careJourney.status}
             </span>
-            <span className={`text-sm ${isDark ? 'text-white/60' : 'text-ron-dark-navy/60'}`}>
+            <span className={`text-sm ${isDark ? 'text-white/60' : 'text-dark-gun-metal/60'}`}>
               Started {careJourney.startDate}
             </span>
           </div>
@@ -217,7 +217,7 @@ export function EnhancedCareJourney() {
                 className={`flex items-center gap-2 pb-4 border-b-2 transition-colors ${
                   activeTab === tab.id
                     ? `${isDark ? 'border-[#CCFF00] text-[#CCFF00]' : 'border-ron-primary text-ron-primary'}`
-                    : `border-transparent ${isDark ? 'text-white hover:text-white/80' : 'text-ron-dark-navy/60 hover:text-ron-dark-navy'}`
+                    : `border-transparent ${isDark ? 'text-white hover:text-white/80' : 'text-dark-gun-metal/60 hover:text-dark-gun-metal'}`
                 }`}
               >
                 <Icon className="w-4 h-4" />

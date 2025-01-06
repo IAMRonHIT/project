@@ -144,7 +144,7 @@ export function CareJourneys() {
                 </div>
                 <div>
                   <h3 className={`text-lg font-medium mb-1 ${
-                    isDark ? 'text-white' : 'text-ron-dark-navy'
+                    isDark ? 'text-white' : 'text-dark-gun-metal'
                   }`}>{journey.title}</h3>
                   <div className="flex items-center gap-3 mb-4">
                     <span className={`px-2 py-0.5 text-sm rounded-full ${
@@ -153,7 +153,7 @@ export function CareJourneys() {
                       {journey.status.charAt(0).toUpperCase() + journey.status.slice(1)}
                     </span>
                     <span className={`text-sm ${
-                      isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                      isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                     }`}>
                       Started {journey.startDate}
                     </span>
@@ -164,34 +164,34 @@ export function CareJourneys() {
                   <div className="grid grid-cols-4 gap-4">
                     <div>
                       <p className={`text-sm mb-1 ${
-                        isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                        isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                       }`}>Reviews</p>
                       <p className={`text-2xl font-semibold ${
-                        isDark ? 'text-white' : 'text-ron-dark-navy'
+                        isDark ? 'text-white' : 'text-dark-gun-metal'
                       }`}>{journey.metrics.reviews}</p>
                     </div>
                     <div>
                       <p className={`text-sm mb-1 ${
-                        isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                        isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                       }`}>Active Plans</p>
                       <p className={`text-2xl font-semibold ${
-                        isDark ? 'text-white' : 'text-ron-dark-navy'
+                        isDark ? 'text-white' : 'text-dark-gun-metal'
                       }`}>{journey.metrics.activePlans}</p>
                     </div>
                     <div>
                       <p className={`text-sm mb-1 ${
-                        isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                        isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                       }`}>Claims</p>
                       <p className={`text-2xl font-semibold ${
-                        isDark ? 'text-white' : 'text-ron-dark-navy'
+                        isDark ? 'text-white' : 'text-dark-gun-metal'
                       }`}>{journey.metrics.claims}</p>
                     </div>
                     <div>
                       <p className={`text-sm mb-1 ${
-                        isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                        isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                       }`}>Communications</p>
                       <p className={`text-2xl font-semibold ${
-                        isDark ? 'text-white' : 'text-ron-dark-navy'
+                        isDark ? 'text-white' : 'text-dark-gun-metal'
                       }`}>{journey.metrics.communications}</p>
                     </div>
                   </div>
@@ -201,7 +201,7 @@ export function CareJourneys() {
                 isDark ? 'hover:bg-white/10' : 'hover:bg-ron-primary/10'
               }`}>
                 <ArrowUpRight className={`w-5 h-5 ${
-                  isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                  isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                 }`} />
               </button>
             </div>

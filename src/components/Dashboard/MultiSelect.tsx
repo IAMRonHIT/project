@@ -37,7 +37,7 @@ export function MultiSelect({ options, selected, onChange, placeholder }: MultiS
       w-full px-3 py-1.5 text-sm rounded-md transition-all duration-200
       border flex justify-between items-center
       ${isDark 
-        ? 'bg-gray-800 border-gray-600 text-gray-300 hover:border-ron-teal-400/50' 
+        ? '"bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10"-800 border-gray-600 text-gray-300 hover:border-ron-teal-400/50' 
         : 'bg-white border-gray-300 text-gray-700 hover:border-ron-teal-400'}
       focus:outline-none focus:ring-1 focus:ring-ron-teal-400
     `;
@@ -46,7 +46,7 @@ export function MultiSelect({ options, selected, onChange, placeholder }: MultiS
   const getDropdownStyles = () => {
     return `
       absolute z-50 w-full mt-1 rounded-md shadow-lg
-      ${isDark ? 'bg-gray-800 border border-gray-600' : 'bg-white border border-gray-200'}
+      ${isDark ? '"bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10"-800 border border-gray-600' : 'bg-white border border-gray-200'}
     `;
   };
 
@@ -64,8 +64,8 @@ export function MultiSelect({ options, selected, onChange, placeholder }: MultiS
     return `
       flex items-center px-3 py-2 text-sm cursor-pointer
       ${isDark 
-        ? `${isSelected ? 'bg-ron-teal-400/20' : 'hover:bg-gray-700'} text-gray-300` 
-        : `${isSelected ? 'bg-ron-teal-50' : 'hover:bg-gray-50'} text-gray-700`}
+        ? `${isSelected ? 'bg-ron-teal-400/20' : 'hover:"bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10"-700'} text-gray-300` 
+        : `${isSelected ? 'bg-ron-teal-50' : 'hover:"bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10"-50'} text-gray-700`}
     `;
   };
 

@@ -66,7 +66,7 @@ export function ClinicalReviewsTable({ onNewReview }: ClinicalReviewsTableProps)
     } rounded-xl shadow-soft`}>
       <div className="p-6 flex items-center justify-between border-b border-ron-divider">
         <h3 className={`text-lg font-medium flex items-center gap-2 ${
-          isDark ? 'text-white' : 'text-ron-dark-navy'
+          isDark ? 'text-white' : 'text-dark-gun-metal'
         }`}>
           <Activity className="w-4 h-4 text-ron-primary dark:text-[#CCFF00]" />
           Clinical Reviews
@@ -75,7 +75,7 @@ export function ClinicalReviewsTable({ onNewReview }: ClinicalReviewsTableProps)
           onClick={onNewReview}
           className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
             isDark
-              ? 'bg-[#CCFF00] text-ron-dark-navy hover:bg-[#CCFF00]/90'
+              ? 'bg-[#CCFF00] text-dark-gun-metal hover:bg-[#CCFF00]/90'
               : 'bg-ron-primary text-white hover:bg-ron-primary/90'
           } transition-colors`}
         >
@@ -89,25 +89,25 @@ export function ClinicalReviewsTable({ onNewReview }: ClinicalReviewsTableProps)
           <thead>
             <tr className={`border-b ${isDark ? 'border-white/10' : 'border-ron-divider'}`}>
               <th className={`px-6 py-3 text-left text-xs font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               } uppercase tracking-wider`}>ID</th>
               <th className={`px-6 py-3 text-left text-xs font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               } uppercase tracking-wider`}>Type</th>
               <th className={`px-6 py-3 text-left text-xs font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               } uppercase tracking-wider`}>Date</th>
               <th className={`px-6 py-3 text-left text-xs font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               } uppercase tracking-wider`}>Service</th>
               <th className={`px-6 py-3 text-left text-xs font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               } uppercase tracking-wider`}>Status</th>
               <th className={`px-6 py-3 text-left text-xs font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               } uppercase tracking-wider`}>Reviewer</th>
               <th className={`px-6 py-3 text-left text-xs font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               } uppercase tracking-wider`}>Actions</th>
             </tr>
           </thead>
@@ -117,16 +117,16 @@ export function ClinicalReviewsTable({ onNewReview }: ClinicalReviewsTableProps)
                 isDark ? 'hover:bg-white/5' : 'hover:bg-ron-primary/5'
               } transition-colors`}>
                 <td className={`px-6 py-4 text-sm font-medium ${
-                  isDark ? 'text-white' : 'text-ron-dark-navy'
+                  isDark ? 'text-white' : 'text-dark-gun-metal'
                 }`}>{review.id}</td>
                 <td className={`px-6 py-4 text-sm ${
-                  isDark ? 'text-white' : 'text-ron-dark-navy'
+                  isDark ? 'text-white' : 'text-dark-gun-metal'
                 }`}>{review.type}</td>
                 <td className={`px-6 py-4 text-sm ${
-                  isDark ? 'text-white' : 'text-ron-dark-navy'
+                  isDark ? 'text-white' : 'text-dark-gun-metal'
                 }`}>{review.requestDate}</td>
                 <td className={`px-6 py-4 text-sm ${
-                  isDark ? 'text-white' : 'text-ron-dark-navy'
+                  isDark ? 'text-white' : 'text-dark-gun-metal'
                 }`}>{review.service}</td>
                 <td className="px-6 py-4">
                   <StatusBadge
@@ -148,7 +148,7 @@ export function ClinicalReviewsTable({ onNewReview }: ClinicalReviewsTableProps)
                       </span>
                     </div>
                     <span className={`text-sm ${
-                      isDark ? 'text-white' : 'text-ron-dark-navy'
+                      isDark ? 'text-white' : 'text-dark-gun-metal'
                     }`}>{review.reviewer}</span>
                   </div>
                 </td>

@@ -90,7 +90,7 @@ const DocumentsTab: React.FC = () => {
   return (
     <div className={`
       h-full flex flex-col
-      ${isDark ? 'bg-gray-900/50' : 'bg-white/80'}
+      ${isDark ? '"bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10"-900/50' : 'bg-white/80'}
       backdrop-blur-xl
     `}>
       <div className="p-6 border-b border-ron-teal-400/20">
@@ -110,7 +110,7 @@ const DocumentsTab: React.FC = () => {
               key={index}
               className={`
                 flex items-center justify-between p-4 rounded-lg
-                ${isDark ? 'bg-gray-800/50' : 'bg-white/50'}
+                ${isDark ? '"bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10"-800/50' : 'bg-white/50'}
                 backdrop-blur-sm
                 border border-ron-teal-400/20
                 transition-all duration-200
@@ -121,7 +121,7 @@ const DocumentsTab: React.FC = () => {
               <div className="flex items-center gap-4">
                 <div className={`
                   w-10 h-10 rounded-lg
-                  ${isDark ? 'bg-gray-900/50' : 'bg-white/80'}
+                  ${isDark ? '"bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10"-900/50' : 'bg-white/80'}
                   border border-ron-teal-400/20
                   flex items-center justify-center
                 `}>
@@ -151,7 +151,7 @@ const DocumentsTab: React.FC = () => {
               <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button className={`
                   p-2 rounded-lg
-                  ${isDark ? 'bg-gray-900/50' : 'bg-white/80'}
+                  ${isDark ? '"bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10"-900/50' : 'bg-white/80'}
                   hover:bg-ron-teal-400/20
                   text-gray-400 hover:text-white
                   transition-colors
@@ -160,7 +160,7 @@ const DocumentsTab: React.FC = () => {
                 </button>
                 <button className={`
                   p-2 rounded-lg
-                  ${isDark ? 'bg-gray-900/50' : 'bg-white/80'}
+                  ${isDark ? '"bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10"-900/50' : 'bg-white/80'}
                   hover:bg-ron-teal-400/20
                   text-gray-400 hover:text-white
                   transition-colors
@@ -169,7 +169,7 @@ const DocumentsTab: React.FC = () => {
                 </button>
                 <button className={`
                   p-2 rounded-lg
-                  ${isDark ? 'bg-gray-900/50' : 'bg-white/80'}
+                  ${isDark ? '"bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10"-900/50' : 'bg-white/80'}
                   hover:bg-ron-coral-400/20
                   text-gray-400 hover:text-ron-coral-400
                   transition-colors

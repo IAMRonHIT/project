@@ -138,7 +138,7 @@ export function Overview({ careJourneyId }: OverviewProps) {
   };
 
   return (
-    <div className={`p-6 space-y-6 ${isDark ? 'text-white' : 'text-ron-dark-navy'}`}>
+    <div className={`p-6 space-y-6 ${isDark ? 'text-white' : 'text-dark-gun-metal'}`}>
       {/* Patient Profile */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <CardWrapper>
@@ -146,26 +146,26 @@ export function Overview({ careJourneyId }: OverviewProps) {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className={`text-sm ${isDark ? 'text-white/60' : 'text-ron-dark-navy/60'}`}>
+                <label className={`text-sm ${isDark ? 'text-white/60' : 'text-dark-gun-metal/60'}`}>
                   Name
                 </label>
                 <p className="font-medium">{patientData.profile.name}</p>
               </div>
               <div>
-                <label className={`text-sm ${isDark ? 'text-white/60' : 'text-ron-dark-navy/60'}`}>
+                <label className={`text-sm ${isDark ? 'text-white/60' : 'text-dark-gun-metal/60'}`}>
                   Age/Gender
                 </label>
                 <p className="font-medium">{patientData.profile.age} / {patientData.profile.gender}</p>
               </div>
             </div>
             <div>
-              <label className={`text-sm ${isDark ? 'text-white/60' : 'text-ron-dark-navy/60'}`}>
+              <label className={`text-sm ${isDark ? 'text-white/60' : 'text-dark-gun-metal/60'}`}>
                 Primary Diagnosis
               </label>
               <p className="font-medium">{patientData.profile.primaryDiagnosis}</p>
             </div>
             <div>
-              <label className={`text-sm ${isDark ? 'text-white/60' : 'text-ron-dark-navy/60'}`}>
+              <label className={`text-sm ${isDark ? 'text-white/60' : 'text-dark-gun-metal/60'}`}>
                 Trigger Event
               </label>
               <p className="font-medium">{patientData.profile.triggerEvent}</p>
@@ -196,7 +196,7 @@ export function Overview({ careJourneyId }: OverviewProps) {
             {patientData.clinicalSnapshot.conditions.map((condition, index) => (
               <div key={index}>
                 <p className="font-medium">{condition.name}</p>
-                <p className={`text-sm ${isDark ? 'text-white/60' : 'text-ron-dark-navy/60'}`}>
+                <p className={`text-sm ${isDark ? 'text-white/60' : 'text-dark-gun-metal/60'}`}>
                   {condition.code}
                 </p>
               </div>
@@ -211,7 +211,7 @@ export function Overview({ careJourneyId }: OverviewProps) {
               <div key={index} className="flex justify-between items-start">
                 <div>
                   <p className="font-medium">{med.name}</p>
-                  <p className={`text-sm ${isDark ? 'text-white/60' : 'text-ron-dark-navy/60'}`}>
+                  <p className={`text-sm ${isDark ? 'text-white/60' : 'text-dark-gun-metal/60'}`}>
                     {med.status}
                   </p>
                 </div>
@@ -233,10 +233,10 @@ export function Overview({ careJourneyId }: OverviewProps) {
             {patientData.clinicalSnapshot.recentProcedures.map((procedure, index) => (
               <div key={index}>
                 <p className="font-medium">{procedure.name}</p>
-                <p className={`text-sm ${isDark ? 'text-white/60' : 'text-ron-dark-navy/60'}`}>
+                <p className={`text-sm ${isDark ? 'text-white/60' : 'text-dark-gun-metal/60'}`}>
                   {procedure.code}
                 </p>
-                <p className={`text-sm ${isDark ? 'text-white/60' : 'text-ron-dark-navy/60'}`}>
+                <p className={`text-sm ${isDark ? 'text-white/60' : 'text-dark-gun-metal/60'}`}>
                   {procedure.date}
                 </p>
               </div>
@@ -260,7 +260,7 @@ export function Overview({ careJourneyId }: OverviewProps) {
                   >
                     {alert.type}
                   </Badge>
-                  <p className={`text-sm ${isDark ? 'text-white/80' : 'text-ron-dark-navy/80'}`}>
+                  <p className={`text-sm ${isDark ? 'text-white/80' : 'text-dark-gun-metal/80'}`}>
                     {alert.message}
                   </p>
                 </div>
@@ -290,7 +290,7 @@ export function Overview({ careJourneyId }: OverviewProps) {
               {patientData.careTeam.primary.map((member, index) => (
                 <div key={index}>
                   <p className="font-medium">{member.name}</p>
-                  <p className={`text-sm ${isDark ? 'text-white/60' : 'text-ron-dark-navy/60'}`}>
+                  <p className={`text-sm ${isDark ? 'text-white/60' : 'text-dark-gun-metal/60'}`}>
                     {member.role} • {member.contact}
                   </p>
                 </div>
@@ -304,7 +304,7 @@ export function Overview({ careJourneyId }: OverviewProps) {
               {patientData.careTeam.appointments.map((apt, index) => (
                 <div key={index}>
                   <p className="font-medium">{apt.type}</p>
-                  <p className={`text-sm ${isDark ? 'text-white/60' : 'text-ron-dark-navy/60'}`}>
+                  <p className={`text-sm ${isDark ? 'text-white/60' : 'text-dark-gun-metal/60'}`}>
                     {apt.date} with {apt.provider}
                   </p>
                 </div>
@@ -339,27 +339,27 @@ export function Overview({ careJourneyId }: OverviewProps) {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className={`text-sm ${isDark ? 'text-white/60' : 'text-ron-dark-navy/60'}`}>
+                <label className={`text-sm ${isDark ? 'text-white/60' : 'text-dark-gun-metal/60'}`}>
                   Adherence Rate
                 </label>
                 <p className="font-medium">{patientData.engagement.adherence}</p>
               </div>
               <div>
-                <label className={`text-sm ${isDark ? 'text-white/60' : 'text-ron-dark-navy/60'}`}>
+                <label className={`text-sm ${isDark ? 'text-white/60' : 'text-dark-gun-metal/60'}`}>
                   Preferred Contact
                 </label>
                 <p className="font-medium">{patientData.engagement.preferredContact}</p>
               </div>
             </div>
             <div>
-              <label className={`text-sm ${isDark ? 'text-white/60' : 'text-ron-dark-navy/60'}`}>
+              <label className={`text-sm ${isDark ? 'text-white/60' : 'text-dark-gun-metal/60'}`}>
                 Recent Interactions
               </label>
               <div className="space-y-2 mt-2">
                 {patientData.engagement.recentInteractions.map((interaction, index) => (
                   <div key={index} className="text-sm">
                     <span className="font-medium">{interaction.date}</span> - {interaction.type}:
-                    <span className={isDark ? 'text-white/80' : 'text-ron-dark-navy/80'}>
+                    <span className={isDark ? 'text-white/80' : 'text-dark-gun-metal/80'}>
                       {' '}{interaction.summary}
                     </span>
                   </div>
@@ -375,16 +375,16 @@ export function Overview({ careJourneyId }: OverviewProps) {
         <SectionTitle icon={AlertCircle} title="Journey Trigger & Updates" />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div>
-            <label className={`text-sm ${isDark ? 'text-white/60' : 'text-ron-dark-navy/60'}`}>
+            <label className={`text-sm ${isDark ? 'text-white/60' : 'text-dark-gun-metal/60'}`}>
               Trigger Source
             </label>
             <p className="font-medium mb-2">{patientData.trigger.source}</p>
-            <p className={`text-sm ${isDark ? 'text-white/80' : 'text-ron-dark-navy/80'}`}>
+            <p className={`text-sm ${isDark ? 'text-white/80' : 'text-dark-gun-metal/80'}`}>
               {patientData.trigger.details}
             </p>
           </div>
           <div>
-            <label className={`text-sm ${isDark ? 'text-white/60' : 'text-ron-dark-navy/60'}`}>
+            <label className={`text-sm ${isDark ? 'text-white/60' : 'text-dark-gun-metal/60'}`}>
               AI-Generated Updates
             </label>
             <ul className="space-y-2 mt-2">

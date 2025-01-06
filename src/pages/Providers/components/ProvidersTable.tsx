@@ -110,22 +110,22 @@ export function ProvidersTable({ searchTerm, selectedFilters }: ProvidersTablePr
           <thead>
             <tr className="border-b border-ron-divider">
               <th className={`px-6 py-4 text-left text-sm font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               }`}>Provider</th>
               <th className={`px-6 py-4 text-left text-sm font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               }`}>Rating</th>
               <th className={`px-6 py-4 text-left text-sm font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               }`}>Status</th>
               <th className={`px-6 py-4 text-left text-sm font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               }`}>Network Tier</th>
               <th className={`px-6 py-4 text-left text-sm font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               }`}>Contact</th>
               <th className={`px-6 py-4 text-left text-sm font-medium ${
-                isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
               }`}>Actions</th>
             </tr>
           </thead>
@@ -136,17 +136,17 @@ export function ProvidersTable({ searchTerm, selectedFilters }: ProvidersTablePr
               } transition-colors`}>
                 <td className="px-6 py-4">
                   <div className={`font-medium ${
-                    isDark ? 'text-white' : 'text-ron-dark-navy'
+                    isDark ? 'text-white' : 'text-dark-gun-metal'
                   }`}>{provider.name}</div>
                   <div className={`text-sm ${
-                    isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                    isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                   }`}>{provider.specialty}</div>
                   <div className="flex items-center gap-2 mt-1">
                     <MapPin className={`w-3.5 h-3.5 ${
-                      isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
+                      isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
                     }`} />
                     <span className={`text-xs ${
-                      isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
+                      isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
                     }`}>{provider.location}</span>
                   </div>
                 </td>
@@ -163,26 +163,26 @@ export function ProvidersTable({ searchTerm, selectedFilters }: ProvidersTablePr
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Phone className={`w-4 h-4 ${
-                        isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
+                        isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
                       }`} />
                       <span className={`text-sm ${
-                        isDark ? 'text-white' : 'text-ron-dark-navy'
+                        isDark ? 'text-white' : 'text-dark-gun-metal'
                       }`}>{provider.phone}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Mail className={`w-4 h-4 ${
-                        isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
+                        isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
                       }`} />
                       <span className={`text-sm ${
-                        isDark ? 'text-white' : 'text-ron-dark-navy'
+                        isDark ? 'text-white' : 'text-dark-gun-metal'
                       }`}>{provider.email}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Calendar className={`w-4 h-4 ${
-                        isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
+                        isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
                       }`} />
                       <span className={`text-sm ${
-                        isDark ? 'text-white/40' : 'text-ron-dark-navy/40'
+                        isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
                       }`}>Next Available: {provider.nextAvailable}</span>
                     </div>
                   </div>

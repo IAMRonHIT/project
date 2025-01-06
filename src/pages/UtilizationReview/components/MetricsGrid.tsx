@@ -60,10 +60,10 @@ export function MetricsGrid() {
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-sm font-medium ${
-                  isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                  isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                 }`}>{stat.label}</p>
                 <p className={`mt-2 text-2xl font-bold ${
-                  isDark ? 'text-white' : 'text-ron-dark-navy'
+                  isDark ? 'text-white' : 'text-dark-gun-metal'
                 }`}>{stat.value}</p>
               </div>
               <div className={`p-2 rounded-lg ${

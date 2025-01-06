@@ -40,7 +40,7 @@ export function CaseOverview() {
         : 'bg-white border-ron-divider'
     } rounded-xl p-6 shadow-soft`}>
       <h3 className={`text-lg font-medium mb-6 ${
-        isDark ? 'text-white' : 'text-ron-dark-navy'
+        isDark ? 'text-white' : 'text-dark-gun-metal'
       }`}>Clinical Overview</h3>
       
       <div className="space-y-6">
@@ -51,10 +51,10 @@ export function CaseOverview() {
             <div className="flex items-start justify-between">
               <div>
                 <p className={`text-sm ${
-                  isDark ? 'text-white/60' : 'text-ron-dark-navy/60'
+                  isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
                 }`}>{item.category}</p>
                 <p className={`text-lg font-medium mt-1 ${
-                  isDark ? 'text-white' : 'text-ron-dark-navy'
+                  isDark ? 'text-white' : 'text-dark-gun-metal'
                 }`}>{item.value}</p>
                 <p className={`text-sm mt-1 ${
                   item.trend === 'positive'
@@ -63,7 +63,7 @@ export function CaseOverview() {
                     ? 'text-red-400'
                     : isDark
                     ? 'text-white/40'
-                    : 'text-ron-dark-navy/40'
+                    : 'text-dark-gun-metal/40'
                 }`}>{item.details}</p>
               </div>
               <div className={`p-2 rounded-lg ${

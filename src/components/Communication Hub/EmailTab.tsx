@@ -63,7 +63,7 @@ const EmailTab: React.FC = () => {
               key={index}
               className={`
                 p-4 rounded-lg cursor-pointer
-                ${isDark ? 'bg-gray-800/50' : 'bg-white/50'}
+                ${isDark ? '"bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10"-800/50' : 'bg-white/50'}
                 backdrop-blur-sm
                 border border-ron-teal-400/20
                 transition-all duration-200
@@ -134,7 +134,7 @@ const EmailTab: React.FC = () => {
           <div className="flex gap-2">
             <div className={`
               flex-1 relative rounded-lg overflow-hidden
-              ${isDark ? 'bg-gray-800/50' : 'bg-white/50'}
+              ${isDark ? '"bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10"-800/50' : 'bg-white/50'}
               backdrop-blur-sm
               border
               ${isDark 

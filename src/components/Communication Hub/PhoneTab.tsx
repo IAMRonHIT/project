@@ -53,7 +53,7 @@ const PhoneTab: React.FC = () => {
       {isCalling ? (
         <div className={`
           flex-1 flex flex-col items-center justify-center
-          ${isDark ? 'bg-gray-900/50' : 'bg-white/80'}
+          ${isDark ? '"bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10"-900/50' : 'bg-white/80'}
           backdrop-blur-xl
         `}>
           <div className={`
@@ -95,7 +95,7 @@ const PhoneTab: React.FC = () => {
                   key={index}
                   className={`
                     p-4 rounded-lg
-                    ${isDark ? 'bg-gray-800/50' : 'bg-white/50'}
+                    ${isDark ? '"bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10"-800/50' : 'bg-white/50'}
                     backdrop-blur-sm
                     border border-ron-teal-400/20
                     transition-all duration-200

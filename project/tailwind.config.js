@@ -24,5 +24,14 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/forms'),
+    function({ addUtilities }) {
+      addUtilities({
+        '.bg-gradient-radial': {
+          'background-image': 'radial-gradient(var(--tw-gradient-stops))',
+        },
+      });
+    },
+  ],
 };

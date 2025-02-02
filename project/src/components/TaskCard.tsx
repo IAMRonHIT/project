@@ -37,7 +37,7 @@ export function TaskCard({ task, theme }: TaskCardProps) {
       className={`
         relative w-full min-h-[180px]
         rounded-lg p-5 border cursor-move
-        ${theme === 'dark' ? 'bg-[#334155] hover:bg-[#334155]/90' : 'bg-white hover:bg-white/90'}
+        ${theme.name === 'dark' ? 'bg-gradient-radial from-white/10 to-teal-900/50 hover:from-white/15 hover:to-teal-900/60' : 'bg-white hover:bg-white/90'}
         ${isDragging 
           ? 'shadow-[0_0_30px_rgba(0,255,255,0.3)] border-[#00FFFF]/60 scale-[1.02] rotate-1' 
           : 'border-gray-200 dark:border-[#1E3448] hover:scale-[1.02] hover:shadow-lg'
@@ -122,7 +122,7 @@ export function TaskCard({ task, theme }: TaskCardProps) {
 
         {isExpanded && task.actions && (
           <div className="space-y-4 mt-6" onClick={(e) => e.stopPropagation()}>
-            {task.actions.map((action) => (
+            {task.actions.map((action: { type: string }) => (
               <button
                 key={action.type}
                 className={`w-full px-4 py-2 ${theme.buttonBg} ${theme.buttonText} rounded-lg text-sm font-medium transition-all duration-300 ${theme.buttonHover}`}

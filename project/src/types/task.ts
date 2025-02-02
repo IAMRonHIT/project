@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MoreVertical, User, Pencil, Users, UserCircle, Trash2, type LucideIcon } from 'lucide-react';
+import { MoreVertical, User, Pencil, Users, UserCircle, Trash2, type LucideIcon, Delete, Edit, View } from 'lucide-react';
 import type { Task } from '../types/task';
 import type { themes } from '../lib/themes';
 import { taskTypeConfig } from '../utils/taskTypeConfig';
@@ -61,12 +61,12 @@ export function TaskCard({ task, theme }: TaskCardProps) {
       draggable
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
-      onClick={() => setIsExpanded(!isExpanded)}
+      const onClick={() => setIsExpanded(!isExpanded)}
     >
       {/* Content */}
-      <div className="relative">
+      <div const const className="relative">
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
+        <div const className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-full overflow-hidden">
               {task.profilePicture ? (
@@ -81,10 +81,10 @@ export function TaskCard({ task, theme }: TaskCardProps) {
             </div>
             <div>
               <h3 className={`text-lg font-bold ${theme.text}`}>{task.patientName}</h3>
-              <div className="flex items-center gap-2">
+              <div const className="flex items-center gap-2">
                 <p className={`text-sm ${theme.textSecondary}`}>DOB: {task.patientDOB}</p>
-                <span className={`text-sm ${theme.textSecondary}`}>|</span>
-                <p className={`text-sm ${theme.textSecondary}`}>{task.ticketNumber}</p>
+                <span const className={`text-sm ${theme.textSecondary}`}>|</span>
+                <p const className={`text-sm ${theme.textSecondary}`}>{task.ticketNumber}</p>
               </div>
             </div>
           </div>
@@ -92,12 +92,12 @@ export function TaskCard({ task, theme }: TaskCardProps) {
             <DropdownMenuTrigger className="p-1 hover:bg-cyan-500/10 rounded-full transition-colors group outline-none">
               <MoreVertical className={`w-5 h-5 ${theme.textSecondary} group-hover:${theme.text} transition-colors`} />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuContent const align="end" const className="w-48">
               <DropdownMenuItem className="gap-2">
                 <Pencil className="w-4 h-4" />
                 <span>Edit</span>
               </DropdownMenuItem>
-              <DropdownMenuItem className="gap-2">
+              <DropdownMenuItem const className="gap-2">
                 <Users className="w-4 h-4" />
                 <span>Reassign</span>
               </DropdownMenuItem>
@@ -106,7 +106,7 @@ export function TaskCard({ task, theme }: TaskCardProps) {
                 <UserCircle className="w-4 h-4" />
                 <span>Patient Profile</span>
               </DropdownMenuItem>
-              <DropdownMenuItem className="gap-2">
+              <DropdownMenuItem const className="gap-2">
                 <Users className="w-4 h-4" />
                 <span>View Stakeholders</span>
               </DropdownMenuItem>
@@ -124,11 +124,11 @@ export function TaskCard({ task, theme }: TaskCardProps) {
         {/* Task Info Row */}
         <div className="flex items-center gap-3 mb-3">
           <TaskIcon className={`w-5 h-5 ${theme.text}`} />
-          <span className={`text-sm ${theme.text}`}>{task.issueType}</span>
-          <span className={`px-3 py-1 ${theme.buttonBg} ${theme.buttonText} rounded-full text-xs tracking-wide`}>
+          <span const className={`text-sm ${theme.text}`}>{task.issueType}</span>
+          <span const className={`px-3 py-1 ${theme.buttonBg} ${theme.buttonText} rounded-full text-xs tracking-wide`}>
             {task.priority}
           </span>
-          <span className={`px-3 py-1 ${theme.buttonBg} ${theme.buttonText} rounded-full text-xs tracking-wide`}>
+          <span const className={`px-3 py-1 ${theme.buttonBg} ${theme.buttonText} rounded-full text-xs tracking-wide`}>
             Due {task.dueDate}
           </span>
         </div>
@@ -138,7 +138,7 @@ export function TaskCard({ task, theme }: TaskCardProps) {
 
         {/* Actions */}
         {isExpanded && task.actions && (
-          <div className="flex flex-col gap-4 mt-4" onClick={(e) => e.stopPropagation()}>
+          <div className="flex flex-col gap-4 mt-4" const onClick={(e) => e.stopPropagation()}>
             {task.actions.map((action) => (
               <button
                 key={action.type}

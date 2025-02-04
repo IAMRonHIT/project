@@ -1,4 +1,21 @@
-export const themes = {
+export type Theme = 'light' | 'dark';
+
+export interface ThemeConfig {
+  name: string;
+  background: string;
+  cardBg: string;
+  columnBg: string;
+  columnText: string;
+  text: string;
+  border: string;
+  accent: string;
+  shadow: string;
+  hover: string;
+  muted: string;
+  glowEffect: string;
+}
+
+export const themes: Record<Theme, ThemeConfig> = {
   light: {
     name: 'Light',
     background: 'bg-white',
@@ -6,16 +23,12 @@ export const themes = {
     columnBg: 'bg-white/50',
     columnText: 'text-gray-900',
     text: 'text-gray-900',
-    textSecondary: 'text-gray-600',
-    border: 'border-gray-400',
-    borderHover: 'hover:border-gray-300',
-    ring: 'ring-[#00425A]/20',
-    buttonBg: 'bg-[#00425A]',
-    buttonBorder: 'border-[#00425A]',
-    buttonText: 'text-white',
-    buttonHover: 'hover:bg-[#00425A]/90',
+    border: 'border-gray-200',
+    accent: 'text-cyan-600',
     shadow: 'shadow-lg',
-    glowEffect: 'shadow-[0_0_30px_rgba(6,182,212,0.4)]',
+    hover: 'hover:bg-gray-50',
+    muted: 'text-gray-500',
+    glowEffect: 'shadow-[0_0_30px_rgba(6,182,212,0.4)]'
   },
   dark: {
     name: 'Dark',
@@ -23,18 +36,12 @@ export const themes = {
     cardBg: 'bg-[#1E293B]/95',
     columnBg: 'bg-[#1E293B]/95',
     columnText: 'text-[#B0C7D1] text-xl tracking-wide',
-    text: 'text-[#B0C7D1]',
-    textSecondary: 'text-[#8FA3AD]',
-    border: 'border-[#1E3448]/50',
-    borderHover: 'hover:border-[#00FFFF]',
-    ring: 'ring-white/20',
-    buttonBg: 'bg-[#1E293B]',
-    buttonBorder: 'border-[#1E293B]',
-    buttonText: 'text-white',
-    buttonHover: 'hover:bg-[#1E293B]/90',
-    shadow: 'shadow-[0_4px_12px_rgba(0,255,255,0.05)]',
+    text: 'text-gray-100',
+    border: 'border-gray-800',
+    accent: 'text-cyan-400',
+    shadow: 'shadow-2xl',
+    hover: 'hover:bg-gray-800',
+    muted: 'text-gray-400',
     glowEffect: 'shadow-[0_0_30px_rgba(0,255,255,0.3)]'
-  },
-} as const;
-
-export type Theme = typeof themes[keyof typeof themes];
+  }
+};

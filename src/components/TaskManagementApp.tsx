@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { KanbanBoard } from './components/KanbanBoard';
-import { ListView } from './components/ListView';
-import { CalendarView } from './components/CalendarView';
-import { ViewSwitcher, type ViewType } from './components/ViewSwitcher';
-import { NewTaskDialog } from './components/NewTaskDialog';
-import { ThemeSwitcher } from './components/ThemeSwitcher';
+import { KanbanBoard } from './KanbanBoard';
+import { ListView } from './ListView';
+import { CalendarView } from './CalendarView';
+import { ViewSwitcher, type ViewType } from './ViewSwitcher';
+import { NewTaskDialog } from './NewTaskDialog';
+import { ThemeSwitcher } from './ThemeSwitcher';
 import { useTheme } from './contexts/ThemeContext';
 import { themes } from './lib/themes';
 import type { Task } from './types/task';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 
 const INITIAL_TASKS: Task[] = [
   {
@@ -338,7 +338,7 @@ const INITIAL_TASKS: Task[] = [
 function App() {
   const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS.map(task => ({
     ...task,
-    dueDate: format(new Date(), 'yyyy-MM-dd'), // Convert string dates to proper format
+    dueDate: format(new Date(), 'yyyy-MM-dd')
   })));
   const [currentView, setCurrentView] = useState<ViewType>('kanban');
   const { theme } = useTheme();
@@ -356,7 +356,7 @@ function App() {
     <div className={`min-h-screen ${currentTheme.background} p-8 transition-colors duration-300`}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <header className={`mb-8 ${theme === 'light' ? 'bg-[#00425A]' : 'bg-cyan-600'} rounded-xl p-6 shadow-lg transition-colors duration-300`}>
+        <header className={`mb-8 ${currentTheme.name === 'Light' ? 'bg-[#00425A]' : 'bg-cyan-600'} rounded-xl p-6 shadow-lg transition-colors duration-300`}>
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold text-white mb-2 tracking-wide">

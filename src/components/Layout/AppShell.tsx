@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import TopBar from './TopBar';
 import { MobileNav } from './MobileNav';
-import { useTheme } from '../../hooks/useTheme.tsx';
+import { useTheme } from '../../hooks/useTheme';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -11,14 +11,14 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const { toggleTheme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
 
   const handleToggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black">
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-black' : 'bg-white'}`}>
       <div className="flex min-h-screen">
         {/* Sidebar */}
         <Sidebar 
@@ -41,7 +41,7 @@ export function AppShell({ children }: AppShellProps) {
           />
 
           {/* Main content */}
-          <div className="flex-1">
+          <div className="flex-1 h-[calc(100vh-64px)]">
             {children}
           </div>
         </div>

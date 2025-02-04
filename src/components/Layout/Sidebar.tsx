@@ -21,7 +21,7 @@ const mainNavItems = [
   { icon: Shield, label: 'Health Plans', to: '/health-plans' },
   { icon: ClipboardCheck, label: 'Utilization Review', to: '/utilization' },
   { icon: Heart, label: 'Care Management', to: '/care' },
-  { icon: Activity, label: 'Population Health', to: '/population' },
+  { icon: Activity, label: 'Population Health', to: '/population-health' },
   { icon: FileText, label: 'Claims', to: '/claims' },
   { icon: MessageSquareMore, label: 'Communication Hub', to: '/communication' },
   { icon: BarChart3, label: 'Reports', to: '/reports' },

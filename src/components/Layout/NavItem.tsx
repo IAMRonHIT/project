@@ -37,29 +37,28 @@ export function NavItem({
         ${isActive 
           ? 'bg-ron-teal-400/20 text-white shadow-glow-teal' 
           : 'text-gray-400 hover:text-white'}
-        transition-all duration-200
         rounded-lg
         relative
         ${className}
+        transition-[background-color,box-shadow] duration-200
       `}
     >
       <div className={`
         flex items-center justify-center
         ${collapsed ? 'w-full' : 'w-auto'}
-        transition-all duration-200
+        transition-[width] duration-200
       `}>
         <Icon className={`
           w-5 h-5
           ${collapsed ? 'mr-0' : 'mr-3'}
-          transition-all duration-200
           ${isActive ? 'text-ron-teal-400' : ''}
+          transition-[margin] duration-200
         `} />
       </div>
       
       {!collapsed && (
         <span className={`
           flex-1 text-sm font-medium
-          transition-all duration-200
           ${isActive ? 'text-white' : ''}
         `}>
           {label}

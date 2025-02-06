@@ -1,5 +1,5 @@
 import { 
-  Users, Building2, Shield, ClipboardCheck, Heart, Activity,
+  Users, Building2, Bot, ClipboardCheck, Heart, Activity,
   FileText, MessageSquareMore, BarChart3, Settings, GraduationCap,
   HelpCircle, ShieldCheck, Home, ChevronLeft, ChevronRight
 } from 'lucide-react';
@@ -18,7 +18,7 @@ const mainNavItems = [
   { icon: Home, label: 'Dashboard', to: '/dashboard' },
   { icon: Users, label: 'Members', to: '/members' },
   { icon: Building2, label: 'Providers', to: '/providers' },
-  { icon: Shield, label: 'Health Plans', to: '/health-plans' },
+  { icon: Bot, label: 'Ron AI', to: '/ron-ai' },
   { icon: ClipboardCheck, label: 'Utilization Review', to: '/utilization' },
   { icon: Heart, label: 'Care Management', to: '/care' },
   { icon: Activity, label: 'Population Health', to: '/population-health' },
@@ -54,7 +54,7 @@ export function Sidebar({ open, collapsed, onClose, onToggleCollapse }: SidebarP
           fixed inset-y-0 left-0 z-50
           ${collapsed ? 'w-20' : 'w-72'}
           bg-black shadow-lg
-          transform transition-all duration-300 ease-in-out 
+          transform transition-transform duration-300 ease-in-out 
           ${open ? 'translate-x-0' : '-translate-x-full'} 
           lg:translate-x-0
           border-r border-ron-teal-400/20
@@ -67,7 +67,7 @@ export function Sidebar({ open, collapsed, onClose, onToggleCollapse }: SidebarP
             border-b border-ron-teal-400/20
           ">
             <Logo className={`
-              transition-all duration-300
+              transition-[width,height] duration-300
               ${collapsed ? 'w-8 h-8' : 'w-32 h-8'}
               opacity-90 hover:opacity-100
             `} />
@@ -79,7 +79,7 @@ export function Sidebar({ open, collapsed, onClose, onToggleCollapse }: SidebarP
                 p-2 rounded-lg
                 ${isDark ? 'bg-ron-teal-400/5 hover:bg-ron-teal-400/10' : 'bg-ron-teal-50/50 hover:bg-ron-teal-50'}
                 text-white/80 hover:text-white
-                transition-all duration-200
+                transition-[background-color,border-color,box-shadow] duration-200
                 backdrop-blur-sm
                 hover:shadow-glow-teal
                 border border-transparent
@@ -109,7 +109,7 @@ export function Sidebar({ open, collapsed, onClose, onToggleCollapse }: SidebarP
                     {...item}
                     collapsed={collapsed}
                     className={`
-                      group transition-all duration-200 
+                      group transition-[background-color,border-color,box-shadow] duration-200 
                       hover:bg-ron-teal-400/10
                       hover:shadow-glow-teal
                       rounded-lg
@@ -137,7 +137,7 @@ export function Sidebar({ open, collapsed, onClose, onToggleCollapse }: SidebarP
                       {...item}
                       collapsed={collapsed}
                       className={`
-                        group transition-all duration-200 
+                        group transition-[background-color,border-color,box-shadow] duration-200 
                         hover:bg-ron-teal-400/10
                         hover:shadow-glow-teal
                         rounded-lg

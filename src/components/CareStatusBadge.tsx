@@ -1,69 +1,29 @@
-import React, { useState } from 'react';
-import { Activity, AlertCircle, CheckCircle } from 'lucide-react';
+import React from 'react';
 
 interface CareStatusBadgeProps {
   status: string;
+  className?: string;
 }
 
-export function CareStatusBadge({ status }: CareStatusBadgeProps) {
-  const [isDark] = useState(document.documentElement.classList.contains('dark'));
-
-  const getStatusStyles = () => {
-    const baseStyles = `
-      inline-flex items-center justify-center
-      min-w-[140px] px-3 py-1 text-xs font-medium
-      rounded-full backdrop-blur-sm border
-      transition-all duration-200
-      bg-gradient-glossy
-      shadow-glow hover:shadow-glow-hover
-    `;
-    
+export function CareStatusBadge({ status, className = '' }: CareStatusBadgeProps) {
+  const getColor = () => {
     switch (status.toLowerCase()) {
       case 'active':
-        return `${baseStyles} ${
-          isDark 
-            ? 'bg-ron-mint-400/10 border-ron-mint-400/20 text-ron-mint-200'
-            : 'bg-ron-mint-50 border-ron-mint-200 text-ron-mint-700'
-        }`;
-      case 'intervene':
-        return `${baseStyles} ${
-          isDark 
-            ? 'bg-ron-coral-400/10 border-ron-coral-400/20 text-ron-coral-200'
-            : 'bg-ron-coral-50 border-ron-coral-200 text-ron-coral-700'
-        }`;
+        return 'bg-green-100 text-green-800';
       case 'pending':
-        return `${baseStyles} ${
-          isDark 
-            ? 'bg-ron-lime-400/10 border-ron-lime-400/20 text-ron-lime-200'
-            : 'bg-ron-lime-50 border-ron-lime-200 text-ron-lime-700'
-        }`;
+        return 'bg-yellow-100 text-yellow-800';
+      case 'inactive':
+        return 'bg-gray-100 text-gray-800';
+      case 'critical':
+        return 'bg-red-100 text-red-800';
       default:
-        return `${baseStyles} ${
-          isDark 
-            ? 'bg-ron-teal-400/10 border-ron-teal-400/20 text-ron-teal-200'
-            : 'bg-ron-teal-50 border-ron-teal-200 text-ron-teal-700'
-        }`;
+        return 'bg-blue-100 text-blue-800';
     }
   };
-
-  const getIcon = () => {
-    switch (status.toLowerCase()) {
-      case 'active':
-        return <CheckCircle className="w-3.5 h-3.5 mr-1.5" />;
-      case 'intervene':
-        return <AlertCircle className="w-3.5 h-3.5 mr-1.5" />;
-      default:
-        return <Activity className="w-3.5 h-3.5 mr-1.5" />;
-    }
-  };
-
-  // Convert "attention needed" to "intervene" for display
-  const displayStatus = status.toLowerCase() === 'attention needed' ? 'Intervene' : status;
 
   return (
-    <span className={getStatusStyles()}>
-      {getIcon()}
-      {displayStatus}
+    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getColor()} ${className}`}>
+      {status}
     </span>
   );
 }

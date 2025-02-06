@@ -1,0 +1,12 @@
+[tool.poetry]
+name = "project"
+version = "0.0.1"
+description = "My project using google-generative-ai"
+authors = tim@hi-ron.com
+
+[tool.poetry.dependencies]
+python = "^3.11"
+google-generative-ai = "^0.21.0"
+
+[tool.poetry.dev-dependencies]
+# (Add any dev dependencies here if needed)

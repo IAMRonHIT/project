@@ -4,7 +4,7 @@ import { ThemeProvider } from './hooks/useTheme';
 import { AppShell } from './components/Layout/AppShell';
 import { MembersPage } from './pages/Members/MembersPage';
 import { ProvidersPage } from './pages/Providers';
-import { HealthPlansPage } from './pages/HealthPlans/HealthPlansPage';
+import { RonAIPage } from './pages/RonAI/RonAIPage';
 import { UtilizationReview } from './pages/UtilizationReview';
 import CommunicationHub from './components/Communication Hub/CommunicationHub';
 import { Member360View } from './pages/Members/Member360View';
@@ -43,9 +43,9 @@ function AppRoutes() {
           path="/communication" 
           element={<CommunicationHub />} 
         />
-        <Route 
-          path="/health-plans" 
-          element={<HealthPlansPage />} 
+        <Route
+          path="/ron-ai"
+          element={<RonAIPage />}
         />
         <Route 
           path="/population-health" 

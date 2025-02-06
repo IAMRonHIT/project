@@ -1,41 +1,63 @@
-import React, { useState } from 'react';
-import { DashboardHeader } from './components/DashboardHeader';
-import { MetricsGrid } from './components/MetricsGrid';
-import { SearchAndFilters } from './components/SearchAndFilters';
-import { ReviewQueue } from './components/ReviewQueue';
-import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
-import { useNotifications } from '@/hooks/useNotifications';
+import React, { useState } from "react";
+import { SearchAndFilters, SearchAndFiltersProps } from "./components/SearchAndFilters";
+import { ReviewQueue, ReviewQueueProps } from "./components/ReviewQueue";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useNotifications } from "@/hooks/useNotifications";
+
+type Filters = {
+  status: string[];
+  priority: string[];
+  type: string[];
+};
 
 export function UtilizationReview() {
+  const { notifications, addNotification } = useNotifications();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
-  const [isDark] = useState(document.documentElement.classList.contains('dark'));
-
-  useKeyboardShortcuts({
-    'alt+n': () => console.log('New Case'),
-    'alt+f': () => console.log('Quick Filter'),
-    'alt+s': () => console.log('Quick Search'),
+  const [selectedFilters, setSelectedFilters] = useState<Filters>({
+    status: [],
+    priority: [],
+    type: []
   });
+  
+  useKeyboardShortcuts([
+    {
+      key: 'f',
+      ctrlKey: true,
+      action: () => {
+        const searchInput = document.querySelector('input[type="search"]') as HTMLInputElement;
+        if (searchInput) {
+          searchInput.focus();
+          addNotification({
+            message: 'Search focused',
+            type: 'info',
+            duration: 2000
+          });
+        }
+      }
+    }
+  ]);
 
-  useNotifications();
+  const handleFilterChange = (filters: SearchAndFiltersProps['selectedFilters']) => {
+    setSelectedFilters({
+      status: filters.status || [],
+      priority: filters.priority || [],
+      type: filters.type || []
+    });
+  };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-ron-dark-base">
-      <DashboardHeader />
-      
-      <main className="container mx-auto px-6 py-8">
-        <MetricsGrid />
-        <SearchAndFilters
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          selectedFilters={selectedFilters}
-          onFilterChange={setSelectedFilters}
-        />
-        <ReviewQueue
-          searchTerm={searchTerm}
-          selectedFilters={selectedFilters}
-        />
-      </main>
+    <div className="p-6">
+      <h1 className="text-2xl font-semibold mb-6">Utilization Review</h1>
+      <SearchAndFilters 
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        selectedFilters={selectedFilters}
+        onFilterChange={handleFilterChange}
+      />
+      <ReviewQueue 
+        searchTerm={searchTerm}
+        selectedFilters={selectedFilters}
+      />
     </div>
   );
 }

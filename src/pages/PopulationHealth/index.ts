@@ -1,1 +1,1 @@
-export { default as PopulationHealthPage } from './PopulationHealthPage';
+export { default } from './PopulationHealthPage';

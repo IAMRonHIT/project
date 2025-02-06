@@ -1,27 +1,15 @@
-{pkgs}: {
-  channel = "stable-24.05";
-  packages = [
-    pkgs.nodejs_20
+{ pkgs ? import <nixpkgs> {} }:
+
+let
+  poetry2nix = pkgs.poetry2nix;
+in
+pkgs.mkShell {
+  buildInputs = [
+    (poetry2nix.mkPoetryEnv { projectDir = ./.; })
+    pkgs.nodejs_20  # if your project needs Node.js
   ];
-  idx.extensions = [
-    "svelte.svelte-vscode"
-    "vue.volar"
-  ];
-  idx.previews = {
-    previews = {
-      web = {
-        command = [
-          "npm"
-          "run"
-          "dev"
-          "--"
-          "--port"
-          "$PORT"
-          "--host"
-          "0.0.0.0"
-        ];
-        manager = "web";
-      };
-    };
-  };
+
+  shellHook = ''
+    echo "Development environment is ready with Python and google-generative-ai installed."
+  '';
 }

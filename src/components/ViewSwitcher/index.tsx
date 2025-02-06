@@ -1,7 +1,7 @@
 import React from 'react';
-import { Kanban, List, Calendar } from 'lucide-react';
+import { Kanban, List, Calendar, Users } from 'lucide-react';
 
-export type ViewType = 'kanban' | 'list' | 'calendar';
+export type ViewType = 'kanban' | 'list' | 'calendar' | 'registry';
 
 interface ViewSwitcherProps {
   currentView: ViewType;
@@ -12,7 +12,8 @@ export function ViewSwitcher({ currentView, onViewChange }: ViewSwitcherProps) {
   const views: Array<{ type: ViewType; icon: React.ElementType; label: string }> = [
     { type: 'kanban', icon: Kanban, label: 'Kanban' },
     { type: 'list', icon: List, label: 'List' },
-    { type: 'calendar', icon: Calendar, label: 'Calendar' }
+    { type: 'calendar', icon: Calendar, label: 'Calendar' },
+    { type: 'registry', icon: Users, label: 'Registry' }
   ];
 
   return (

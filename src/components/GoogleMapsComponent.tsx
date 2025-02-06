@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
 
 const containerStyle = {
@@ -36,9 +36,16 @@ interface HealthLocation {
 interface GoogleMapsComponentProps {
   apiKey: string;
   locations?: HealthLocation[];
+  selectedLocationId?: string | null;
+  onLocationSelect?: (locationId: string) => void;
 }
 
-const GoogleMapsComponent = ({ apiKey, locations = [] }: GoogleMapsComponentProps) => {
+const GoogleMapsComponent: React.FC<GoogleMapsComponentProps> = ({ 
+  apiKey, 
+  locations = [], 
+  selectedLocationId,
+  onLocationSelect 
+}) => {
   const [selectedLocation, setSelectedLocation] = useState<HealthLocation | null>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
 
@@ -49,6 +56,29 @@ const GoogleMapsComponent = ({ apiKey, locations = [] }: GoogleMapsComponentProp
   const onUnmount = useCallback(() => {
     setMap(null);
   }, []);
+
+  // Handle location selection from outside the component
+  useEffect(() => {
+    if (map && selectedLocationId) {
+      const location = locations.find(loc => loc.id === selectedLocationId);
+      if (location) {
+        map.panTo(location.position);
+        map.setZoom(14);
+        setSelectedLocation(location);
+      }
+    }
+  }, [selectedLocationId, locations, map]);
+
+  const handleMarkerClick = (location: HealthLocation) => {
+    setSelectedLocation(location);
+    if (onLocationSelect) {
+      onLocationSelect(location.id);
+    }
+    if (map) {
+      map.panTo(location.position);
+      map.setZoom(14);
+    }
+  };
 
   return (
     <LoadScript googleMapsApiKey={apiKey}>
@@ -64,7 +94,7 @@ const GoogleMapsComponent = ({ apiKey, locations = [] }: GoogleMapsComponentProp
           <Marker
             key={location.id}
             position={location.position}
-            onClick={() => setSelectedLocation(location)}
+            onClick={() => handleMarkerClick(location)}
             title={location.title}
           />
         ))}
@@ -72,7 +102,16 @@ const GoogleMapsComponent = ({ apiKey, locations = [] }: GoogleMapsComponentProp
         {selectedLocation && (
           <InfoWindow
             position={selectedLocation.position}
-            onCloseClick={() => setSelectedLocation(null)}
+            onCloseClick={() => {
+              setSelectedLocation(null);
+              if (onLocationSelect) {
+                onLocationSelect('');
+              }
+              if (map) {
+                map.setZoom(4);
+                map.panTo(defaultCenter);
+              }
+            }}
           >
             <div className="bg-white rounded-lg shadow-lg p-4 min-w-[200px]">
               <h3 className="font-bold text-lg text-gray-800 mb-2">{selectedLocation.title}</h3>

@@ -1,1 +1,0 @@
-export { CareJourneySearch } from './CareJourneySearch';

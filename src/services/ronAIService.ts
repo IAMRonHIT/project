@@ -6,7 +6,7 @@ interface AssistantResponse {
   requiredActions?: any[];
 }
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'; // Next.js server port
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3003'; // Next.js server port
 
 class RonAIService {
   private currentThreadId: string | null = null;
@@ -221,3 +221,19 @@ export const ronAIService = new RonAIService();
 
 // Export helper function
 export const formatMessage = ronAIService.formatMessage;
+
+// New function to handle streaming run responses using EventSource
+export function streamRun(threadId: string, onMessage: (event: MessageEvent) => void, onError: (error: any) => void) {
+  const evtSource = new EventSource(`${BACKEND_URL}/api/assistants/runs?threadId=${threadId}`);
+  evtSource.onmessage = (event) => {
+    // Pass the event data to the provided callback
+    onMessage(event);
+  };
+  evtSource.onerror = (error) => {
+    // Call the error handling callback
+    onError(error);
+    // Optionally close the connection on error
+    evtSource.close();
+  };
+  return evtSource;
+}

@@ -4,9 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "start": "concurrently \"npm run dev\" \"npm run start:backend\"",
+    "start": "cd backend && npm run dev",
     "dev": "vite",
-    "start:backend": "cd backend && npm run dev",
+    "dev:frontend": "vite --port",
+    "dev:backend": "cd backend && npm run dev:next",
+    "cleanup": "cd backend && npm run cleanup-ports",
     "build": "tsc && vite build",
     "lint": "eslint . --max-warnings 0",
     "preview": "vite preview"

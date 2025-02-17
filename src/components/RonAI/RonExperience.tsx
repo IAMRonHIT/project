@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { FaPaperPlane, FaFileUpload, FaHistory } from 'react-icons/fa';
-import { ronAIService, formatMessage } from '../../services/ronAIService';
+import { ronAIService, formatMessage, streamRun } from '../../services/ronAIService';
 import { fileUploadService, type UploadProgress } from '../../services/fileUploadService';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -17,6 +17,10 @@ interface ChatMessage {
   message: string;
   referencesContext?: boolean;
   analysis?: boolean;
+}
+
+interface StreamedMessage {
+    content: string;
 }
 
 interface ThreadContext {
@@ -103,6 +107,7 @@ const RonAIExperience: React.FC = () => {
   const [dragActive, setDragActive] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null);
   const [threadContext, setThreadContext] = useState<ThreadContext | null>(null);
+  const [streamingResponse, setStreamingResponse] = useState(''); // Add state for accumulating streamed response
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Initialize chat with Ron AI
@@ -112,7 +117,7 @@ const RonAIExperience: React.FC = () => {
         setIsLoading(true);
         console.log('Initializing chat with Ron AI...');
         // Send initial message to Ron AI
-        const response = await ronAIService.sendMessage('Introduce yourself. Explain your capabilities and how you can help.');
+        const response = await ronAIService.sendMessage('Hi Ron! Let\'s get to work, if you\'re ready simply reply with "Ron AI wil see you now"');
         console.log('Received initialization response:', response);
 
         if (!response || !response.response) {

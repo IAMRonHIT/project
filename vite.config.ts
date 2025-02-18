@@ -11,11 +11,14 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5173,
+    port: 5175,
+    strictPort: true, // This will make Vite fail if port 5175 is not available
     proxy: {
       '/api': {
         target: 'http://localhost:3001',
-        changeOrigin: true
+        changeOrigin: true,
+        secure: false,
+        ws: true
       }
     },
   },

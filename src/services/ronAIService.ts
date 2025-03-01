@@ -1,82 +1,204 @@
-// ronAIService.ts
+let currentThreadId: string | null = null;
+
+export async function getOrCreateThreadId(): Promise<string> {
+  if (!currentThreadId) {
+    const response = await fetch('/api/assistants/threads', {
+      method: 'POST'
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create thread');
+    }
+    
+    const data = await response.json();
+    if (!data.threadId) {
+      throw new Error('No threadId returned from server');
+    }
+    currentThreadId = data.threadId;
+  }
+  
+  return currentThreadId!;
+}
+
+export async function getThreadHistory(threadId: string) {
+  try {
+    const response = await fetch(`/api/assistants/threads/${threadId}/messages`);
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch thread history');
+    }
+    
+    const data = await response.json();
+    return data.messages.map((message: any) => ({
+      role: message.role === 'assistant' ? 'assistant' : 'user',
+      content: message.content[0]?.text?.value || ''
+    }));
+  } catch (error) {
+    console.error('Failed to get thread history:', error);
+    throw error;
+  }
+}
+
 export async function streamAssistantMessage(
-  conversation: any[],  // The array of messages (with roles and content) to send
-  onChunk: (text: string) => void,
+  content: string,
+  onUpdate: (update: any) => void,
   signal?: AbortSignal
 ): Promise<void> {
-  // Prepare the request payload
-  const payload = { messages: conversation };
-  let response: Response;
   try {
-    response = await fetch('/api/assistant/route', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      signal: signal  // allows the caller to abort if needed
+    const threadId = await getOrCreateThreadId();
+    
+    // Set up EventSource for streaming
+    const url = new URL(`/api/assistants/threads/${threadId}/messages/stream`, window.location.origin);
+    url.searchParams.set('message', content);
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive'
+      },
+      signal
     });
-  } catch (err: any) {
-    // Network error or fetch aborted
-    throw new Error(err?.message || 'Network error');
-  }
 
-  if (!response.ok) {
-    // If backend returns an HTTP error, attempt to parse error message
-    let errorMessage = `Request failed with status ${response.status}`;
-    try {
-      const errorData = await response.json();
-      if (errorData.error) {
-        errorMessage = errorData.error;
-      }
-    } catch (_) {
-      // response might not be JSON
-      try {
-        const text = await response.text();
-        if (text) errorMessage = text;
-      } catch {
-        /* swallow further errors */
-      }
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to start stream');
     }
-    throw new Error(errorMessage);
-  }
 
-  // At this point, response is OK and we expect a stream
-  const reader = response.body!.getReader();
-  const decoder = new TextDecoder('utf-8');
-  let partialData = '';
-  try {
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      // Decode the received chunk and accumulate
-      const chunkText = decoder.decode(value, { stream: true });
-      if (!chunkText) continue;
+    // Notify that we're connected and create a placeholder for the streaming message
+    onUpdate({ type: 'connected' });
+    onUpdate({ 
+      type: 'messageStart', 
+      message: {
+        role: 'assistant',
+        content: '',
+        isStreaming: true
+      }
+    });
 
-      // If the server is sending SSE data events, they might include "data: " prefixes
-      // and possibly multiple events in one chunk. We handle that here.
-      partialData += chunkText;
-      // Split by SSE event terminator "\n\n"
-      let eventEndIndex: number;
-      while ((eventEndIndex = partialData.indexOf('\n\n')) !== -1) {
-        const event = partialData.slice(0, eventEndIndex);
-        partialData = partialData.slice(eventEndIndex + 2);
-        if (event.startsWith('data:')) {
-          const data = event.slice(5).trim(); // remove "data:" prefix
-          if (data === '[DONE]') {
-            // End of stream signal (if used)
-            await reader.cancel();
-            break;
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('No stream available');
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        
+        if (done) {
+          break;
+        }
+
+        // Decode the chunk and add it to our buffer
+        buffer += decoder.decode(value, { stream: true });
+        
+        // Process any complete messages in the buffer
+        const lines = buffer.split('\n\n');
+        buffer = lines.pop() || ''; // Keep the last incomplete chunk in the buffer
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              
+              switch (data.type) {
+                case 'status':
+                  onUpdate({ type: 'status', status: data.status });
+                  break;
+                
+                case 'contentUpdate':
+                  // Handle incremental content updates
+                  onUpdate({ 
+                    type: 'contentUpdate', 
+                    content: data.content 
+                  });
+                  break;
+                
+                case 'messageDone':
+                  // The message is now the complete OpenAI message object
+                  const messageContent = data.message.content[0]?.text?.value;
+                  if (messageContent) {
+                    onUpdate({ 
+                      type: 'messageComplete', 
+                      message: {
+                        role: 'assistant',
+                        content: messageContent,
+                        isStreaming: false
+                      }
+                    });
+                  }
+                  break;
+                
+                case 'error':
+                  console.error('Stream error:', data.error);
+                  onUpdate({ type: 'error', error: data.error });
+                  break;
+                
+                case 'tool_execution':
+                  onUpdate({ type: 'toolOutputsSubmitted' });
+                  break;
+                
+                case 'toolCalls':
+                  onUpdate({ type: 'toolCalls' });
+                  break;
+              }
+            } catch (error) {
+              if (error instanceof Error) {
+                onUpdate({ type: 'error', error: error.message });
+              }
+            }
           }
-          // Call the callback with the parsed data chunk
-          onChunk(data);
-        } else {
-          // If the chunk is not prefixed with "data:", treat it as plain text
-          onChunk(event);
         }
       }
-      // If no "\n\n" found, partialData holds the buffer for the next loop
+    } catch (error) {
+      if (error instanceof Error) {
+        onUpdate({ type: 'error', error: error.message });
+      }
+      throw error;
+    } finally {
+      reader.releaseLock();
     }
-  } finally {
-    // Ensure reader is released in any case
-    reader.releaseLock();
+  } catch (error) {
+    if (error instanceof Error && error.name !== 'AbortError') {
+      onUpdate({ type: 'error', error: error.message });
+      throw error;
+    }
+  }
+}
+
+/**
+ * Send feedback for a specific message
+ */
+export async function sendMessageFeedback(
+  messageId: string,
+  feedbackType: 'positive' | 'negative' | null
+): Promise<boolean> {
+  try {
+    const response = await fetch('/api/assistants/feedback', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        messageId,
+        feedbackType
+      })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      console.error('Error sending feedback:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Failed to send feedback:', error);
+    return false;
   }
 }

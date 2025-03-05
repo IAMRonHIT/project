@@ -5,10 +5,11 @@ import {
   getThreadHistory,
   sendMessageFeedback
 } from '../../services/ronAIService';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ClipboardIcon, CheckIcon, ThumbsUp, ThumbsDown, ChevronDown, ChevronRight } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { ClipboardIcon, CheckIcon, Sun, Moon, ThumbsUp, ThumbsDown } from 'lucide-react';
+import RonAiTab from './RonAITab';
+import './RonAITab.module.css';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -17,6 +18,8 @@ interface Message {
   toolExecution?: boolean;
   id?: string;
   feedback?: 'positive' | 'negative' | null;
+  mode?: 'normal' | 'deep-thinking' | 'conversation';
+  isDeepThinking?: boolean;
 }
 
 // Component for copying code blocks
@@ -69,6 +72,9 @@ const RonExperience: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [isDeepThinking, setIsDeepThinking] = useState(false);
+  const [isConversationMode, setIsConversationMode] = useState(false);
+  const [expandedThoughts, setExpandedThoughts] = useState<{[key: string]: boolean}>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -141,13 +147,11 @@ const RonExperience: React.FC = () => {
       /* Message visibility */
       .message-item {
         opacity: 0;
-        transform: translateY(10px);
       }
       
       .message-item.message-visible {
         opacity: 1;
-        transform: translateY(0);
-        transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+        transition: opacity 0.3s ease-out;
       }
 
       /* Enhanced text styles for readability */
@@ -285,7 +289,7 @@ const RonExperience: React.FC = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!currentMessage.trim() || isLoading) return;
 
@@ -293,7 +297,8 @@ const RonExperience: React.FC = () => {
     setMessages(prev => [...prev, {
       role: 'user',
       content: currentMessage,
-      id: `user-${Date.now()}`
+      id: `user-${Date.now()}`,
+      mode: isDeepThinking ? 'deep-thinking' : isConversationMode ? 'conversation' : 'normal'
     }]);
     
     const message = currentMessage;
@@ -301,9 +306,11 @@ const RonExperience: React.FC = () => {
 
     try {
       const controller = new AbortController();
+      
       await streamAssistantMessage(
         message,
         (update) => {
+          // Pass isDeepThinking to use the Ron Thinking assistant when deep thinking mode is enabled
           if (update.type === 'messageStart') {
             // Add new assistant message placeholder that will be updated
             setMessages(prev => [...prev, {
@@ -319,7 +326,8 @@ const RonExperience: React.FC = () => {
                 newMessages[streamingIndex] = {
                   ...newMessages[streamingIndex],
                   // Append the new content instead of replacing it
-                  content: newMessages[streamingIndex].content + update.content
+                  content: newMessages[streamingIndex].content + update.content,
+                  isDeepThinking: update.isDeepThinking
                 };
               }
               return newMessages;
@@ -330,10 +338,16 @@ const RonExperience: React.FC = () => {
               const newMessages = [...prev];
               const streamingIndex = newMessages.findIndex(m => m.isStreaming);
               if (streamingIndex !== -1) {
-                newMessages[streamingIndex] = update.message;
+                newMessages[streamingIndex] = {
+                  ...update.message,
+                  isDeepThinking: update.message.isDeepThinking
+                };
               } else {
                 // Fallback if no streaming message is found
-                newMessages.push(update.message);
+                newMessages.push({
+                  ...update.message,
+                  isDeepThinking: update.message.isDeepThinking
+                });
               }
               return newMessages;
             });
@@ -369,7 +383,8 @@ const RonExperience: React.FC = () => {
             setIsLoading(false);
           }
         },
-        controller.signal
+        controller.signal,
+        isDeepThinking
       );
     } catch (error) {
       console.error('Error in stream:', error);
@@ -384,7 +399,7 @@ const RonExperience: React.FC = () => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit(e as unknown as React.FormEvent);
+      handleSubmit(e as unknown as React.FormEvent<HTMLFormElement>);
     }
   };
 
@@ -423,160 +438,181 @@ const RonExperience: React.FC = () => {
     };
   }, []);
 
-  return (
-    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
-      {/* Messages container */}
-      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-        {memoizedMessages.map((msg, idx) => (
-          <div
-            key={idx}
-            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} ${
-              idx === memoizedMessages.length - 1 && msg.isStreaming ? 'animate-fadeIn' : ''
-            } message-item`}
-          >
-            <div
-              className={`max-w-[80%] rounded-lg p-3 ${
-                msg.role === 'user'
-                  ? 'bg-blue-500 text-white dark:bg-blue-700 ml-auto'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 mr-auto'
-              } ${msg.isStreaming ? 'animate-pulse' : ''}`}
-            >
-              {msg.role === 'assistant' ? (
-                <>
-                  <ReactMarkdown
-                    className="prose prose-sm max-w-none dark:prose-invert"
-                    remarkPlugins={[remarkGfm]}
-                    components={{ code: CodeBlock }}
-                  >
-                    {msg.content}
-                  </ReactMarkdown>
-                  {msg.isStreaming && (
-                    <div className="flex mt-2">
-                      <div className="typing-indicator">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                      </div>
-                    </div>
+  // Render message with code blocks
+  const renderMessage = (msg: Message, idx: number) => {
+    const messageId = msg.id || `msg-${idx}`;
+    const isExpanded = expandedThoughts[messageId] || false;
+    
+    const toggleAccordion = () => {
+      setExpandedThoughts(prev => ({
+        ...prev,
+        [messageId]: !prev[messageId]
+      }));
+    };
+    
+    return (
+      <div
+        key={idx}
+        className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} ${
+          idx === memoizedMessages.length - 1 && msg.isStreaming ? 'animate-fadeIn' : ''
+        } message-item`}
+      >
+        <div
+          className={`max-w-[80%] rounded-lg p-3 ${
+            msg.role === 'user'
+              ? 'bg-teal-500 bg-opacity-20 text-white ml-auto'
+              : 'bg-[#1E1E1E] border border-gray-700 text-gray-100 mr-auto'
+          }`}
+        >
+          {msg.role === 'assistant' ? (
+            <>
+              {msg.isDeepThinking && (
+                <div className="mb-3 text-amber-400 font-semibold flex items-center">
+                  <span>🤔 Deep Thinking Mode</span>
+                  {!msg.isStreaming && (
+                    <button 
+                      onClick={toggleAccordion}
+                      className="ml-2 p-1 rounded-md hover:bg-gray-700 transition-colors"
+                      aria-expanded={isExpanded}
+                      aria-label={isExpanded ? "Collapse chain of thought" : "Expand chain of thought"}
+                    >
+                      {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                    </button>
                   )}
-                </>
-              ) : (
-                <pre className="whitespace-pre-wrap font-sans">
-                  {msg.content}
-                </pre>
-              )}
-              {msg.role === 'assistant' && !msg.isStreaming && (
-                <div className="flex mt-2 justify-end">
-                  <button
-                    type="button"
-                    onClick={() => handleFeedback(idx, 'positive')}
-                    className={`mr-2 p-1 rounded-full transition-colors ${
-                      msg.feedback === 'positive' 
-                        ? 'bg-green-100 text-green-600 dark:bg-green-800 dark:text-green-300' 
-                        : 'text-gray-400 hover:text-green-500 dark:text-gray-500 dark:hover:text-green-400'
-                    }`}
-                    aria-label="Helpful response"
-                    title="Mark this response as helpful"
-                  >
-                    <ThumbsUp size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleFeedback(idx, 'negative')}
-                    className={`p-1 rounded-full transition-colors ${
-                      msg.feedback === 'negative' 
-                        ? 'bg-red-100 text-red-600 dark:bg-red-800 dark:text-red-300' 
-                        : 'text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400'
-                    }`}
-                    aria-label="Unhelpful response"
-                    title="Mark this response as unhelpful"
-                  >
-                    <ThumbsDown size={16} />
-                  </button>
                 </div>
               )}
-            </div>
-          </div>
-        ))}
-        {isLoading && !messages.some(m => m.isStreaming) && (
-          <div className="flex justify-center">
-            <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Input form */}
-      <form onSubmit={handleSubmit} className="border-t p-4 dark:border-gray-700 bg-white dark:bg-gray-800">
-        <div className="flex space-x-2">
-          <textarea
-            ref={inputRef}
-            className="flex-1 resize-none rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 p-2 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:focus:border-blue-400 dark:focus:ring-blue-400 outline-none min-h-[40px] max-h-[200px] placeholder-gray-500 dark:placeholder-gray-400"
-            placeholder="Type a message..."
-            rows={1}
-            value={currentMessage}
-            onChange={handleInput}
-            onKeyDown={handleKeyDown}
-          />
-          <button
-            type="submit"
-            disabled={isLoading || !currentMessage.trim()}
-            className={`px-4 py-2 rounded-lg text-white ${
-              isLoading || !currentMessage.trim()
-                ? 'bg-blue-300 dark:bg-blue-800 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600'
-            } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800`}
-          >
-            {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Send'}
-          </button>
-          <button
-            type="button"
-            onClick={toggleDarkMode}
-            className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
-          >
-            {darkMode ? (
-              <Sun className="h-5 w-5 text-yellow-400" />
-            ) : (
-              <Moon className="h-5 w-5 text-blue-600" />
-            )}
-          </button>
-        </div>
-      </form>
-      {showShortcuts && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-gray-800 border-t dark:border-gray-700 shadow-lg z-50">
-          <div className="max-w-2xl mx-auto">
-            <div className="flex justify-between items-center mb-3">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Keyboard Shortcuts</h2>
-              <button 
-                onClick={() => setShowShortcuts(false)}
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                aria-label="Close shortcuts panel"
+              {msg.isDeepThinking && !msg.isStreaming && isExpanded && (
+                <div className="border-l-2 border-amber-400 pl-3 mb-4 text-amber-200 italic text-sm transition-all duration-300">
+                  <p className="font-semibold mb-1">Chain of Thought:</p>
+                  {formatChainOfThought(msg.content)}
+                </div>
+              )}
+              <ReactMarkdown
+                className="prose prose-sm max-w-none prose-invert"
+                remarkPlugins={[remarkGfm]}
+                components={{ code: CodeBlock }}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
+                {msg.isDeepThinking && !msg.isStreaming ? 
+                  extractFinalAnswer(msg.content) : 
+                  msg.content}
+              </ReactMarkdown>
+              {msg.isStreaming && (
+                <div className="flex justify-center mt-4">
+                  <div className="typing-container" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#333', borderRadius: '50%', width: '40px', height: '40px', marginTop: '8px' }}>
+                    <div className="typing-indicator">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="whitespace-pre-wrap">
+              {msg.content}
+            </div>
+          )}
+          {msg.role === 'assistant' && !msg.isStreaming && (
+            <div className="flex mt-2 justify-end">
+              <button
+                type="button"
+                onClick={() => handleFeedback(idx, 'positive')}
+                className={`mr-2 p-1 rounded-full transition-colors ${
+                  msg.feedback === 'positive' 
+                    ? 'bg-green-100 text-green-600 dark:bg-green-800 dark:text-green-300' 
+                    : 'text-gray-400 hover:text-green-500 dark:text-gray-500 dark:hover:text-green-400'
+                }`}
+                aria-label="Helpful response"
+                title="Mark this response as helpful"
+              >
+                <ThumbsUp size={16} />
+              </button>
+              <button
+                type="button"
+                onClick={() => handleFeedback(idx, 'negative')}
+                className={`p-1 rounded-full transition-colors ${
+                  msg.feedback === 'negative' 
+                    ? 'bg-red-100 text-red-600 dark:bg-red-800 dark:text-red-300' 
+                    : 'text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400'
+                }`}
+                aria-label="Unhelpful response"
+                title="Mark this response as unhelpful"
+              >
+                <ThumbsDown size={16} />
               </button>
             </div>
-            <ul className="space-y-2 text-gray-800 dark:text-gray-200">
-              <li className="flex items-center">
-                <kbd className="px-2 py-1 mr-2 text-xs font-semibold text-gray-800 bg-gray-200 rounded dark:bg-gray-700 dark:text-gray-300">Alt + D</kbd>
-                <span>Toggle dark mode</span>
-              </li>
-              <li className="flex items-center">
-                <kbd className="px-2 py-1 mr-2 text-xs font-semibold text-gray-800 bg-gray-200 rounded dark:bg-gray-700 dark:text-gray-300">Alt + N</kbd>
-                <span>Focus on text input</span>
-              </li>
-              <li className="flex items-center">
-                <kbd className="px-2 py-1 mr-2 text-xs font-semibold text-gray-800 bg-gray-200 rounded dark:bg-gray-700 dark:text-gray-300">Alt + K</kbd>
-                <span>Toggle keyboard shortcuts help</span>
-              </li>
-            </ul>
-          </div>
+          )}
         </div>
-      )}
-    </div>
+      </div>
+    );
+  };
+
+  // Helper function to format the chain of thought
+  const formatChainOfThought = (content: string): JSX.Element => {
+    // Look for patterns like "Let me think..." or step-by-step reasoning
+    const parts = content.split(/\n\n|(?<=\.)\s+(?=[A-Z])/);
+    
+    if (parts.length <= 2) {
+      // If there aren't many parts, just return the whole thing
+      return <p>{content}</p>;
+    }
+    
+    // Take all but the last part as the chain of thought
+    const thoughts = parts.slice(0, -1);
+    
+    return (
+      <div className="chain-of-thought">
+        {thoughts.map((thought, i) => (
+          <p key={i} className="mb-2">{thought}</p>
+        ))}
+      </div>
+    );
+  };
+
+  // Extract the final answer from the chain of thought
+  const extractFinalAnswer = (content: string): string => {
+    const parts = content.split(/\n\n|(?<=\.)\s+(?=[A-Z])/);
+    
+    if (parts.length <= 2) {
+      return content;
+    }
+    
+    // Return just the last part as the conclusion
+    return parts[parts.length - 1];
+  };
+
+  // Toggle deep thinking mode
+  const toggleDeepThinking = () => {
+    setIsDeepThinking(prev => !prev);
+    if (isConversationMode) {
+      setIsConversationMode(false);
+    }
+  };
+  
+  // Toggle conversation mode
+  const toggleConversationMode = () => {
+    setIsConversationMode(prev => !prev);
+    if (isDeepThinking) {
+      setIsDeepThinking(false);
+    }
+  };
+
+  return (
+    <RonAiTab
+      messages={memoizedMessages}
+      currentMessage={currentMessage}
+      setCurrentMessage={setCurrentMessage}
+      handleSubmit={(e) => handleSubmit(e as React.FormEvent<HTMLFormElement>)}
+      isLoading={isLoading}
+      messagesContainerRef={messagesContainerRef}
+      messagesEndRef={messagesEndRef}
+      renderMessage={renderMessage}
+      isDeepThinking={isDeepThinking}
+      isConversationMode={isConversationMode}
+      toggleDeepThinking={toggleDeepThinking}
+      toggleConversationMode={toggleConversationMode}
+    />
   );
 };
 

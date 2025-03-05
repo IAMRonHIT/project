@@ -43,7 +43,8 @@ export async function getThreadHistory(threadId: string) {
 export async function streamAssistantMessage(
   content: string,
   onUpdate: (update: any) => void,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  isDeepThinking?: boolean
 ): Promise<void> {
   try {
     const threadId = await getOrCreateThreadId();
@@ -51,6 +52,11 @@ export async function streamAssistantMessage(
     // Set up EventSource for streaming
     const url = new URL(`/api/assistants/threads/${threadId}/messages/stream`, window.location.origin);
     url.searchParams.set('message', content);
+    
+    // Add deep thinking parameter if true
+    if (isDeepThinking) {
+      url.searchParams.set('deepThinking', 'true');
+    }
 
     const response = await fetch(url, {
       method: 'GET',
@@ -115,7 +121,8 @@ export async function streamAssistantMessage(
                   // Handle incremental content updates
                   onUpdate({ 
                     type: 'contentUpdate', 
-                    content: data.content 
+                    content: data.content,
+                    isDeepThinking: data.isDeepThinking
                   });
                   break;
                 
@@ -128,7 +135,8 @@ export async function streamAssistantMessage(
                       message: {
                         role: 'assistant',
                         content: messageContent,
-                        isStreaming: false
+                        isStreaming: false,
+                        isDeepThinking: data.isDeepThinking
                       }
                     });
                   }

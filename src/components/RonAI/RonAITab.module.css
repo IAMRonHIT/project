@@ -1,0 +1,488 @@
+/* RonAITab Styles */
+
+/* Layout styles */
+.container {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #1E1E1E;
+  color: #E5E5E5;
+}
+
+.column {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.leftColumn {
+  width: 300px;
+  border-right: 1px solid #333;
+  background-color: #252525;
+  padding: 0;
+}
+
+.centerColumn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #1E1E1E;
+}
+
+.rightColumn {
+  width: 320px;
+  border-left: 1px solid #333;
+  background-color: #252525;
+}
+
+.columnTitle {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #ffffff;
+}
+
+/* Sidebar styles */
+.header {
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #333;
+}
+
+.headerTitle {
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ffffff;
+}
+
+.sidebarContent {
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.groupHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 4px;
+  margin: 8px 0 4px;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  font-weight: 600;
+  color: #bbb;
+}
+
+.casesList {
+  margin-bottom: 16px;
+}
+
+.caseItem {
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.caseItem:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.caseItemSelected {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.caseHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 4px;
+}
+
+.caseTitle {
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #ffffff;
+}
+
+.caseId {
+  color: #888;
+  font-size: 12px;
+}
+
+.statusIndicator {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Center column styles */
+.chatHeader {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #333;
+}
+
+.patientInfo {
+  flex: 1;
+}
+
+.patientName {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #ffffff;
+}
+
+.patientDetails {
+  color: #aaa;
+  font-size: 14px;
+}
+
+.messagesContainer {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.inputContainer {
+  padding: 12px 20px 20px;
+  border-top: 1px solid #333;
+}
+
+.inputWrapper {
+  display: flex;
+  align-items: flex-end;
+  background-color: #252525;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.inputWrapper:focus-within {
+  border-color: #00A3FF;
+  box-shadow: 0 0 0 2px rgba(0, 163, 255, 0.2);
+}
+
+.inputWrapperDeepThinking {
+  border-color: #9333ea !important;
+  box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.2) !important;
+}
+
+.inputWrapperConversation {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important;
+}
+
+.textArea {
+  flex: 1;
+  background-color: transparent;
+  border: none;
+  color: #E5E5E5;
+  resize: none;
+  outline: none;
+  max-height: 150px;
+  padding: 0;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.inputButtons {
+  display: flex;
+  gap: 8px;
+  margin-left: 8px;
+}
+
+.iconButton {
+  padding: 8px;
+  border-radius: 50%;
+  background-color: transparent;
+  color: #888;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+}
+
+.iconButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.iconButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sendButton {
+  padding: 10px;
+  border-radius: 50%;
+  background-color: #00A3FF;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  margin-left: 4px;
+}
+
+.sendButton:hover {
+  background-color: #0077CC;
+}
+
+.sendButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #666;
+}
+
+/* New button styles */
+.deepThinkingButton {
+  padding: 8px;
+  border-radius: 50%;
+  background-color: transparent;
+  color: #888;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+}
+
+.deepThinkingButton:hover {
+  background-color: rgba(147, 51, 234, 0.2);
+  color: #9333ea;
+}
+
+.deepThinkingButtonActive {
+  background-color: #9333ea;
+  color: white;
+}
+
+.conversationButton {
+  padding: 8px;
+  border-radius: 50%;
+  background-color: transparent;
+  color: #888;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+}
+
+.conversationButton:hover {
+  background-color: rgba(37, 99, 235, 0.2);
+  color: #2563eb;
+}
+
+.conversationButtonActive {
+  background-color: #2563eb;
+  color: white;
+}
+
+.modeIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.deepThinkingIndicator {
+  color: #9333ea;
+}
+
+.conversationIndicator {
+  color: #2563eb;
+}
+
+.recordingIndicator {
+  color: #ef4444;
+}
+
+/* Right column styles */
+.contextHeader {
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #333;
+}
+
+.contextContent {
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.contextSection {
+  margin-bottom: 20px;
+}
+
+.sectionTitle {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #bbb;
+  font-size: 14px;
+}
+
+.patientHistory {
+  background-color: #2A2A2A;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 14px;
+  color: #ddd;
+  line-height: 1.5;
+}
+
+.medicationList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.medicationItem {
+  background-color: #2A2A2A;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.medicationName {
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #ffffff;
+}
+
+.medicationDetails {
+  color: #bbb;
+  margin-bottom: 4px;
+}
+
+.problemsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.problemItem {
+  background-color: #2A2A2A;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.problemTitle {
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #ffffff;
+}
+
+.problemDetails {
+  color: #bbb;
+}
+
+/* Animation */
+.typingIndicator {
+  display: flex;
+  gap: 4px;
+}
+
+.typingIndicator span {
+  width: 8px;
+  height: 8px;
+  background-color: #888;
+  border-radius: 50%;
+  animation: typing 1.4s infinite;
+}
+
+.typingIndicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typingIndicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typing {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.typingDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #888;
+  margin: 0 2px;
+}
+
+.typingDot:nth-child(1) {
+  animation: typing 1.4s infinite;
+}
+
+.typingDot:nth-child(2) {
+  animation: typing 1.4s infinite 0.2s;
+}
+
+.typingDot:nth-child(3) {
+  animation: typing 1.4s infinite 0.4s;
+}
+
+.typingContainer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #333;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  margin-top: 8px;
+}
+
+/* Mode indicator animations */
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+.pulseAnimation {
+  animation: pulse 2s infinite ease-in-out;
+}

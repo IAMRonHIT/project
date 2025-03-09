@@ -1,6 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { MedicationCard } from './MedicationCard';
+import { ClinicalTrends } from './ClinicalTrends';
+import { SocialFactorsPanel } from './SocialFactorsPanel';
+import { useTheme } from '../hooks/useTheme';
+import { luxuryEffects } from '../lib/themes';
 
-interface CareTeamMember {
+export interface CareTeamMember {
   id: string;
   name: string;
   role: string;
@@ -8,7 +14,7 @@ interface CareTeamMember {
   nextAvailable: string;
 }
 
-interface Intervention {
+export interface Intervention {
   id: string;
   date: string;
   type: string;
@@ -18,7 +24,34 @@ interface Intervention {
   notes: string;
 }
 
-interface PatientDetails {
+export interface Medication {
+  id: string;
+  name: string;
+  dosage: string;
+  frequency: string;
+  refillDate: string;
+  adherenceRate: number;
+  lastTaken: string;
+  nextDue: string;
+  status: 'ACTIVE' | 'DISCONTINUED' | 'PENDING_REFILL';
+}
+
+export interface ClinicalTrend {
+  metric: string;
+  values: Array<{
+    date: string;
+    value: number;
+    unit: string;
+  }>;
+  trend: 'UP' | 'DOWN' | 'STABLE';
+  unit: string;
+  normalRange?: {
+    min: number;
+    max: number;
+  };
+}
+
+export interface PatientDetails {
   careTeam: CareTeamMember[];
   interventions: Intervention[];
   appointments: {
@@ -31,109 +64,192 @@ interface PatientDetails {
     overall: number;
   };
   careGaps: Array<{ issue: string; priority: 'High' | 'Medium' | 'Low'; dueDate: string }>;
+  medications: Medication[];
+  clinicalTrends: ClinicalTrend[];
+  socialFactors: {
+    transportation: boolean;
+    housing: boolean;
+    foodSecurity: boolean;
+    financialStability: boolean;
+  };
 }
 
-interface PatientDetailsViewProps {
+export interface PatientDetailsViewProps {
   details: PatientDetails;
   onClose: () => void;
 }
 
-const PatientDetailsView: React.FC<PatientDetailsViewProps> = ({ details, onClose }) => {
+export const PatientDetailsView: React.FC<PatientDetailsViewProps> = ({ details, onClose }) => {
+  const [pinnedMedications, setPinnedMedications] = useState<Set<string>>(new Set());
+  const { theme } = useTheme();
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        when: "beforeChildren",
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 30
+      }
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-start mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Patient Details</h2>
-          <button
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+    >
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className={`
+          ${luxuryEffects.glassmorphism[theme === 'dark' ? 'dark' : 'light']}
+          rounded-lg max-w-6xl w-full p-6 max-h-[90vh] overflow-y-auto
+          ${luxuryEffects.neonGlow.cyan}
+        `}
+      >
+        <motion.div
+          variants={itemVariants}
+          className="flex justify-between items-start mb-8"
+        >
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
+            Patient Overview
+          </h2>
+          <motion.button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+            title="Close patient overview"
+            aria-label="Close patient overview"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
 
-        {/* Care Team Section */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-4">Care Team</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {details.careTeam.map(member => (
-              <div key={member.id} className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-medium text-gray-800">{member.name}</h4>
-                <p className="text-sm text-gray-600">{member.role}</p>
-                <p className="text-sm text-gray-600">Last Contact: {member.lastContact}</p>
-                <p className="text-sm text-gray-600">Next Available: {member.nextAvailable}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* Quick Stats */}
+        <motion.div
+          variants={itemVariants}
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
+        >
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            className={`
+              rounded-lg p-4
+              ${luxuryEffects.glassmorphism[theme === 'dark' ? 'dark' : 'light']}
+              ${luxuryEffects.interaction.hover}
+            `}
+          >
+            <h4 className="text-sm font-medium bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
+              Overall Adherence
+            </h4>
+            <motion.p
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="text-3xl font-bold bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent mt-1"
+            >
+              {details.adherence.overall}%
+            </motion.p>
+          </motion.div>
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            className={`
+              rounded-lg p-4
+              ${luxuryEffects.glassmorphism[theme === 'dark' ? 'dark' : 'light']}
+              ${luxuryEffects.interaction.hover}
+            `}
+          >
+            <h4 className="text-sm font-medium bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
+              Active Care Gaps
+            </h4>
+            <motion.p
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="text-3xl font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent mt-1"
+            >
+              {details.careGaps.filter(gap => gap.priority === 'High').length}
+            </motion.p>
+          </motion.div>
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            className={`
+              rounded-lg p-4
+              ${luxuryEffects.glassmorphism[theme === 'dark' ? 'dark' : 'light']}
+              ${luxuryEffects.interaction.hover}
+            `}
+          >
+            <h4 className="text-sm font-medium bg-gradient-to-r from-emerald-500 to-green-500 bg-clip-text text-transparent">
+              Next Appointment
+            </h4>
+            <motion.p
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="text-xl font-bold bg-gradient-to-r from-emerald-500 to-green-500 bg-clip-text text-transparent mt-1"
+            >
+              {details.appointments.upcoming[0]?.date || 'None scheduled'}
+            </motion.p>
+          </motion.div>
+        </motion.div>
 
-        {/* Interventions Section */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-4">Interventions</h3>
+        {/* Medications Section */}
+        <motion.div
+          variants={itemVariants}
+          className="mb-8"
+        >
           <div className="space-y-4">
-            {details.interventions.map(intervention => (
-              <div key={intervention.id} className="bg-gray-50 rounded-lg p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <h4 className="font-medium text-gray-800">{intervention.type}</h4>
-                    <p className="text-sm text-gray-600">Provider: {intervention.provider}</p>
-                  </div>
-                  <span className="px-2 py-1 rounded-full text-sm bg-green-100 text-green-800">
-                    {intervention.outcome}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-600 mt-2">{intervention.notes}</p>
-                <p className="text-sm text-gray-600 mt-2">Follow-up: {intervention.followUpDate}</p>
-              </div>
+            {details.medications.map(medication => (
+              <MedicationCard
+                key={medication.id}
+                medication={medication}
+                isExpanded={pinnedMedications.has(medication.id)}
+              />
             ))}
           </div>
-        </div>
+        </motion.div>
 
-        {/* Adherence Section */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-4">Adherence Metrics</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="text-sm font-medium text-gray-600">Medications</h4>
-              <p className="text-2xl font-bold text-gray-900">{details.adherence.medications}%</p>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="text-sm font-medium text-gray-600">Appointments</h4>
-              <p className="text-2xl font-bold text-gray-900">{details.adherence.appointments}%</p>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="text-sm font-medium text-gray-600">Overall</h4>
-              <p className="text-2xl font-bold text-gray-900">{details.adherence.overall}%</p>
-            </div>
-          </div>
-        </div>
+        {/* Clinical Trends Section */}
+        <motion.div
+          variants={itemVariants}
+          className="mb-8"
+        >
+          <ClinicalTrends trends={details.clinicalTrends} />
+        </motion.div>
 
-        {/* Care Gaps Section */}
-        <div>
-          <h3 className="text-lg font-semibold mb-4">Care Gaps</h3>
-          <div className="space-y-4">
-            {details.careGaps.map((gap, idx) => (
-              <div key={idx} className="bg-gray-50 rounded-lg p-4">
-                <div className="flex justify-between items-center">
-                  <h4 className="font-medium text-gray-800">{gap.issue}</h4>
-                  <span className={`px-2 py-1 rounded-full text-sm ${
-                    gap.priority === 'High' ? 'bg-red-100 text-red-800' :
-                    gap.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-green-100 text-green-800'
-                  }`}>
-                    {gap.priority}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-600 mt-2">Due: {gap.dueDate}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
+        {/* Social Factors Section */}
+        <motion.div
+          variants={itemVariants}
+          className="mb-8"
+        >
+          <SocialFactorsPanel
+            factors={details.socialFactors}
+            onUpdate={(factor, value) => {
+              // In a real app, this would update the backend
+              console.log(`Updating ${factor} to ${value}`);
+            }}
+          />
+        </motion.div>
+      </motion.div>
+    </motion.div>
   );
 };
 
+// Add default export
 export default PatientDetailsView;

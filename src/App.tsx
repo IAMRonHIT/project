@@ -5,7 +5,6 @@ import { AppShell } from './components/Layout/AppShell';
 import { MembersPage } from './pages/Members/MembersPage';
 import { ProvidersPage } from './pages/Providers';
 import { RonAIPage } from './pages/RonAI/RonAIPage';
-import { UtilizationReview } from './pages/UtilizationReview';
 import CommunicationHub from './components/Communication Hub/CommunicationHub';
 import { Member360View } from './pages/Members/Member360View';
 import { EnhancedCareJourney } from './pages/Members/components/EnhancedCareJourney';
@@ -34,10 +33,6 @@ function AppRoutes() {
         <Route 
           path="/providers" 
           element={<ProvidersPage />} 
-        />
-        <Route 
-          path="/utilization" 
-          element={<UtilizationReview />} 
         />
         <Route 
           path="/communication" 

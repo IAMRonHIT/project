@@ -1,8 +1,23 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, ChevronLeft, ChevronDown, Activity, Calendar, Clock, FileText, ArrowUpRight, Check, AlertTriangle, X } from 'lucide-react';
+import { ChevronRight, ChevronLeft, ChevronDown, Activity, Calendar, Clock, FileText, ArrowUpRight } from 'lucide-react';
 import { mockCareJourneys } from './mockData';
 import { JourneyTimeline } from './JourneyTimeline';
+
+interface Journey {
+  id: string;
+  title: string;
+  type: 'surgery' | 'checkup';
+  status: 'active' | 'completed' | 'pending';
+  startDate: string;
+  provider: string;
+}
+
+interface ButtonAriaProps {
+  'aria-expanded': boolean;
+  'aria-controls': string;
+  'aria-label': string;
+}
 
 export function CareJourneys() {
   const [isDark] = useState(document.documentElement.classList.contains('dark'));
@@ -30,10 +45,6 @@ export function CareJourneys() {
     }
   };
 
-  const handleCriterionToggle = (criterionId: string) => {
-    // Handle criterion toggle logic
-  };
-
   return (
     <div className={`${
       isDark
@@ -52,13 +63,15 @@ export function CareJourneys() {
             <button
               onClick={handlePreviousPage}
               disabled={currentPage === 0}
+              aria-label="Previous page"
+              title="Previous page"
               className={`p-2 rounded-lg ${
                 isDark
                   ? 'hover:bg-white/10 disabled:text-white/20'
                   : 'hover:bg-ron-primary/10 disabled:text-dark-gun-metal/20'
               } transition-colors disabled:cursor-not-allowed`}
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-4 h-4" aria-hidden="true" />
             </button>
             <span className={`text-sm ${
               isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
@@ -68,110 +81,127 @@ export function CareJourneys() {
             <button
               onClick={handleNextPage}
               disabled={currentPage === totalPages - 1}
+              aria-label="Next page"
+              title="Next page"
               className={`p-2 rounded-lg ${
                 isDark
                   ? 'hover:bg-white/10 disabled:text-white/20'
                   : 'hover:bg-ron-primary/10 disabled:text-dark-gun-metal/20'
               } transition-colors disabled:cursor-not-allowed`}
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
         </div>
       </div>
 
       <div className="divide-y divide-ron-divider">
-        {currentJourneys.map((journey) => (
-          <div key={journey.id}>
-            <button
-              onClick={() => setSelectedJourney(selectedJourney === journey.id ? null : journey.id)}
-              className={`w-full px-6 py-4 flex items-center justify-between ${
-                isDark ? 'hover:bg-white/5' : 'hover:bg-ron-primary/5'
-              } transition-colors`}
-            >
-              <div className="flex items-center gap-6">
-                <div className={`w-10 h-10 rounded-lg ${
-                  isDark ? 'bg-white/10' : 'bg-ron-primary/10'
-                } flex items-center justify-center`}>
-                  {journey.type === 'surgery' ? (
-                    <Activity className={isDark ? 'text-[#CCFF00]' : 'text-ron-primary'} />
-                  ) : (
-                    <Calendar className={isDark ? 'text-[#CCFF00]' : 'text-ron-primary'} />
-                  )}
-                </div>
-                <div className="text-left">
-                  <h4 className={`font-medium ${
-                    isDark ? 'text-white' : 'text-dark-gun-metal'
-                  }`}>{journey.title}</h4>
-                  <div className="flex items-center gap-4 mt-1">
-                    <div className="flex items-center gap-1">
-                      <Clock className={`w-4 h-4 ${
-                        isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
-                      }`} />
-                      <span className={`text-sm ${
-                        isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
-                      }`}>{journey.startDate}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <FileText className={`w-4 h-4 ${
-                        isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
-                      }`} />
-                      <span className={`text-sm ${
-                        isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
-                      }`}>{journey.provider}</span>
+        {currentJourneys.map((journey: Journey) => {
+          const isSelected = selectedJourney === journey.id;
+          const timelineId = `journey-timeline-${journey.id}`;
+          
+          const ariaProps: ButtonAriaProps = {
+            'aria-expanded': isSelected,
+            'aria-controls': timelineId,
+            'aria-label': `${journey.title} - ${journey.status} - Click to ${isSelected ? 'collapse' : 'expand'} details`
+          };
+          
+          return (
+            <div key={journey.id}>
+              <button
+                onClick={() => setSelectedJourney(isSelected ? null : journey.id)}
+                className={`w-full px-6 py-4 flex items-center justify-between ${
+                  isDark ? 'hover:bg-white/5' : 'hover:bg-ron-primary/5'
+                } transition-colors`}
+                {...ariaProps}
+              >
+                <div className="flex items-center gap-6">
+                  <div className={`w-10 h-10 rounded-lg ${
+                    isDark ? 'bg-white/10' : 'bg-ron-primary/10'
+                  } flex items-center justify-center`}>
+                    {journey.type === 'surgery' ? (
+                      <Activity className={isDark ? 'text-[#CCFF00]' : 'text-ron-primary'} aria-hidden="true" />
+                    ) : (
+                      <Calendar className={isDark ? 'text-[#CCFF00]' : 'text-ron-primary'} aria-hidden="true" />
+                    )}
+                  </div>
+                  <div className="text-left">
+                    <h4 className={`font-medium ${
+                      isDark ? 'text-white' : 'text-dark-gun-metal'
+                    }`}>{journey.title}</h4>
+                    <div className="flex items-center gap-4 mt-1">
+                      <div className="flex items-center gap-1">
+                        <Clock className={`w-4 h-4 ${
+                          isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
+                        }`} aria-hidden="true" />
+                        <span className={`text-sm ${
+                          isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
+                        }`}>{journey.startDate}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <FileText className={`w-4 h-4 ${
+                          isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
+                        }`} aria-hidden="true" />
+                        <span className={`text-sm ${
+                          isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
+                        }`}>{journey.provider}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className={`
-                  inline-flex items-center justify-center
-                  min-w-[140px] px-3 py-1 text-xs font-medium
-                  rounded-full backdrop-blur-sm border
-                  transition-all duration-200
-                  bg-gradient-glossy
-                  shadow-glow hover:shadow-glow-hover
-                  ${journey.status === 'active'
-                    ? isDark
-                      ? 'bg-ron-mint-400/10 border-ron-mint-400/20 text-ron-mint-200'
-                      : 'bg-ron-mint-50 border-ron-mint-200 text-ron-mint-700'
-                    : journey.status === 'completed'
+                <div className="flex items-center gap-4">
+                  <div className={`
+                    inline-flex items-center justify-center
+                    min-w-[140px] px-3 py-1 text-xs font-medium
+                    rounded-full backdrop-blur-sm border
+                    transition-all duration-200
+                    bg-gradient-glossy
+                    shadow-glow hover:shadow-glow-hover
+                    ${journey.status === 'active'
                       ? isDark
-                        ? 'bg-ron-teal-400/10 border-ron-teal-400/20 text-ron-teal-200'
-                        : 'bg-ron-teal-50 border-ron-teal-200 text-ron-teal-700'
-                      : isDark
-                        ? 'bg-ron-lime-400/10 border-ron-lime-400/20 text-ron-lime-200'
-                        : 'bg-ron-lime-50 border-ron-lime-200 text-ron-lime-700'
-                  }
-                `}>
-                  {journey.status.toUpperCase()}
+                        ? 'bg-ron-mint-400/10 border-ron-mint-400/20 text-ron-mint-200'
+                        : 'bg-ron-mint-50 border-ron-mint-200 text-ron-mint-700'
+                      : journey.status === 'completed'
+                        ? isDark
+                          ? 'bg-ron-teal-400/10 border-ron-teal-400/20 text-ron-teal-200'
+                          : 'bg-ron-teal-50 border-ron-teal-200 text-ron-teal-700'
+                        : isDark
+                          ? 'bg-ron-lime-400/10 border-ron-lime-400/20 text-ron-lime-200'
+                          : 'bg-ron-lime-50 border-ron-lime-200 text-ron-lime-700'
+                    }
+                  `}>
+                    {journey.status.toUpperCase()}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <ArrowUpRight className={`w-4 h-4 ${
+                      isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
+                    }`} aria-hidden="true" />
+                    <ChevronDown className={`w-4 h-4 transition-transform ${
+                      isSelected ? 'rotate-180' : ''
+                    } ${isDark ? 'text-white/40' : 'text-dark-gun-metal/40'}`} aria-hidden="true" />
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <ArrowUpRight className={`w-4 h-4 ${
-                    isDark ? 'text-white/40' : 'text-dark-gun-metal/40'
-                  }`} />
-                  <ChevronDown className={`w-4 h-4 transition-transform ${
-                    selectedJourney === journey.id ? 'rotate-180' : ''
-                  } ${isDark ? 'text-white/40' : 'text-dark-gun-metal/40'}`} />
-                </div>
-              </div>
-            </button>
+              </button>
 
-            <AnimatePresence>
-              {selectedJourney === journey.id && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="overflow-hidden"
-                >
-                  <JourneyTimeline journey={journey} />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        ))}
+              <AnimatePresence>
+                {isSelected && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                    id={timelineId}
+                    role="region"
+                    aria-label={`Timeline for ${journey.title}`}
+                  >
+                    <JourneyTimeline journey={journey} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

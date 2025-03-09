@@ -42,23 +42,12 @@ export function ChatInterface({ selectedCaseId }: ChatInterfaceProps) {
     setIsProcessing(true);
 
     try {
-      const response = await fetch('http://localhost:3001/api/ron', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ input: userMessage.content }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const data = await response.json();
+      // Simulate AI response delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: data.response,
+        content: `This is a placeholder response for case #${selectedCaseId}`,
         sender: 'ai',
         timestamp: new Date().toISOString()
       };
@@ -133,6 +122,8 @@ export function ChatInterface({ selectedCaseId }: ChatInterfaceProps) {
                 : 'bg-gray-800/50 text-gray-500 cursor-not-allowed'
               }
             `}
+            title="Send message"
+            aria-label="Send message"
           >
             <MessageSquare className="h-5 w-5" />
           </button>

@@ -4,6 +4,9 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
+      fontFamily: {
+        'raleway': ['Raleway', 'sans-serif'],
+      },
       colors: {
         ron: {
           // Core colors
@@ -125,8 +128,123 @@ export default {
       animation: {
         'fade-in-up': 'fade-in-up 0.5s ease-out forwards',
         'grow-up': 'grow-up 0.5s ease-out forwards'
-      }
+      },
+      typography: (theme) => ({
+        DEFAULT: {
+          css: {
+            '--tw-prose-body': theme('colors.white'),
+            '--tw-prose-headings': theme('colors.white'),
+            '--tw-prose-lead': theme('colors.white'),
+            '--tw-prose-links': theme('colors.ron.teal.400'),
+            '--tw-prose-bold': theme('colors.white'),
+            '--tw-prose-counters': theme('colors.white'),
+            '--tw-prose-bullets': theme('colors.ron.teal.400'),
+            '--tw-prose-hr': theme('colors.ron.divider.dark'),
+            '--tw-prose-quotes': theme('colors.white'),
+            '--tw-prose-quote-borders': theme('colors.ron.teal.400'),
+            '--tw-prose-captions': theme('colors.white'),
+            '--tw-prose-code': theme('colors.ron.teal.300'),
+            '--tw-prose-pre-code': theme('colors.white'),
+            '--tw-prose-pre-bg': 'rgba(0, 0, 0, 0.5)',
+            '--tw-prose-th-borders': theme('colors.ron.divider.dark'),
+            '--tw-prose-td-borders': theme('colors.ron.divider.dark'),
+
+            // Light mode
+            '.light &': {
+              '--tw-prose-body': theme('colors.gray.900'),
+              '--tw-prose-headings': theme('colors.gray.900'),
+              '--tw-prose-lead': theme('colors.gray.900'),
+              '--tw-prose-links': theme('colors.ron.teal.600'),
+              '--tw-prose-bold': theme('colors.gray.900'),
+              '--tw-prose-counters': theme('colors.gray.900'),
+              '--tw-prose-bullets': theme('colors.ron.teal.600'),
+              '--tw-prose-hr': theme('colors.ron.divider.light'),
+              '--tw-prose-quotes': theme('colors.gray.900'),
+              '--tw-prose-quote-borders': theme('colors.ron.teal.600'),
+              '--tw-prose-captions': theme('colors.gray.900'),
+              '--tw-prose-code': theme('colors.ron.teal.600'),
+              '--tw-prose-pre-code': theme('colors.gray.900'),
+              '--tw-prose-pre-bg': 'rgba(0, 0, 0, 0.05)',
+              '--tw-prose-th-borders': theme('colors.ron.divider.light'),
+              '--tw-prose-td-borders': theme('colors.ron.divider.light'),
+            },
+
+            // Base styles that apply to both modes
+            // Code blocks
+            code: {
+              color: theme('colors.ron.teal.300'),
+              backgroundColor: 'rgba(0, 0, 0, 0.3)',
+              padding: '0.2em 0.4em',
+              borderRadius: '0.25rem',
+              '&::before': {
+                content: 'none !important',
+              },
+              '&::after': {
+                content: 'none !important',
+              },
+            },
+            'pre code': {
+              backgroundColor: 'transparent',
+              padding: '0',
+              color: 'inherit',
+              fontSize: '0.875em',
+            },
+            pre: {
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              color: theme('colors.white'),
+              borderRadius: '0.5rem',
+              padding: '1rem',
+              overflowX: 'auto',
+            },
+            // Tables
+            table: {
+              borderCollapse: 'separate',
+              borderSpacing: '0',
+              width: '100%',
+              tableLayout: 'auto',
+              textAlign: 'left',
+              marginTop: '2em',
+              marginBottom: '2em',
+            },
+            'th, td': {
+              borderWidth: '1px',
+              borderColor: theme('colors.ron.divider.dark'),
+              padding: '0.75rem',
+            },
+            th: {
+              backgroundColor: 'rgba(0, 0, 0, 0.3)',
+              fontWeight: '600',
+            },
+            // Lists
+            ul: {
+              li: {
+                '&::before': {
+                  backgroundColor: theme('colors.ron.teal.400'),
+                },
+              },
+            },
+            // Math equations
+            '.math': {
+              color: theme('colors.white'),
+              padding: '0.5rem 0',
+            },
+            // Blockquotes
+            blockquote: {
+              borderLeftColor: theme('colors.ron.teal.400'),
+              backgroundColor: 'rgba(0, 0, 0, 0.2)',
+              padding: '1rem',
+              borderRadius: '0.25rem',
+            },
+            // Task lists
+            'input[type="checkbox"]': {
+              color: theme('colors.ron.teal.400'),
+            },
+          },
+        },
+      }),
     }
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/typography'),
+  ],
 };

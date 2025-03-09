@@ -1,27 +1,27 @@
 import React from 'react';
+import { Badge } from './Badge';
 
-interface PriorityBadgeProps {
-  priority: string;
+type Priority = 'high' | 'medium' | 'low';
+
+interface PriorityBadgeProps extends Readonly<{
+  priority: Priority;
   className?: string;
-}
+}> {}
+
+const priorityVariantMap: Record<Priority, 'error' | 'warning' | 'success'> = {
+  high: 'error',
+  medium: 'warning',
+  low: 'success'
+};
 
 export function PriorityBadge({ priority, className = '' }: PriorityBadgeProps) {
-  const getColor = () => {
-    switch (priority.toLowerCase()) {
-      case 'high':
-        return 'bg-red-100 text-red-800';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'low':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getColor()} ${className}`}>
-      {priority}
-    </span>
+    <Badge
+      variant={priorityVariantMap[priority]}
+      size="sm"
+      className={className}
+    >
+      {priority.toUpperCase()}
+    </Badge>
   );
 }

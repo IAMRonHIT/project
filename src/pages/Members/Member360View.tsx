@@ -1,15 +1,45 @@
-import React, { useState, useEffect } from 'react';
-import { Activity, Heart, AlertCircle, Clock, ArrowLeft } from 'lucide-react';
+import React, { useState } from 'react';
+import { Activity, Heart, AlertCircle, Clock, ArrowLeft, UserCircle } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { useTheme } from '../../hooks/useTheme';
+import { luxuryEffects } from '../../lib/themes';
 import { CareJourneysTable } from './components/CareJourneysTable';
+import { PatientDetailsView } from '../../components';
 
 export function Member360View() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [isDark] = React.useState(() => document.documentElement.classList.contains('dark'));
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  
+  const motionVariants = {
+    container: {
+      hidden: { opacity: 0 },
+      visible: {
+        opacity: 1,
+        transition: {
+          when: "beforeChildren",
+          staggerChildren: 0.1
+        }
+      }
+    },
+    item: {
+      hidden: { opacity: 0, y: 20 },
+      visible: {
+        opacity: 1,
+        y: 0,
+        transition: {
+          type: "spring",
+          stiffness: 300,
+          damping: 30
+        }
+      }
+    }
+  };
+  const [showPatientDetails, setShowPatientDetails] = useState(false);
 
-  // In a real app, you would fetch member data based on the ID
-  // For now, we'll use Sarah Wilson's data since that's what we're testing
+  // Mock data for member overview
   const memberData = {
     id: '1',
     name: 'Sarah Wilson',
@@ -17,6 +47,131 @@ export function Member360View() {
     riskScore: 41.13,
     careStatus: 'Active',
     lastUpdated: '2h ago'
+  };
+
+  // Mock data for patient details
+  const patientDetails = {
+    careTeam: [
+      {
+        id: '1',
+        name: 'Dr. Emily Chen',
+        role: 'Primary Care Physician',
+        lastContact: '2025-02-08T15:30:00',
+        nextAvailable: '2025-02-15T10:00:00'
+      },
+      {
+        id: '2',
+        name: 'James Wilson',
+        role: 'Care Coordinator',
+        lastContact: '2025-02-09T11:00:00',
+        nextAvailable: '2025-02-12T14:00:00'
+      }
+    ],
+    interventions: [
+      {
+        id: '1',
+        date: '2025-02-01T09:00:00',
+        type: 'Medication Review',
+        provider: 'Dr. Emily Chen',
+        outcome: 'Completed',
+        followUpDate: '2025-03-01T09:00:00',
+        notes: 'Adjusted blood pressure medication dosage'
+      }
+    ],
+    appointments: {
+      past: [
+        {
+          date: '2025-01-15',
+          type: 'Check-up',
+          provider: 'Dr. Emily Chen',
+          outcome: 'Completed'
+        }
+      ],
+      upcoming: [
+        {
+          date: '2025-02-15',
+          type: 'Follow-up',
+          provider: 'Dr. Emily Chen'
+        }
+      ]
+    },
+    adherence: {
+      medications: 85,
+      appointments: 90,
+      overall: 87
+    },
+    careGaps: [
+      {
+        issue: 'Annual Eye Exam',
+        priority: 'High' as const,
+        dueDate: '2025-03-01'
+      },
+      {
+        issue: 'Flu Shot',
+        priority: 'Medium' as const,
+        dueDate: '2025-02-28'
+      }
+    ],
+    medications: [
+      {
+        id: '1',
+        name: 'Lisinopril',
+        dosage: '10mg',
+        frequency: 'Once daily',
+        refillDate: '2025-02-20',
+        adherenceRate: 92,
+        lastTaken: '2025-02-10T08:00:00',
+        nextDue: '2025-02-11T08:00:00',
+        status: 'ACTIVE' as const
+      },
+      {
+        id: '2',
+        name: 'Metformin',
+        dosage: '500mg',
+        frequency: 'Twice daily',
+        refillDate: '2025-02-15',
+        adherenceRate: 78,
+        lastTaken: '2025-02-10T20:00:00',
+        nextDue: '2025-02-11T08:00:00',
+        status: 'PENDING_REFILL' as const
+      }
+    ],
+    clinicalTrends: [
+      {
+        metric: 'Blood Pressure',
+        values: [
+          { date: '2025-01-01', value: 130, unit: 'mmHg' },
+          { date: '2025-01-15', value: 128, unit: 'mmHg' },
+          { date: '2025-02-01', value: 125, unit: 'mmHg' }
+        ],
+        trend: 'DOWN' as const,
+        unit: 'mmHg',
+        normalRange: {
+          min: 90,
+          max: 120
+        }
+      },
+      {
+        metric: 'Blood Glucose',
+        values: [
+          { date: '2025-01-01', value: 140, unit: 'mg/dL' },
+          { date: '2025-01-15', value: 145, unit: 'mg/dL' },
+          { date: '2025-02-01', value: 142, unit: 'mg/dL' }
+        ],
+        trend: 'STABLE' as const,
+        unit: 'mg/dL',
+        normalRange: {
+          min: 70,
+          max: 130
+        }
+      }
+    ],
+    socialFactors: {
+      transportation: true,
+      housing: true,
+      foodSecurity: false,
+      financialStability: true
+    }
   };
 
   const metrics = [
@@ -54,11 +209,16 @@ export function Member360View() {
   return (
     <div className="relative min-h-screen">
       {/* Header */}
-      <div className={`${
-        isDark
-          ? 'bg-white/5 backdrop-blur-xl border-white/10'
-          : 'bg-white border-ron-divider'
-      } mb-6 rounded-xl shadow-soft`}>
+      <motion.div
+        variants={motionVariants.container}
+        initial="hidden"
+        animate="visible"
+        className={`
+          ${luxuryEffects.glassmorphism[isDark ? 'dark' : 'light']}
+          ${luxuryEffects.neonGlow.cyan}
+          mb-6 rounded-xl
+        `}
+      >
         <div className="p-6">
           <button
             onClick={() => navigate('/members')}
@@ -72,9 +232,25 @@ export function Member360View() {
 
           <div className="flex items-start justify-between">
             <div>
-              <h1 className={`text-3xl font-light ${
-                isDark ? 'text-white' : 'text-dark-gun-metal'
-              }`}>{memberData.name}</h1>
+              <div className="flex items-center gap-4">
+                <h1 className={`text-3xl font-light ${
+                  isDark ? 'text-white' : 'text-dark-gun-metal'
+                }`}>{memberData.name}</h1>
+                <button
+                  onClick={() => setShowPatientDetails(true)}
+                  className={`
+                    flex items-center gap-2 px-4 py-2 rounded-lg
+                    ${isDark 
+                      ? 'bg-white/10 hover:bg-white/20 text-white' 
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                    }
+                    transition-colors
+                  `}
+                >
+                  <UserCircle className="w-5 h-5" />
+                  <span>View Details</span>
+                </button>
+              </div>
               <div className="flex items-center gap-4 mt-2">
                 <div className="flex items-center gap-2">
                   <span className="text-emerald-400">●</span>
@@ -95,23 +271,29 @@ export function Member360View() {
           </div>
 
           {/* Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+          <motion.div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
             {metrics.map((metric, index) => (
-              <div
+              <motion.div
                 key={index}
-                className={`${
-                  isDark ? 'bg-white/5' : 'bg-white'
-                } rounded-xl shadow-soft border border-ron-divider p-6`}
+                variants={motionVariants.item}
+                whileHover={{ scale: 1.02 }}
+                className={`
+                  ${luxuryEffects.glassmorphism[isDark ? 'dark' : 'light']}
+                  ${luxuryEffects.interaction.hover}
+                  rounded-xl p-6
+                `}
               >
-                <h2 className="text-lg font-semibold mb-4">{metric.title}</h2>
+                <h2 className="text-lg font-semibold mb-4 bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
+                  {metric.title}
+                </h2>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className={`text-sm font-medium ${
-                      isDark ? 'text-white/60' : 'text-dark-gun-metal/60'
-                    }`}>{metric.title}</p>
-                    <p className={`text-3xl font-light mt-1 ${
-                      isDark ? 'text-white' : 'text-dark-gun-metal'
-                    }`}>{metric.value}</p>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                      {metric.title}
+                    </p>
+                    <p className="text-3xl font-light mt-1 bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
+                      {metric.value}
+                    </p>
                   </div>
                   <div className={`w-12 h-12 rounded-full bg-${metric.color}-500/20 flex items-center justify-center`}>
                     <metric.icon className={`w-6 h-6 text-${metric.color}-400`} />
@@ -126,21 +308,35 @@ export function Member360View() {
                     }`}>{metric.details}</p>
                   </div>
                 )}
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
 
           {/* Care Journeys */}
-          <div className={`mt-6 ${
-            isDark ? 'bg-white/5' : 'bg-white'
-          } rounded-xl shadow-soft border border-ron-divider p-6`}>
+          <motion.div
+            variants={motionVariants.item}
+            className={`
+              mt-6
+              ${luxuryEffects.glassmorphism[isDark ? 'dark' : 'light']}
+              ${luxuryEffects.interaction.hover}
+              rounded-xl p-6
+            `}
+          >
             <h2 className={`text-lg font-semibold mb-4 ${
               isDark ? 'text-white' : 'text-dark-gun-metal'
             }`}>Care Journeys</h2>
             <CareJourneysTable />
-          </div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
+
+      {/* Patient Details Modal */}
+      {showPatientDetails && (
+        <PatientDetailsView
+          details={patientDetails}
+          onClose={() => setShowPatientDetails(false)}
+        />
+      )}
     </div>
   );
 }

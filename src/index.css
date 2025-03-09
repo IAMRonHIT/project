@@ -1,3 +1,7 @@
+/* stylelint-disable at-rule-no-unknown */
+
+@import url('https://fonts.googleapis.com/css2?family=Raleway:wght@300;400&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -35,6 +39,7 @@
   .card {
     background-color: rgb(var(--bg-secondary) / 0.5);
     border: 1px solid rgb(var(--border) / 0.2);
+    -webkit-backdrop-filter: blur(16px);
     backdrop-filter: blur(16px);
   }
 

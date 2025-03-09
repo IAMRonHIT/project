@@ -1,75 +1,85 @@
 import React from 'react';
+import { motion } from 'framer-motion';
+import { useTheme } from '../hooks/useTheme';
+import { luxuryEffects } from '../lib/themes';
 
 interface ProgressBarProps {
   value: number;
-  max?: number;
-  size?: 'sm' | 'md' | 'lg';
-  variant?: 'default' | 'success' | 'warning' | 'error';
+  variant?: 'success' | 'warning' | 'error' | 'info';
   showValue?: boolean;
   glow?: boolean;
 }
 
-export function ProgressBar({
+export const ProgressBar: React.FC<ProgressBarProps> = ({
   value,
-  max = 100,
-  size = 'md',
-  variant = 'default',
+  variant = 'info',
   showValue = false,
-  glow = false
-}: ProgressBarProps) {
-  const [isDark] = React.useState(document.documentElement.classList.contains('dark'));
-  const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
+  glow = false,
+}) => {
+  const { theme } = useTheme();
 
-  const getSizeStyles = () => {
-    switch (size) {
-      case 'sm':
-        return 'h-1.5';
-      case 'lg':
-        return 'h-4';
+  const getVariantColors = () => {
+    switch (variant) {
+      case 'success':
+        return 'from-emerald-500 to-green-500';
+      case 'warning':
+        return 'from-amber-500 to-orange-500';
+      case 'error':
+        return 'from-rose-500 to-red-500';
+      case 'info':
       default:
-        return 'h-2.5';
+        return 'from-cyan-500 to-blue-500';
     }
   };
 
-  const getVariantStyles = () => {
+  const getGlowColor = () => {
     switch (variant) {
       case 'success':
-        return isDark ? 'bg-ron-mint-400' : 'bg-ron-mint-300';
+        return 'shadow-[0_0_20px_rgba(16,185,129,0.3)]';
       case 'warning':
-        return isDark ? 'bg-ron-lime-400' : 'bg-ron-lime-300';
+        return 'shadow-[0_0_20px_rgba(245,158,11,0.3)]';
       case 'error':
-        return isDark ? 'bg-ron-coral-400' : 'bg-ron-coral-300';
+        return 'shadow-[0_0_20px_rgba(239,68,68,0.3)]';
+      case 'info':
       default:
-        return isDark ? 'bg-ron-teal-400' : 'bg-ron-teal-300';
+        return 'shadow-[0_0_20px_rgba(6,182,212,0.3)]';
     }
   };
 
   return (
     <div className="relative">
-      <div className={`
-        w-full rounded-full overflow-hidden
-        ${getSizeStyles()}
-        ${isDark ? 'bg-white/10' : 'bg-ron-primary/10'}
-        ${glow ? 'shadow-glow' : ''}
-      `}>
-        <div
+      <div
+        className={`
+          h-2 rounded-full overflow-hidden
+          ${luxuryEffects.glassmorphism[theme === 'dark' ? 'dark' : 'light']}
+        `}
+      >
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${value}%` }}
+          transition={{
+            type: 'spring',
+            stiffness: 300,
+            damping: 30,
+          }}
           className={`
-            ${getSizeStyles()}
-            ${getVariantStyles()}
-            transition-all duration-500 ease-out
-            bg-gradient-glossy
+            h-full bg-gradient-to-r ${getVariantColors()}
+            ${glow ? getGlowColor() : ''}
           `}
-          style={{ width: `${percentage}%` }}
         />
       </div>
       {showValue && (
-        <span className={`
-          absolute right-0 -top-6 text-sm font-medium
-          ${isDark ? 'text-white/60' : 'text-dark-gun-metal/60'}
-        `}>
-          {percentage.toFixed(0)}%
-        </span>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="absolute -top-6 right-0"
+        >
+          <span className={`text-sm font-medium bg-gradient-to-r ${getVariantColors()} bg-clip-text text-transparent`}>
+            {value}%
+          </span>
+        </motion.div>
       )}
     </div>
   );
-}
+};

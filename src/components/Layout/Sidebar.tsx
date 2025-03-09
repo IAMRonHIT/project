@@ -19,10 +19,7 @@ const mainNavItems = [
   { icon: Users, label: 'Members', to: '/members' },
   { icon: Building2, label: 'Providers', to: '/providers' },
   { icon: Bot, label: 'Ron AI', to: '/ron-ai' },
-  { icon: ClipboardCheck, label: 'Utilization Review', to: '/utilization' },
-  { icon: Heart, label: 'Care Management', to: '/care' },
   { icon: Activity, label: 'Population Health', to: '/population-health' },
-  { icon: FileText, label: 'Claims', to: '/claims' },
   { icon: MessageSquareMore, label: 'Communication Hub', to: '/communication' },
   { icon: BarChart3, label: 'Reports', to: '/reports' },
 ];

@@ -1,102 +1,76 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { FaPaperPlane, FaFileUpload, FaHistory } from 'react-icons/fa';
-import { ronAIService, formatMessage, streamRun } from '../../services/ronAIService';
-import { fileUploadService, type UploadProgress } from '../../services/fileUploadService';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { 
+  streamAssistantMessage, 
+  getOrCreateThreadId, 
+  getThreadHistory,
+  sendMessageFeedback
+} from '../../services/ronAIService';
+import realtimeAudioService, { ConnectionState } from '../../services/realtimeAudioService';
+import { Loader2, ClipboardIcon, CheckIcon, ThumbsUp, ThumbsDown, ChevronDown, ChevronRight } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import RonAiTab from './RonAITab';
 import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import rehypeHighlight from 'rehype-highlight';
-import 'katex/dist/katex.min.css';
-import 'highlight.js/styles/github-dark.css';
-import FileViewer from './FileViewer';
+import './RonAITab.module.css';
 
-interface ChatMessage {
-  sender: 'You' | 'Ron AI';
-  time: string;
-  message: string;
-  referencesContext?: boolean;
-  analysis?: boolean;
-}
-
-interface StreamedMessage {
-    content: string;
-}
-
-interface ThreadContext {
-  threadId: string;
-  files: string[];
-  lastActivity: Date;
-}
-
-const formatFileSize = (bytes: number): string => {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-  if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-  return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+// Define a simple styles object for the typing indicator
+const styles = {
+  typingContainer: 'flex items-center justify-center',
+  typingIndicator: 'flex space-x-1'
 };
 
-const formatAIResponse = (text: string | undefined): string => {
-  if (!text) return 'No response received';
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+  isStreaming?: boolean;
+  toolExecution?: boolean;
+  id?: string;
+  feedback?: 'positive' | 'negative' | null;
+  mode?: 'normal' | 'deep-thinking' | 'conversation' | 'audio';
+  isDeepThinking?: boolean;
+  isAudio?: boolean;
+}
+
+// Component for copying code blocks
+const CopyButton: React.FC<{ text: string }> = ({ text }) => {
+  const [copied, setCopied] = useState(false);
   
-  try {
-    let formatted = text;
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  
+  return (
+    <button 
+      className="absolute top-2 right-2 p-1 rounded-md bg-gray-700 text-white opacity-70 hover:opacity-100 transition-opacity"
+      onClick={copyToClipboard}
+    >
+      {copied ? <CheckIcon size={16} /> : <ClipboardIcon size={16} />}
+    </button>
+  );
+};
 
-    // Preserve code block indentation
-    formatted = formatted.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
-      const trimmedCode = code.split('\n').map(line => line.trimEnd()).join('\n');
-      return `\n\`\`\`${lang || ''}\n${trimmedCode}\n\`\`\`\n`;
-    });
-
-    // Format inline code
-    formatted = formatted.replace(/`([^`]+)`/g, (match, code) => {
-      return `\`${code.trim()}\``;
-    });
-
-    // Format tables
-    formatted = formatted.replace(/\|.*\|/g, match => `\n${match.trim()}\n`);
-
-    // Add line breaks before bullet points
-    formatted = formatted.replace(/•/g, '\n•');
-    
-    // Add line breaks before numbered lists
-    formatted = formatted.replace(/(\d+\.\s)/g, '\n$1');
-    
-    // Add line breaks before sections with all caps (like "NOTE:", "IMPORTANT:")
-    formatted = formatted.replace(/([A-Z]{2,}:)/g, '\n\n$1');
-    
-    // Format math equations
-    formatted = formatted.replace(/\$\$(.*?)\$\$/g, (match, equation) => `\n$$${equation.trim()}$$\n`);
-    formatted = formatted.replace(/\$(.*?)\$/g, (match, equation) => `$${equation.trim()}$`);
-    
-    // Remove extra line breaks but preserve code block formatting
-    formatted = formatted.replace(/\n{3,}/g, '\n\n');
-    
-    return formatted.trim();
-  } catch (error) {
-    console.error('Error formatting AI response:', error);
-    return text; // Return original text if formatting fails
+// Custom renderer for code blocks to add copy button and syntax highlighting
+const CodeBlock = (props: any) => {
+  const { node, inline, className, children, ...rest } = props;
+  const match = /language-(\w+)/.exec(className || '');
+  
+  if (inline) {
+    return <code className={className} {...rest}>{children}</code>;
   }
-};
 
-// Check if message references previous context
-const checkForContextReference = (message: string): boolean => {
-  const contextPhrases = [
-    'as we discussed',
-    'as mentioned',
-    'earlier',
-    'previously',
-    'going back to',
-    'you asked about',
-    'referring to',
-    'as I noted',
-    'from the file',
-    'in the document',
-    'based on our conversation'
-  ];
-  
-  return contextPhrases.some(phrase => 
-    message.toLowerCase().includes(phrase.toLowerCase())
+  const language = match ? match[1] : '';
+  const code = String(children).replace(/\n$/, '');
+
+  return (
+    <div className="relative">
+      <pre className={`${className || ''} p-4 rounded overflow-auto`}>
+        <code className={language ? `language-${language}` : ''} {...rest}>
+          {code}
+        </code>
+      </pre>
+      {!inline && <CopyButton text={code} />}
+    </div>
   );
 };
 
@@ -104,41 +78,305 @@ const RonAIExperience: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [dragActive, setDragActive] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null);
-  const [threadContext, setThreadContext] = useState<ThreadContext | null>(null);
-  const [streamingResponse, setStreamingResponse] = useState(''); // Add state for accumulating streamed response
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [darkMode, setDarkMode] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const [isDeepThinking, setIsDeepThinking] = useState(false);
+  const [isConversationMode, setIsConversationMode] = useState(false);
+  const [audioConnectionState, setAudioConnectionState] = useState<ConnectionState>('disconnected');
+  const [audioTranscript, setAudioTranscript] = useState('');
+  const [expandedThoughts, setExpandedThoughts] = useState<{[key: string]: boolean}>({});
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // Initialize chat with Ron AI
   useEffect(() => {
-    const initializeChat = async () => {
-      try {
-        setIsLoading(true);
-        console.log('Initializing chat with Ron AI...');
-        // Send initial message to Ron AI
-        const response = await ronAIService.sendMessage('Hi Ron! Let\'s get to work, if you\'re ready simply reply with "Ron AI wil see you now"');
-        console.log('Received initialization response:', response);
+    if (darkMode) {
+      document.body.classList.add('dark-theme');
+    } else {
+      document.body.classList.remove('dark-theme');
+    }
+  }, [darkMode]);
 
-        if (!response || !response.response) {
-          throw new Error('Invalid initialization response from Ron AI');
+  // Add CSS variables for theme
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      :root {
+        --bg-primary: #f9fafb;
+        --bg-secondary: #f3f4f6;
+        --text-primary: #111827;
+        --text-secondary: #4b5563;
+        --border-color: #e5e7eb;
+        --accent-color: #3b82f6;
+        --user-message-bg: #e2f1fd;
+        --assistant-message-bg: #f3f4f6;
+      }
+      
+      .dark-theme {
+        --bg-primary: #111827;
+        --bg-secondary: #1f2937;
+        --text-primary: #f9fafb;
+        --text-secondary: #d1d5db;
+        --border-color: #374151;
+        --accent-color: #60a5fa;
+        --user-message-bg: #2563eb;
+        --assistant-message-bg: #1f2937;
+      }
+      
+      body {
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+      }
+      
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+      }
+      
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background-color: transparent;
+      }
+      
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background-color: rgba(156, 163, 175, 0.5);
+        border-radius: 4px;
+      }
+      
+      .dark-theme .custom-scrollbar::-webkit-scrollbar-thumb {
+        background-color: rgba(75, 85, 99, 0.5);
+      }
+      
+      /* Message visibility */
+      .message-item {
+        opacity: 0;
+      }
+      
+      .message-item.message-visible {
+        opacity: 1;
+        transition: opacity 0.3s ease-out;
+      }
+
+      /* Enhanced text styles for readability */
+      .dark-theme pre, .dark-theme code {
+        background-color: #2d3748 !important;
+        color: #e2e8f0 !important;
+      }
+
+      .prose-sm {
+        font-size: 0.925rem;
+        line-height: 1.6;
+      }
+
+      .dark-theme .prose-invert {
+        color: #e2e8f0;
+      }
+
+      /* Improve code readability */
+      code {
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        padding: 0.2em 0.4em;
+        border-radius: 3px;
+      }
+
+      pre code {
+        padding: 0;
+      }
+
+      /* Ensure proper contrast for code blocks */
+      .dark-theme .hljs {
+        background-color: #2d3748 !important;
+      }
+
+      /* Style enhancements for markdown content */
+      .markdown-content h1 {
+        font-size: 1.75rem;
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 0.5rem;
+      }
+      
+      .markdown-content h2 {
+        font-size: 1.5rem;
+        margin-top: 1.4rem;
+        margin-bottom: 0.9rem;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+      
+      .markdown-content h3 {
+        font-size: 1.25rem;
+        margin-top: 1.3rem;
+        margin-bottom: 0.8rem;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+      
+      .markdown-content h4, .markdown-content h5, .markdown-content h6 {
+        margin-top: 1.2rem;
+        margin-bottom: 0.7rem;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+      
+      .markdown-content p {
+        margin-bottom: 1rem;
+        line-height: 1.6;
+      }
+      
+      .markdown-content ul, .markdown-content ol {
+        margin-bottom: 1rem;
+        padding-left: 1.5rem;
+      }
+      
+      .markdown-content li {
+        margin-bottom: 0.5rem;
+        line-height: 1.5;
+      }
+      
+      .markdown-content ul li {
+        list-style-type: disc;
+      }
+      
+      .markdown-content ol li {
+        list-style-type: decimal;
+      }
+      
+      .markdown-content blockquote {
+        border-left: 4px solid var(--accent-color);
+        padding-left: 1rem;
+        margin-left: 0;
+        margin-right: 0;
+        font-style: italic;
+        color: var(--text-secondary);
+      }
+      
+      .markdown-content table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 1rem;
+      }
+      
+      .markdown-content table th, .markdown-content table td {
+        border: 1px solid var(--border-color);
+        padding: 0.5rem;
+        text-align: left;
+      }
+      
+      .markdown-content table th {
+        background-color: var(--bg-secondary);
+        font-weight: 600;
+      }
+      
+      .dark-theme .markdown-content a {
+        color: #60a5fa;
+        text-decoration: none;
+      }
+      
+      .markdown-content a:hover {
+        text-decoration: underline;
+      }
+      
+      .markdown-content img {
+        max-width: 100%;
+        border-radius: 4px;
+        margin: 1rem 0;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // Cleanup function to remove style when component unmounts
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
+  // Initialize the Realtime Audio Service when component mounts
+  useEffect(() => {
+    // Configure the realtime audio service
+    realtimeAudioService.config({
+      instructions: "You are Ron AI, a helpful healthcare assistant that provides accurate and concise information.",
+      voice: "ash",
+      onTranscriptUpdate: (text) => {
+        setAudioTranscript(text);
+      },
+      onConnectionStateChange: (state) => {
+        setAudioConnectionState(state);
+        // When speaking is done, extract the final answer
+        if (state === 'connected' && audioTranscript) {
+          // Add the transcript as an assistant message
+          const finalAnswer = processAudioTranscript(audioTranscript);
+          if (finalAnswer) {
+            setMessages(prevMessages => [
+              ...prevMessages,
+              {
+                role: 'assistant',
+                content: finalAnswer,
+                mode: 'audio'
+              }
+            ]);
+            // Clear the transcript for the next interaction
+            setAudioTranscript('');
+          }
         }
+      },
+      onError: (error) => {
+        console.error('Realtime audio error:', error);
+        // Notify user of error
+        setMessages(prevMessages => [
+          ...prevMessages,
+          {
+            role: 'assistant',
+            content: `I encountered an error with the audio service: ${error.message}. Please try again or use text input instead.`,
+            mode: 'normal'
+          }
+        ]);
+      }
+    });
 
-        // Set initial message and thread context
-        const initialMessage = formatMessage('Ron AI', response.response);
-        setMessages([initialMessage]);
-        
-        // Initialize thread context
-        setThreadContext({
-          threadId: response.threadId,
-          files: [],
-          lastActivity: new Date()
-        });
+    // Clean up on component unmount
+    return () => {
+      realtimeAudioService.stopSession();
+    };
+  }, []);
 
-        console.log('Chat initialized successfully:', {
-          threadId: response.threadId,
-          initialMessage: response.response
-        });
+  // Process the audio transcript to clean it up
+  const processAudioTranscript = (transcript: string): string => {
+    if (!transcript) return '';
+    
+    // Clean up the transcript to make it more presentable
+    // Remove any timestamps or speaker identifiers
+    let cleaned = transcript.trim();
+    
+    // Remove any "thinking" or "processing" phrases that might appear
+    const removePhrases = [
+      "Let me think about that",
+      "Let me check that for you",
+      "I'm processing your request",
+      "One moment please"
+    ];
+    
+    removePhrases.forEach(phrase => {
+      if (cleaned.startsWith(phrase)) {
+        cleaned = cleaned.slice(phrase.length).trim();
+      }
+    });
+    
+    // If there are multiple paragraphs, ensure proper formatting
+    cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
+    
+    return cleaned;
+  };
+
+  // Load thread history on mount
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        const threadId = await getOrCreateThreadId();
+        const history = await getThreadHistory(threadId);
+        setMessages(history);
       } catch (error) {
         console.error('Error initializing chat:', {
           error,
@@ -209,63 +447,149 @@ const RonAIExperience: React.FC = () => {
         });
       }
     } catch (error) {
-      console.error('Error communicating with Ron:', {
-        error,
-        details: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-        threadId: threadContext?.threadId,
-        content
+      console.error('Error sending feedback:', error);
+      // Revert UI change if there was an error
+      setMessages(prev => {
+        const newMessages = [...prev];
+        newMessages[index] = { ...message };
+        return newMessages;
       });
-      
-      let errorText = 'I apologize, but I encountered an error processing your request.';
-      
-      if (error instanceof Error) {
-        if (error.message.includes('Action required')) {
-          errorText = 'I apologize, but I need additional capabilities to process this request. This feature is not yet supported.';
-        } else if (error.message.includes('Invalid response')) {
-          errorText = 'I apologize, but I received an invalid response. Please try your request again.';
-        } else if (error.message.includes('Failed to format')) {
-          errorText = 'I apologize, but I had trouble formatting the response. Please try again.';
-        } else {
-          errorText = `I apologize, but an error occurred: ${error.message}`;
-        }
-      }
-      
-      const errorMessage = formatMessage('Ron AI', errorText);
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const handleFileUpload = async (file: File) => {
-    try {
-      setIsLoading(true);
-      const userMessage = formatMessage('You', `Uploading file: ${file.name} (${formatFileSize(file.size)})`);
-      setMessages(prev => [...prev, userMessage]);
-
-      // Upload file with progress tracking
-      const response = await ronAIService.uploadFile(file);
-
-      if (!response || !response.threadId) {
-        throw new Error('Invalid upload response received');
+  // Handle audio recording when the audio connection state changes
+  useEffect(() => {
+    if (audioConnectionState === 'recording') {
+      // Add a user message for the recording
+      setMessages(prev => [...prev, {
+        role: 'user',
+        content: 'Recording audio...',
+        isAudio: true,
+        id: `user-audio-${Date.now()}`
+      }]);
+    } else if (audioConnectionState === 'processing' && messages.length > 0) {
+      // Update the last user message with "Processing audio..."
+      const lastUserMessageIndex = [...messages].reverse().findIndex(m => m.role === 'user' && m.isAudio);
+      if (lastUserMessageIndex >= 0) {
+        const actualIndex = messages.length - 1 - lastUserMessageIndex;
+        setMessages(prev => {
+          const newMessages = [...prev];
+          newMessages[actualIndex] = {
+            ...newMessages[actualIndex],
+            content: 'Processing audio...'
+          };
+          return newMessages;
+        });
       }
+    }
+  }, [audioConnectionState, messages]);
 
-      // Update thread context
-      setThreadContext({
-        threadId: response.threadId,
-        files: [response.fileName || file.name],
-        lastActivity: new Date()
-      });
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!currentMessage.trim() || isLoading) return;
 
-      // Add analysis message
-      const analysisText = response.analysis || 'File uploaded successfully. You can now ask questions about the file.';
-      const analysisMessage = {
-        ...formatMessage('Ron AI', formatAIResponse(analysisText)),
-        analysis: true
-      };
-      setMessages(prev => [...prev, analysisMessage]);
+    setIsLoading(true);
+    setMessages(prev => [...prev, {
+      role: 'user',
+      content: currentMessage,
+      id: `user-${Date.now()}`,
+      mode: isDeepThinking ? 'deep-thinking' : isConversationMode ? 'conversation' : 'normal'
+    }]);
+    
+    const message = currentMessage;
+    setCurrentMessage('');
 
+    try {
+      const controller = new AbortController();
+      
+      await streamAssistantMessage(
+        message,
+        (update) => {
+          // Pass isDeepThinking to use the Ron Thinking assistant when deep thinking mode is enabled
+          if (update.type === 'messageStart') {
+            // Add new assistant message placeholder that will be updated
+            setMessages(prevMessages => [
+              ...prevMessages,
+              {
+                ...update.message,
+                id: `msg-${Date.now()}`
+              }
+            ]);
+          } else if (update.type === 'contentUpdate') {
+            // Update the streaming message with new content
+            setMessages(prev => {
+              const newMessages = [...prev];
+              const streamingIndex = newMessages.findIndex(m => m.isStreaming);
+              if (streamingIndex !== -1) {
+                // Remove any "Searching database..." message when new content arrives
+                let updatedContent = newMessages[streamingIndex].content;
+                if (updatedContent.includes("_Searching database..._")) {
+                  updatedContent = updatedContent.replace("\n\n_Searching database..._", "");
+                }
+                
+                newMessages[streamingIndex] = {
+                  ...newMessages[streamingIndex],
+                  // Update with the cleaned content plus the new content
+                  content: updatedContent + update.content,
+                  isDeepThinking: update.isDeepThinking
+                };
+              }
+              return newMessages;
+            });
+          } else if (update.type === 'messageComplete' || update.type === 'messageDone') {
+            // Replace the streaming message with the complete one
+            setMessages(prev => {
+              const newMessages = [...prev];
+              const streamingIndex = newMessages.findIndex(m => m.isStreaming);
+              if (streamingIndex !== -1) {
+                newMessages[streamingIndex] = {
+                  ...update.message,
+                  isDeepThinking: update.message.isDeepThinking
+                };
+              } else {
+                // Fallback if no streaming message is found
+                newMessages.push({
+                  ...update.message,
+                  isDeepThinking: update.message.isDeepThinking
+                });
+              }
+              return newMessages;
+            });
+            setIsLoading(false);
+          } else if (update.type === 'toolCalls') {
+            // Show a visual indicator that tools are being executed
+            setMessages(prev => {
+              const newMessages = [...prev];
+              const assistantIndex = newMessages.findIndex(m => m.role === 'assistant' && m.isStreaming);
+              if (assistantIndex !== -1) {
+                newMessages[assistantIndex] = {
+                  ...newMessages[assistantIndex],
+                  toolExecution: true,
+                  content: newMessages[assistantIndex].content + "\n\n_Searching database..._"
+                };
+              }
+              return newMessages;
+            });
+          } else if (update.type === 'error') {
+            // Handle errors gracefully in the UI
+            setMessages(prev => {
+              const newMessages = [...prev];
+              const streamingIndex = newMessages.findIndex(m => m.isStreaming);
+              if (streamingIndex !== -1) {
+                newMessages[streamingIndex] = {
+                  ...newMessages[streamingIndex],
+                  isStreaming: false,
+                  content: `Sorry, I encountered an error while processing your request: ${update.error}. Please try again.`
+                };
+              }
+              return newMessages;
+            });
+            setIsLoading(false);
+          }
+        },
+        controller.signal,
+        isDeepThinking
+      );
     } catch (error) {
       console.error('Error uploading file:', error);
       let errorMsg = 'I apologize, but I encountered an error uploading the file.';
@@ -318,94 +642,63 @@ const RonAIExperience: React.FC = () => {
         setMessages(prev => [...prev, errorMessage]);
         return;
       }
-      await handleFileUpload(file);
-    }
+      
+      // Alt+N to focus on the text input
+      if (e.altKey && e.key === 'n') {
+        inputRef.current?.focus();
+      }
+      
+      // Alt+K to toggle keyboard shortcuts help
+      if (e.altKey && e.key === 'k') {
+        setShowShortcuts(prev => !prev);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const error = fileUploadService.validateFile(file);
-      if (error) {
-        const errorMessage = formatMessage('Ron AI', error);
-        setMessages(prev => [...prev, errorMessage]);
-        return;
-      }
-      handleFileUpload(file);
-    }
-  };
-
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
-  };
-
-  // Calculate upload progress percentage
-  const calculateUploadProgress = (): number => {
-    if (!uploadProgress) return 0;
-    return Math.round((uploadProgress.uploadedBytes / uploadProgress.totalBytes) * 100);
-  };
-
-  return (
-    <div className="flex flex-col h-full bg-gradient-to-br from-dark-navy to-black text-white dark:text-white light:text-gray-900">
-      {/* Thread Context and File Viewer */}
-      {threadContext && (
-        <div className="bg-dark-navy border-b border-gray-800">
-          <div className="p-4">
-            <div className="flex items-center gap-2 text-sm text-gray-400">
-              <FaHistory className="text-ron-teal-400" />
-              <span>Thread: {threadContext.threadId}</span>
-              {threadContext.files.length > 0 && (
-                <>
-                  <span>•</span>
-                  <span>Files: {threadContext.files.join(', ')}</span>
-                </>
-              )}
-            </div>
-          </div>
-          {/* File Viewer Component */}
-          <div className="p-4 border-t border-gray-800">
-            <FileViewer />
-          </div>
-        </div>
-      )}
-
-      <div 
-        className={`flex-1 p-6 overflow-y-auto relative ${dragActive ? 'bg-ron-teal-400/10' : ''}`}
-        onDragEnter={handleDrag}
-        onDragLeave={handleDrag}
-        onDragOver={handleDrag}
-        onDrop={handleDrop}
+  // Render message with code blocks
+  const renderMessage = (msg: Message, idx: number) => {
+    const messageId = msg.id || `msg-${idx}`;
+    const isExpanded = expandedThoughts[messageId] || false;
+    
+    const toggleAccordion = () => {
+      setExpandedThoughts(prev => ({
+        ...prev,
+        [messageId]: !prev[messageId]
+      }));
+    };
+    
+    return (
+      <div
+        key={idx}
+        className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} ${
+          idx === memoizedMessages.length - 1 && msg.isStreaming ? 'animate-fadeIn' : ''
+        } message-item`}
       >
-        {messages.map((msg, index) => (
-          <div
-            key={index}
-            className={`mb-6 animate-fade-in ${
-              msg.sender === 'You' ? 'text-right' : ''
-            }`}
-          >
-            <div className="inline-block max-w-xl">
-              <div
-                className={`px-6 py-4 rounded-2xl ${
-                  msg.sender === 'You'
-                    ? 'bg-gradient-to-r from-neon-pink to-neon-purple shadow-neon-pink'
-                    : msg.analysis
-                    ? 'bg-gradient-to-r from-ron-teal-400 to-ron-teal-600 shadow-ron-teal'
-                    : 'dark:bg-glass-white dark:backdrop-blur-xs dark:border-white dark:border-opacity-20 light:bg-white light:border-gray-200 border shadow-lg'
-                }`}
-              >
-                {msg.referencesContext && (
-                  <div className="flex items-center gap-2 mb-2 text-xs text-ron-teal-400">
-                    <FaHistory />
-                    <span>Referencing previous context</span>
-                  </div>
-                )}
-                <div className="text-sm prose prose-invert max-w-none">
-                  {msg.sender === 'You' ? (
-                    <p>{msg.message}</p>
-                  ) : (
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm, remarkMath]}
-                      rehypePlugins={[rehypeKatex, rehypeHighlight]}
+        <div
+          className={`max-w-[80%] rounded-lg p-3 ${
+            msg.role === 'user'
+              ? 'bg-teal-500 bg-opacity-20 text-white ml-auto'
+              : 'bg-[#1E1E1E] border border-gray-700 text-gray-100 mr-auto'
+          }`}
+        >
+          {msg.role === 'assistant' ? (
+            <>
+              {msg.isDeepThinking && (
+                <div className="mb-3 text-amber-400 font-semibold flex items-center">
+                  <span>🤔 Deep Thinking Mode</span>
+                  {!msg.isStreaming && (
+                    <button 
+                      type="button"
+                      onClick={toggleAccordion}
+                      className="ml-2 p-1 rounded-md hover:bg-gray-700 transition-colors"
+                      aria-expanded={isExpanded}
+                      aria-label={isExpanded ? "Collapse chain of thought" : "Expand chain of thought"}
                     >
                       {msg.message}
                     </ReactMarkdown>
@@ -469,84 +762,185 @@ const RonAIExperience: React.FC = () => {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <span className="text-2xl font-bold">{calculateUploadProgress()}%</span>
                 </div>
+              )}
+              <div
+                className={`prose prose-sm ${
+                  darkMode ? 'prose-invert' : ''
+                } markdown-content`}
+              >
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    code: CodeBlock,
+                    // Enhanced table styling
+                    table: ({node, ...props}) => (
+                      <div className="overflow-x-auto my-4">
+                        <table className="min-w-full divide-y divide-gray-700" {...props} />
+                      </div>
+                    ),
+                    // Add styling for table headers
+                    th: ({node, ...props}) => (
+                      <th className="bg-gray-800 px-4 py-2 text-left font-medium text-gray-300" {...props} />
+                    ),
+                    // Add styling for table cells
+                    td: ({node, ...props}) => (
+                      <td className="border-t border-gray-700 px-4 py-2" {...props} />
+                    ),
+                    // Add styling for blockquotes
+                    blockquote: ({node, ...props}) => (
+                      <blockquote className="border-l-4 border-teal-500 pl-4 italic text-gray-400" {...props} />
+                    ),
+                    // Better list styling
+                    ul: ({node, ...props}) => (
+                      <ul className="list-disc pl-5 space-y-2" {...props} />
+                    ),
+                    ol: ({node, ...props}) => (
+                      <ol className="list-decimal pl-5 space-y-2" {...props} />
+                    ),
+                    // Better paragraph spacing
+                    p: ({node, children}) => (
+                      <p className="mb-4 leading-relaxed">{children}</p>
+                    ),
+                    // Enhance heading styles
+                    h1: ({node, ...props}) => (
+                      <h1 className="text-2xl font-semibold mb-4 pb-2 border-b border-gray-700" {...props} />
+                    ),
+                    h2: ({node, ...props}) => (
+                      <h2 className="text-xl font-semibold mb-3 mt-6" {...props} />
+                    ),
+                    h3: ({node, ...props}) => (
+                      <h3 className="text-lg font-semibold mb-3 mt-5" {...props} />
+                    ),
+                    // Custom link styling
+                    a: ({node, ...props}) => (
+                      <a className="text-teal-400 hover:underline" {...props} />
+                    ),
+                  }}
+                >
+                  {msg.isDeepThinking && !msg.isStreaming ? 
+                    extractFinalAnswer(msg.content) : 
+                    msg.content}
+                </ReactMarkdown>
               </div>
-              <p className="text-xl font-semibold">
-                {uploadProgress.status === 'uploading' && 'Uploading file...'}
-                {uploadProgress.status === 'complete' && 'Upload complete!'}
-              </p>
-              <p className="mt-2 text-gray-400">
-                {formatFileSize(uploadProgress.uploadedBytes)} of {formatFileSize(uploadProgress.totalBytes)}
-              </p>
+              {msg.isStreaming && (
+                <div className="flex justify-center mt-4">
+                  <div className="flex items-center justify-center">
+                    <div className="flex space-x-1">
+                      <span className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></span>
+                      <span className="w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-75"></span>
+                      <span className="w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-150"></span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="whitespace-pre-wrap">
+              {msg.content}
             </div>
-          </div>
-        )}
-      </div>
-
-      {/* Hidden File Input */}
-      <div className="sr-only">
-        <label htmlFor="file-upload">Upload a file for analysis</label>
-        <input
-          id="file-upload"
-          name="file-upload"
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileSelect}
-          className="hidden"
-          accept=".txt,.log,.md,.py,.js,.jsx,.ts,.tsx,.csv,.json,.pdf,.ipynb"
-          aria-label="Upload a file for analysis"
-          title="Upload a file for analysis"
-        />
-      </div>
-
-      {/* Input Field */}
-      <div className="p-4 bg-dark-navy border-t border-gray-800">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={triggerFileInput}
-            disabled={isLoading || !!uploadProgress}
-            className={`p-4 bg-gradient-to-r from-neon-blue to-neon-green rounded-full shadow-neon-blue hover:scale-105 transform transition focus:outline-none focus:ring-2 focus:ring-neon-blue ${
-              isLoading || uploadProgress ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
-            aria-label="Upload file"
-            title={`Upload file (TXT, LOG, MD, PY, JS, JSX, TS, TSX, CSV, JSON, PDF, IPYNB • Max ${formatFileSize(512 * 1024 * 1024)})`}
-          >
-            <FaFileUpload className="text-white text-xl" aria-hidden="true" />
-          </button>
-
-          <input
-            type="text"
-            placeholder={
-              uploadProgress
-                ? `Uploading file... ${calculateUploadProgress()}%`
-                : isLoading
-                ? 'Ron is thinking...'
-                : 'Type your message or drag & drop a file...'
-            }
-            className="flex-1 p-4 bg-glass-white backdrop-blur-xs rounded-full text-black font-raleway font-light placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-neon-blue"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !isLoading && !uploadProgress) handleSend();
-            }}
-            disabled={isLoading || !!uploadProgress}
-            aria-label="Message input"
-          />
-
-          <button
-            onClick={() => handleSend()}
-            disabled={isLoading || !!uploadProgress}
-            className={`p-4 bg-gradient-to-r from-neon-pink to-neon-purple rounded-full shadow-neon-pink hover:scale-105 transform transition focus:outline-none focus:ring-2 focus:ring-neon-pink ${
-              isLoading || uploadProgress ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
-            aria-label="Send message"
-            title="Send message"
-          >
-            <FaPaperPlane className="text-white text-xl" aria-hidden="true" />
-          </button>
+          )}
+          {msg.role === 'assistant' && !msg.isStreaming && (
+            <div className="flex mt-2 justify-end">
+              <button
+                type="button"
+                onClick={() => handleFeedback(idx, 'positive')}
+                className={`mr-2 p-1 rounded-full transition-colors ${
+                  msg.feedback === 'positive' 
+                    ? 'bg-green-100 text-green-600 dark:bg-green-800 dark:text-green-300' 
+                    : 'text-gray-400 hover:text-green-500 dark:text-gray-500 dark:hover:text-green-400'
+                }`}
+                aria-label="Helpful response"
+                title="Mark this response as helpful"
+              >
+                <ThumbsUp size={16} />
+              </button>
+              <button
+                type="button"
+                onClick={() => handleFeedback(idx, 'negative')}
+                className={`p-1 rounded-full transition-colors ${
+                  msg.feedback === 'negative' 
+                    ? 'bg-red-100 text-red-600 dark:bg-red-800 dark:text-red-300' 
+                    : 'text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400'
+                }`}
+                aria-label="Unhelpful response"
+                title="Mark this response as unhelpful"
+              >
+                <ThumbsDown size={16} />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-export default RonAIExperience;
+  // Extract the final answer from the chain of thought
+  const extractFinalAnswer = (content: string): string => {
+    // Check if this is sequential thinking output 
+    if (content.includes('thoughtNumber') || content.includes('nextThoughtNeeded')) {
+      // For sequential thinking output, we should show the entire content
+      // as it's already formatted appropriately
+      return content;
+    }
+    
+    // For traditional chain of thought
+    const parts = content.split(/\n\n|(?<=\.)\s+(?=[A-Z])/);
+    
+    if (parts.length <= 2) {
+      return content;
+    }
+    
+    // Look for a conclusion marker
+    const conclusionIndex = parts.findIndex(part => 
+      part.toLowerCase().includes('conclusion') || 
+      part.toLowerCase().includes('in conclusion') ||
+      part.toLowerCase().includes('therefore') ||
+      part.toLowerCase().includes('to summarize') ||
+      part.toLowerCase().includes('in summary')
+    );
+    
+    if (conclusionIndex !== -1) {
+      // Return the conclusion and any text after it
+      return parts.slice(conclusionIndex).join(' ');
+    }
+    
+    // Fallback: return the last part as before
+    return parts[parts.length - 1];
+  };
+
+  // Toggle deep thinking mode
+  const toggleDeepThinking = () => {
+    setIsDeepThinking(prev => !prev);
+    if (isConversationMode) {
+      setIsConversationMode(false);
+    }
+  };
+  
+  // Toggle conversation mode
+  const toggleConversationMode = () => {
+    setIsConversationMode(prev => !prev);
+    if (isDeepThinking) {
+      setIsDeepThinking(false);
+    }
+  };
+
+  return (
+    <RonAiTab
+      messages={memoizedMessages}
+      currentMessage={currentMessage}
+      setCurrentMessage={setCurrentMessage}
+      handleSubmit={(e) => handleSubmit(e as React.FormEvent<HTMLFormElement>)}
+      isLoading={isLoading}
+      messagesContainerRef={messagesContainerRef}
+      messagesEndRef={messagesEndRef}
+      renderMessage={renderMessage}
+      isDeepThinking={isDeepThinking}
+      isConversationMode={isConversationMode}
+      toggleDeepThinking={toggleDeepThinking}
+      toggleConversationMode={toggleConversationMode}
+    />
+  );
+};
+
+export default RonExperience;

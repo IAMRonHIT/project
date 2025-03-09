@@ -1,0 +1,95 @@
+/* Audio visualization effects for RON AI */
+.glow-effect {
+  box-shadow: 0 0 10px 4px rgba(56, 178, 172, 0.7), 0 0 15px 6px rgba(56, 178, 172, 0.5);
+  animation: pulse 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 10px 4px rgba(56, 178, 172, 0.7), 0 0 15px 6px rgba(56, 178, 172, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 15px 6px rgba(56, 178, 172, 0.9), 0 0 22px 8px rgba(56, 178, 172, 0.7);
+  }
+}
+
+/* Container glow when model is speaking */
+.visualizer-container-active {
+  position: relative;
+  transition: all 0.3s ease-in-out;
+}
+
+.visualizer-container-active::after {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -15px;
+  right: -15px;
+  bottom: -10px;
+  z-index: -1;
+  filter: blur(15px);
+  opacity: 0.8;
+  background: radial-gradient(circle, rgba(56, 178, 172, 0.6) 0%, rgba(49, 130, 206, 0.3) 70%, transparent 100%);
+  animation: expand 2s ease-in-out infinite alternate;
+  border-radius: 50%;
+}
+
+@keyframes expand {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.3);
+    opacity: 0.8;
+  }
+}
+
+/* Animations for individual bars */
+.audio-bar {
+  transition: height 150ms ease-in-out, opacity 150ms ease-in-out, transform 150ms ease-in-out;
+  height: 8px;
+  opacity: 0.5;
+}
+
+/* Inactive state for each bar */
+.audio-bar-0 { height: 8px; opacity: 0.5; }
+.audio-bar-1 { height: 9px; opacity: 0.55; }
+.audio-bar-2 { height: 10px; opacity: 0.6; }
+.audio-bar-3 { height: 11px; opacity: 0.65; }
+.audio-bar-4 { height: 12px; opacity: 0.7; }
+.audio-bar-5 { height: 13px; opacity: 0.75; }
+.audio-bar-6 { height: 14px; opacity: 0.8; }
+.audio-bar-7 { height: 15px; opacity: 0.85; }
+.audio-bar-8 { height: 16px; opacity: 0.9; }
+.audio-bar-9 { height: 17px; opacity: 0.95; }
+
+/* Active state (when model is speaking) */
+.visualizer-container-active .audio-bar {
+  transform: scaleY(1);
+}
+
+.audio-bar.active {
+  animation: barAnimation 350ms ease-in-out infinite alternate;
+}
+
+@keyframes barAnimation {
+  0% {
+    transform: scaleY(1);
+  }
+  100% {
+    transform: scaleY(1.3);
+  }
+}
+
+/* Adjust animation speed when multiple bars are active */
+.visualizer-container-active .audio-bar:nth-child(1) { animation-delay: 0ms; }
+.visualizer-container-active .audio-bar:nth-child(2) { animation-delay: 50ms; }
+.visualizer-container-active .audio-bar:nth-child(3) { animation-delay: 100ms; }
+.visualizer-container-active .audio-bar:nth-child(4) { animation-delay: 150ms; }
+.visualizer-container-active .audio-bar:nth-child(5) { animation-delay: 200ms; }
+.visualizer-container-active .audio-bar:nth-child(6) { animation-delay: 150ms; }
+.visualizer-container-active .audio-bar:nth-child(7) { animation-delay: 100ms; }
+.visualizer-container-active .audio-bar:nth-child(8) { animation-delay: 50ms; }
+.visualizer-container-active .audio-bar:nth-child(9) { animation-delay: 0ms; }
+.visualizer-container-active .audio-bar:nth-child(10) { animation-delay: 50ms; }

@@ -10,7 +10,7 @@ export type ConnectionState =
 
 export interface ConfigOptions {
   instructions?: string;
-  voice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer' | 'ash';
+  voice?: 'ash' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer' | 'ash';
   model?: string;
   onTranscriptUpdate?: (text: string) => void;
   onConnectionStateChange?: (state: ConnectionState) => void;

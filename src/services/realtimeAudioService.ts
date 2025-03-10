@@ -61,7 +61,7 @@ class RealtimeAudioService {
   private audioElement: HTMLAudioElement | null = null;
   private recordingState: 'inactive' | 'requested' | 'recording' = 'inactive';
   private ephemeralToken: string | null = null;
-  private voice: string = 'alloy';
+  private voice: string = 'ash';
   private instructions: string = '';
   private backendUrl: string;
   private audioContext: AudioContext | null = null;

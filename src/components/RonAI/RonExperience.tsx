@@ -208,7 +208,7 @@ const RonExperience: React.FC = () => {
     // Configure the realtime audio service
     realtimeAudioService.config({
       instructions: "You are Ron AI, a helpful healthcare assistant that provides accurate and concise information.",
-      voice: "alloy",
+      voice: "ash",
       onTranscriptUpdate: (text) => {
         setAudioTranscript(text);
       },

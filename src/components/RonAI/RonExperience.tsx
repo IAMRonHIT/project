@@ -5,11 +5,18 @@ import {
   getThreadHistory,
   sendMessageFeedback
 } from '../../services/ronAIService';
+import realtimeAudioService, { ConnectionState } from '../../services/realtimeAudioService';
 import { Loader2, ClipboardIcon, CheckIcon, ThumbsUp, ThumbsDown, ChevronDown, ChevronRight } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import RonAiTab from './RonAITab';
+import remarkGfm from 'remark-gfm';
 import './RonAITab.module.css';
+
+// Define a simple styles object for the typing indicator
+const styles = {
+  typingContainer: 'flex items-center justify-center',
+  typingIndicator: 'flex space-x-1'
+};
 
 interface Message {
   role: 'user' | 'assistant';
@@ -18,8 +25,9 @@ interface Message {
   toolExecution?: boolean;
   id?: string;
   feedback?: 'positive' | 'negative' | null;
-  mode?: 'normal' | 'deep-thinking' | 'conversation';
+  mode?: 'normal' | 'deep-thinking' | 'conversation' | 'audio';
   isDeepThinking?: boolean;
+  isAudio?: boolean;
 }
 
 // Component for copying code blocks
@@ -74,6 +82,8 @@ const RonExperience: React.FC = () => {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [isDeepThinking, setIsDeepThinking] = useState(false);
   const [isConversationMode, setIsConversationMode] = useState(false);
+  const [audioConnectionState, setAudioConnectionState] = useState<ConnectionState>('disconnected');
+  const [audioTranscript, setAudioTranscript] = useState('');
   const [expandedThoughts, setExpandedThoughts] = useState<{[key: string]: boolean}>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -193,6 +203,83 @@ const RonExperience: React.FC = () => {
     };
   }, []);
 
+  // Initialize the Realtime Audio Service when component mounts
+  useEffect(() => {
+    // Configure the realtime audio service
+    realtimeAudioService.config({
+      instructions: "You are Ron AI, a helpful healthcare assistant that provides accurate and concise information.",
+      voice: "alloy",
+      onTranscriptUpdate: (text) => {
+        setAudioTranscript(text);
+      },
+      onConnectionStateChange: (state) => {
+        setAudioConnectionState(state);
+        // When speaking is done, extract the final answer
+        if (state === 'connected' && audioTranscript) {
+          // Add the transcript as an assistant message
+          const finalAnswer = processAudioTranscript(audioTranscript);
+          if (finalAnswer) {
+            setMessages(prevMessages => [
+              ...prevMessages,
+              {
+                role: 'assistant',
+                content: finalAnswer,
+                mode: 'audio'
+              }
+            ]);
+            // Clear the transcript for the next interaction
+            setAudioTranscript('');
+          }
+        }
+      },
+      onError: (error) => {
+        console.error('Realtime audio error:', error);
+        // Notify user of error
+        setMessages(prevMessages => [
+          ...prevMessages,
+          {
+            role: 'assistant',
+            content: `I encountered an error with the audio service: ${error.message}. Please try again or use text input instead.`,
+            mode: 'normal'
+          }
+        ]);
+      }
+    });
+
+    // Clean up on component unmount
+    return () => {
+      realtimeAudioService.stopSession();
+    };
+  }, []);
+
+  // Process the audio transcript to clean it up
+  const processAudioTranscript = (transcript: string): string => {
+    if (!transcript) return '';
+    
+    // Clean up the transcript to make it more presentable
+    // Remove any timestamps or speaker identifiers
+    let cleaned = transcript.trim();
+    
+    // Remove any "thinking" or "processing" phrases that might appear
+    const removePhrases = [
+      "Let me think about that",
+      "Let me check that for you",
+      "I'm processing your request",
+      "One moment please"
+    ];
+    
+    removePhrases.forEach(phrase => {
+      if (cleaned.startsWith(phrase)) {
+        cleaned = cleaned.slice(phrase.length).trim();
+      }
+    });
+    
+    // If there are multiple paragraphs, ensure proper formatting
+    cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
+    
+    return cleaned;
+  };
+
   // Load thread history on mount
   useEffect(() => {
     const loadHistory = async () => {
@@ -289,6 +376,33 @@ const RonExperience: React.FC = () => {
     }
   };
 
+  // Handle audio recording when the audio connection state changes
+  useEffect(() => {
+    if (audioConnectionState === 'recording') {
+      // Add a user message for the recording
+      setMessages(prev => [...prev, {
+        role: 'user',
+        content: 'Recording audio...',
+        isAudio: true,
+        id: `user-audio-${Date.now()}`
+      }]);
+    } else if (audioConnectionState === 'processing' && messages.length > 0) {
+      // Update the last user message with "Processing audio..."
+      const lastUserMessageIndex = [...messages].reverse().findIndex(m => m.role === 'user' && m.isAudio);
+      if (lastUserMessageIndex >= 0) {
+        const actualIndex = messages.length - 1 - lastUserMessageIndex;
+        setMessages(prev => {
+          const newMessages = [...prev];
+          newMessages[actualIndex] = {
+            ...newMessages[actualIndex],
+            content: 'Processing audio...'
+          };
+          return newMessages;
+        });
+      }
+    }
+  }, [audioConnectionState, messages]);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!currentMessage.trim() || isLoading) return;
@@ -313,10 +427,13 @@ const RonExperience: React.FC = () => {
           // Pass isDeepThinking to use the Ron Thinking assistant when deep thinking mode is enabled
           if (update.type === 'messageStart') {
             // Add new assistant message placeholder that will be updated
-            setMessages(prev => [...prev, {
-              ...update.message,
-              id: `msg-${Date.now()}`
-            }]);
+            setMessages(prevMessages => [
+              ...prevMessages,
+              {
+                ...update.message,
+                id: `msg-${Date.now()}`
+              }
+            ]);
           } else if (update.type === 'contentUpdate') {
             // Update the streaming message with new content
             setMessages(prev => {
@@ -471,9 +588,10 @@ const RonExperience: React.FC = () => {
                   <span>🤔 Deep Thinking Mode</span>
                   {!msg.isStreaming && (
                     <button 
+                      type="button"
                       onClick={toggleAccordion}
                       className="ml-2 p-1 rounded-md hover:bg-gray-700 transition-colors"
-                      aria-expanded={isExpanded}
+                      aria-expanded={isExpanded ? "true" : "false"}
                       aria-label={isExpanded ? "Collapse chain of thought" : "Expand chain of thought"}
                     >
                       {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
@@ -498,11 +616,11 @@ const RonExperience: React.FC = () => {
               </ReactMarkdown>
               {msg.isStreaming && (
                 <div className="flex justify-center mt-4">
-                  <div className="typing-container" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#333', borderRadius: '50%', width: '40px', height: '40px', marginTop: '8px' }}>
-                    <div className="typing-indicator">
-                      <span></span>
-                      <span></span>
-                      <span></span>
+                  <div className="flex items-center justify-center">
+                    <div className="flex space-x-1">
+                      <span className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></span>
+                      <span className="w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-75"></span>
+                      <span className="w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-150"></span>
                     </div>
                   </div>
                 </div>
@@ -572,13 +690,35 @@ const RonExperience: React.FC = () => {
 
   // Extract the final answer from the chain of thought
   const extractFinalAnswer = (content: string): string => {
+    // Check if this is sequential thinking output 
+    if (content.includes('thoughtNumber') || content.includes('nextThoughtNeeded')) {
+      // For sequential thinking output, we should show the entire content
+      // as it's already formatted appropriately
+      return content;
+    }
+    
+    // For traditional chain of thought
     const parts = content.split(/\n\n|(?<=\.)\s+(?=[A-Z])/);
     
     if (parts.length <= 2) {
       return content;
     }
     
-    // Return just the last part as the conclusion
+    // Look for a conclusion marker
+    const conclusionIndex = parts.findIndex(part => 
+      part.toLowerCase().includes('conclusion') || 
+      part.toLowerCase().includes('in conclusion') ||
+      part.toLowerCase().includes('therefore') ||
+      part.toLowerCase().includes('to summarize') ||
+      part.toLowerCase().includes('in summary')
+    );
+    
+    if (conclusionIndex !== -1) {
+      // Return the conclusion and any text after it
+      return parts.slice(conclusionIndex).join(' ');
+    }
+    
+    // Fallback: return the last part as before
     return parts[parts.length - 1];
   };
 

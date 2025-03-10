@@ -1,5 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Search, Bot, Send, Mic, Paperclip, X, ChevronRight, ChevronDown, Brain, Phone } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ArrowLeft, Search, Bot, Send, Mic, Paperclip, X, ChevronRight, ChevronDown, Brain, Phone, MessageSquare } from 'lucide-react';
+import realtimeAudioService, { ConnectionState } from '../../services/realtimeAudioService';
+import './audioVisualization.css';
+
+// Add type definitions for the Web Speech API
+declare global {
+  interface Window {
+    SpeechRecognition: typeof SpeechRecognition;
+    webkitSpeechRecognition: typeof SpeechRecognition;
+  }
+}
 
 interface RonAiTabProps {
   messages: any[];
@@ -32,155 +42,27 @@ const RonAiTab: React.FC<RonAiTabProps> = ({
 }) => {
   const [darkMode, setDarkMode] = useState(true);
   const [selectedCase, setSelectedCase] = useState<number | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
-  // Use props if provided, otherwise use local state
+  const [isSpeechToTextRecording, setIsSpeechToTextRecording] = useState(false);
+  const [isRealtimeAudioActive, setIsRealtimeAudioActive] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [audioConnectionState, setAudioConnectionState] = useState<ConnectionState>('disconnected');
+  const [transcript, setTranscript] = useState('');
+  const [events, setEvents] = useState<any[]>([]);  
+  const audioAnimationRef = useRef<HTMLDivElement>(null);
   const [localIsDeepThinking, setLocalIsDeepThinking] = useState(false);
   const [localIsConversationMode, setLocalIsConversationMode] = useState(false);
+  const [isModelSpeaking, setIsModelSpeaking] = useState(false);
+  const [audioLevels, setAudioLevels] = useState<number[]>([0.1, 0.2, 0.5, 0.6, 0.4, 0.3, 0.5, 0.2, 0.4, 0.3]);
+  const analyzerRef = useRef<AnalyserNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
   
-  // Use props if provided, otherwise use local state
   const isDeepThinking = propIsDeepThinking !== undefined ? propIsDeepThinking : localIsDeepThinking;
   const isConversationMode = propIsConversationMode !== undefined ? propIsConversationMode : localIsConversationMode;
-  const [groupBy, setGroupBy] = useState('category'); // 'category' or 'status'
-  const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
   
-  // Status colors exactly matching the screenshot
-  const statusColors = {
-    "Pending Review": "#00E5C7", // Bright teal/mint
-    "Approved": "#00FF00",      // Bright green
-    "Completed": "#00FF00",     // Bright green (same as approved)
-    "Denied": "#FF007A",        // Bright pink
-    "Scheduled": "#00A3FF",     // Bright blue
-    "Pending Info": "#FFBB00"   // Bright amber
-  };
-  
-  // Sample cases/reviews data - for a single patient (Sarah Johnson)
-  const casesData = [
-    { 
-      id: "CASE-7851", 
-      title: "Continuous Glucose Monitor Prior Auth",
-      category: "Prior Authorization", 
-      status: "Pending Review",
-      date: "Feb 20, 2025"
-    },
-    { 
-      id: "CASE-7838", 
-      title: "Endocrinologist Referral",
-      category: "Referral", 
-      status: "Approved",
-      date: "Feb 15, 2025"
-    },
-    { 
-      id: "CASE-7742", 
-      title: "Diabetes Education Program",
-      category: "Care Planning", 
-      status: "Completed",
-      date: "Jan 30, 2025"
-    },
-    { 
-      id: "CASE-7705", 
-      title: "Medical Supplies Claim",
-      category: "Claim", 
-      status: "Denied",
-      date: "Jan 22, 2025"
-    },
-    { 
-      id: "CASE-7688", 
-      title: "Medication Prior Auth - Metformin",
-      category: "Prior Authorization", 
-      status: "Approved",
-      date: "Jan 18, 2025"
-    },
-    { 
-      id: "CASE-7650", 
-      title: "Annual Eye Exam Referral",
-      category: "Referral", 
-      status: "Scheduled",
-      date: "Mar 10, 2025"
-    },
-    { 
-      id: "CASE-7630", 
-      title: "Nutrition Consultation",
-      category: "Care Planning", 
-      status: "Completed",
-      date: "Jan 12, 2025"
-    },
-    { 
-      id: "CASE-7612", 
-      title: "Insulin Pump Coverage",
-      category: "Prior Authorization", 
-      status: "Pending Info",
-      date: "Feb 28, 2025"
-    },
-    { 
-      id: "CASE-7598", 
-      title: "Lab Tests - Quarterly",
-      category: "Referral", 
-      status: "Approved",
-      date: "Feb 05, 2025"
-    }
-  ];
-  
-  // Patient info
-  const patientInfo = {
-    name: "Sarah Johnson",
-    id: "SJ-78954",
-    primaryDiagnosis: "Type 2 Diabetes (E11.9)",
-    insurance: "BlueCross Health Plan (PPO)"
-  };
-  
-  // Container and theme classes
-  const containerClass = darkMode 
-    ? "container dark-mode" 
-    : "container light-mode";
-  
-  const cardClass = darkMode
-    ? "card dark-mode-card"
-    : "card light-mode-card";
-  
-  const sidebarClass = darkMode
-    ? "sidebar dark-mode-sidebar"
-    : "sidebar light-mode-sidebar";
-    
-  const accentColor = darkMode ? "dark-mode-accent" : "light-mode-accent";
-  
-  // Group cases by category or status
-  const getGroupedCases = () => {
-    const groupedCases: Record<string, typeof casesData> = {};
-    
-    casesData.forEach(caseItem => {
-      const groupKey = groupBy === 'category' ? caseItem.category : caseItem.status;
-      
-      if (!groupedCases[groupKey]) {
-        groupedCases[groupKey] = [];
-      }
-      
-      groupedCases[groupKey].push(caseItem);
-    });
-    
-    return groupedCases;
-  };
-  
-  // Toggle a group's expanded state
-  const toggleGroup = (groupName: string) => {
-    if (expandedGroups.includes(groupName)) {
-      setExpandedGroups(expandedGroups.filter(g => g !== groupName));
-    } else {
-      setExpandedGroups([...expandedGroups, groupName]);
-    }
-  };
-  
-  // Toggle recording state
-  const toggleRecording = () => {
-    setIsRecording(!isRecording);
-    if (isConversationMode) {
-      if (propToggleConversationMode) {
-        propToggleConversationMode(); // This will toggle it, so we need to ensure it's currently true
-      } else {
-        setLocalIsConversationMode(false);
-      }
-    }
-  };
-  
+  // State for speech-to-text functionality
+  const [isSpeechToTextActive, setIsSpeechToTextActive] = useState(false);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+
   // Toggle deep thinking mode - use prop function if provided
   const toggleDeepThinking = () => {
     if (propToggleDeepThinking) {
@@ -196,103 +78,139 @@ const RonAiTab: React.FC<RonAiTabProps> = ({
       propToggleConversationMode();
     } else {
       setLocalIsConversationMode(!localIsConversationMode);
-      if (isRecording) {
-        setIsRecording(false);
+      if (isSpeechToTextRecording) {
+        setIsSpeechToTextRecording(false);
       }
     }
   };
   
-  // Initialize with all groups collapsed
-  useEffect(() => {
-    setExpandedGroups([]); // Start with all accordions closed
-  }, [groupBy]);
-  
-  // Add custom scrollbar styles
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.textContent = `
-      .custom-scrollbar::-webkit-scrollbar {
-        width: 3px;
+  // Toggle local speech-to-text (using Web Speech API, not OpenAI)
+  const toggleSpeechToText = () => {
+    if (isSpeechToTextActive) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
       }
-      .custom-scrollbar::-webkit-scrollbar-track {
-        background: ${darkMode ? 'rgba(31, 41, 55, 0.3)' : 'rgba(243, 244, 246, 0.3)'};
+      setIsSpeechToTextActive(false);
+    } else {
+      try {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+          console.error("Speech recognition not supported in this browser");
+          return;
+        }
+        
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+        
+        recognition.onresult = (event) => {
+          let interimTranscript = '';
+          let finalTranscript = '';
+          
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+              finalTranscript += transcript;
+            } else {
+              interimTranscript += transcript;
+            }
+          }
+          
+          if (finalTranscript) {
+            setCurrentMessage(prev => prev + ' ' + finalTranscript.trim());
+          }
+          setTranscript(interimTranscript);
+        };
+        
+        recognition.onerror = (event) => {
+          console.error('Speech recognition error', event.error);
+          setIsSpeechToTextActive(false);
+        };
+        
+        recognition.onend = () => {
+          if (isSpeechToTextActive) {
+            recognition.start();
+          }
+        };
+        
+        recognition.start();
+        recognitionRef.current = recognition;
+        setIsSpeechToTextActive(true);
+      } catch (error) {
+        console.error('Error starting speech recognition:', error);
       }
-      .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: ${darkMode ? 'rgba(75, 85, 99, 0.6)' : 'rgba(209, 213, 219, 0.6)'};
-      }
-      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: ${darkMode ? 'rgba(107, 114, 128, 0.6)' : 'rgba(156, 163, 175, 0.6)'};
-      }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, [darkMode]);
-  
-  // Function to render status badges exactly matching the screenshot
-  const renderStatusIndicator = (status: string) => {
-    // Map status to Tailwind color classes based on status
-    let colorClass = '';
-    switch(status) {
-      case 'Completed':
-        colorClass = 'text-ron-success border-ron-success';
-        break;
-      case 'In Progress':
-        colorClass = 'text-ron-teal-400 border-ron-teal-400';
-        break;
-      case 'Pending':
-        colorClass = 'text-ron-warning border-ron-warning';
-        break;
-      case 'Canceled':
-        colorClass = 'text-ron-error border-ron-error';
-        break;
-      default:
-        colorClass = 'text-gray-400 border-gray-400';
     }
-    
-    return (
-      <div className="inline-flex items-center mt-1">
-        <div className={`bg-black bg-opacity-20 px-3 py-1 rounded-md inline-block min-w-[120px] text-center shadow border ${colorClass}`}>
-          <span className="text-xs">{status}</span>
-        </div>
-      </div>
-    );
   };
   
-  // AudioWave animation for title - with teal accents to match UI
-  const AudioWaveTitle = () => {
-    // Using predefined heights for audio wave bars with Tailwind classes
-    const heightClasses = [
-      'h-2', 'h-3', 'h-5', 'h-6', 'h-4', 'h-3', 'h-5', 'h-2', 'h-4', 'h-3'
-    ];
-    
-    return (
-      <div className="flex items-center justify-center mb-8">
-        <div className="relative">
-          <h1 className="text-4xl font-extralight tracking-wider bg-gradient-to-r from-ron-teal-400 to-blue-500 bg-clip-text text-transparent">
-            RON AI
-          </h1>
-          <div className="absolute -bottom-6 left-0 right-0 flex justify-center space-x-1">
-            {heightClasses.map((heightClass, i) => (
-              <div 
-                key={i}
-                className={`w-0.5 rounded-full bg-gradient-to-t from-ron-teal-400 to-blue-500 ${heightClass} opacity-${Math.floor((i % 5) + 3) * 10}`}
-              ></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+  const toggleRealtimeAudio = async () => {
+    try {
+      if (!isRealtimeAudioActive) {
+        setIsConnecting(true);
+        
+        // Step 1: Create the session
+        await realtimeAudioService.startSession();
+        
+        // Step 2: Set up event handlers
+        realtimeAudioService.onConnectionStateChange = (state) => {
+          setAudioConnectionState(state);
+          
+          // Only set active when fully connected and wait for data channel to be ready
+          if (state === 'connected') {
+            setIsRealtimeAudioActive(true);
+            setIsConnecting(false);
+          } else if (state === 'disconnected' || state === 'error') {
+            setIsRealtimeAudioActive(false);
+            setIsConnecting(false);
+          }
+        };
+        
+        realtimeAudioService.onMessage = (message) => {
+          setEvents((prev) => [message, ...prev]);
+        };
+        
+        realtimeAudioService.onTranscriptUpdate = (text) => {
+          setTranscript(text);
+        };
+        
+        // Step 3: Start recording only when everything is set up and ready
+        // This will be triggered by the onConnectionStateChange handler
+        realtimeAudioService.onDataChannelOpen = () => {
+          // Wait a moment to ensure everything is ready
+          setTimeout(() => {
+            if (realtimeAudioService.connectionState === 'connected') {
+              realtimeAudioService.startRecording();
+            }
+          }, 500);
+        };
+      } else {
+        // Stop in reverse order
+        realtimeAudioService.stopRecording();
+        setTimeout(() => {
+          realtimeAudioService.stopSession();
+          setIsRealtimeAudioActive(false);
+        }, 200);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setIsRealtimeAudioActive(false);
+      setIsConnecting(false);
+    }
   };
   
-  // Handle input change
+  const handleRecordingToggle = async () => {
+    try {
+      await toggleRealtimeAudio();
+    } catch (error) {
+      console.error('Error toggling recording:', error);
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCurrentMessage(e.target.value);
   };
 
-  // Handle key press in input
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -300,14 +218,127 @@ const RonAiTab: React.FC<RonAiTabProps> = ({
     }
   };
 
+  // Setup audio analyzer to detect when model is speaking
+  useEffect(() => {
+    // Clean up previous animation frame if it exists
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+
+    // Only run analysis when connected and the model might be speaking
+    if (audioConnectionState === 'connected' || audioConnectionState === 'speaking') {
+      const setupAudioAnalyzer = () => {
+        if (!realtimeAudioService.audioElement) return;
+        
+        // Create audio context if it doesn't exist
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        
+        // Create analyzer node
+        const analyzer = audioContext.createAnalyser();
+        analyzer.fftSize = 256; // Higher resolution
+        analyzer.smoothingTimeConstant = 0.6; // More responsive
+        
+        // Connect audio element to analyzer
+        try {
+          if (realtimeAudioService.audioElement && realtimeAudioService.audioElement.srcObject) {
+            const source = audioContext.createMediaStreamSource(
+              realtimeAudioService.audioElement.srcObject as MediaStream
+            );
+            source.connect(analyzer);
+            analyzerRef.current = analyzer;
+            
+            // Start analyzing audio
+            const analyzeAudio = () => {
+              if (!analyzerRef.current) return;
+              
+              const data = new Uint8Array(analyzerRef.current.frequencyBinCount);
+              analyzerRef.current.getByteFrequencyData(data);
+              
+              // Calculate average level - focusing on speech frequencies (300-3000 Hz)
+              let sum = 0;
+              let count = 0;
+              const speechLowBin = Math.floor(300 * analyzer.fftSize / audioContext.sampleRate);
+              const speechHighBin = Math.floor(3000 * analyzer.fftSize / audioContext.sampleRate);
+              
+              for (let i = speechLowBin; i < speechHighBin && i < data.length; i++) {
+                sum += data[i];
+                count++;
+              }
+              
+              const speechAvg = count > 0 ? sum / count : 0;
+              
+              // Detect if model is speaking based on speech frequency levels
+              // Using hysteresis to prevent rapid on/off switching
+              if (speechAvg > 15) {
+                setIsModelSpeaking(true);
+              } else if (speechAvg < 5) {
+                // Only turn off if level drops significantly to prevent flicker
+                setIsModelSpeaking(false);
+              }
+              
+              // Generate new audio levels based on frequency data
+              if (speechAvg > 5) {
+                const newLevels = Array.from({ length: 10 }, (_, i) => {
+                  // Use different frequency bands for each bar
+                  const bandStart = Math.floor(i * data.length / 10);
+                  const bandEnd = Math.floor((i + 1) * data.length / 10);
+                  let bandSum = 0;
+                  
+                  for (let j = bandStart; j < bandEnd; j++) {
+                    bandSum += data[j];
+                  }
+                  
+                  const bandAvg = (bandEnd - bandStart) > 0 ? bandSum / (bandEnd - bandStart) : 0;
+                  // Normalize to 0-1 range with a minimum value
+                  return Math.min(1, Math.max(0.2, bandAvg / 255));
+                });
+                setAudioLevels(newLevels);
+              }
+              
+              // Continue analyzing
+              animationFrameRef.current = requestAnimationFrame(analyzeAudio);
+            };
+            
+            analyzeAudio();
+          }
+        } catch (error) {
+          console.error('Error setting up audio analyzer:', error);
+        }
+      };
+      
+      // Wait a moment for audio element to be ready
+      const timeoutId = setTimeout(setupAudioAnalyzer, 500);
+      
+      return () => {
+        clearTimeout(timeoutId);
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+        }
+      };
+    } else {
+      // Reset when not connected
+      setIsModelSpeaking(false);
+      return () => {};
+    }
+  }, [audioConnectionState]);
+  
+  // Monitor messages to detect when model might be speaking
+  useEffect(() => {
+    if (events.length > 0) {
+      const lastEvent = events[0]; // Events are added at the beginning
+      if (lastEvent.type === 'audio_started') {
+        setIsModelSpeaking(true);
+      } else if (lastEvent.type === 'audio_ended') {
+        setIsModelSpeaking(false);
+      }
+    }
+  }, [events]);
+
   return (
-    <div className={containerClass}>
-      {/* Main three-column layout with strict height containment */}
+    <div className={darkMode ? "container dark-mode" : "container light-mode"}>
       <div className="grid grid-cols-12 h-full">
-        {/* Left column - Cases list with proper containment */}
         <div className="col-span-3 h-full flex flex-col overflow-hidden">
-          <div className={sidebarClass}>
-            {/* Back button */}
+          <div className={darkMode ? "sidebar dark-mode-sidebar" : "sidebar light-mode-sidebar"}>
             <div className="p-4 flex-shrink-0">
               <button 
                 className="p-2 rounded-full border border-gray-700"
@@ -318,34 +349,17 @@ const RonAiTab: React.FC<RonAiTabProps> = ({
               </button>
             </div>
             
-            {/* Patient header */}
             <div className="p-8 flex-shrink-0">
-              <div className="text-xl font-light mb-1">{patientInfo.name}</div>
-              <div className="text-sm text-gray-400">{patientInfo.id}</div>
+              <div className="text-xl font-light mb-1">Sarah Johnson</div>
+              <div className="text-sm text-gray-400">SJ-78954</div>
             </div>
             
-            {/* Cases header & grouping controls */}
             <div className="px-6 pt-6 pb-3 flex-shrink-0">
               <div className="flex justify-between items-center mb-3">
                 <h3 className="text-lg font-light">Care Journey</h3>
-                <div className="flex text-xs">
-                  <button 
-                    className={`px-3 py-1 rounded-l-full border border-r-0 border-gray-600 ${groupBy === 'category' ? 'bg-gray-700 text-white' : ''}`}
-                    onClick={() => setGroupBy('category')}
-                  >
-                    By Type
-                  </button>
-                  <button 
-                    className={`px-3 py-1 rounded-r-full border border-l-0 border-gray-600 ${groupBy === 'status' ? 'bg-gray-700 text-white' : ''}`}
-                    onClick={() => setGroupBy('status')}
-                  >
-                    By Status
-                  </button>
-                </div>
               </div>
             </div>
             
-            {/* Search - minimal */}
             <div className="px-6 mb-4 flex-shrink-0">
               <div className={`flex items-center rounded-full px-4 py-2 border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
                 <Search size={16} className="mr-2 text-gray-400" />
@@ -357,104 +371,144 @@ const RonAiTab: React.FC<RonAiTabProps> = ({
               </div>
             </div>
             
-            {/* List content - grouped into accordions */}
             <div className="flex-1 overflow-y-auto custom-scrollbar px-4">
               <div className="pb-4">
-                {Object.entries(getGroupedCases()).map(([groupName, groupCases]) => (
-                  <div key={groupName} className="mb-2">
-                    {/* Accordion header with glow */}
+                <div className="mb-2">
+                  <div 
+                    className="flex items-center justify-between py-2 px-2 cursor-pointer mb-2 border-b border-teal-400 shadow-sm"
+                  >
+                    <div className="flex items-center">
+                      <ChevronRight size={16} className="mr-2 text-gray-400" />
+                      <span className="font-light text-sm">Prior Authorization</span>
+                    </div>
+                    <span className="text-xs text-gray-400">2</span>
+                  </div>
+                  
+                  <div className="pt-2 pb-1 space-y-2">
                     <div 
-                      className="flex items-center justify-between py-2 px-2 cursor-pointer mb-2 border-b border-teal-400 shadow-sm"
-                      onClick={() => toggleGroup(groupName)}
+                      className="py-3 px-2 cursor-pointer transition-all border-l border-transparent hover:border-l-2 hover:border-l-gray-500"
                     >
-                      <div className="flex items-center">
-                        {expandedGroups.includes(groupName) ? 
-                          <ChevronDown size={16} className="mr-2 text-gray-400" /> : 
-                          <ChevronRight size={16} className="mr-2 text-gray-400" />
-                        }
-                        <span className="font-light text-sm">{groupName}</span>
+                      <div className="font-light mb-1 text-sm text-teal-400">Continuous Glucose Monitor Prior Auth</div>
+                      <div className="flex justify-between items-center mb-1">
+                        <div className="text-xs text-gray-400">CASE-7851</div>
+                        <div className="text-xs text-gray-400">Feb 20, 2025</div>
                       </div>
-                      <span className="text-xs text-gray-400">{groupCases.length}</span>
+                      <div className="flex justify-between items-center">
+                        <div className="text-xs text-gray-400">Pending Review</div>
+                      </div>
                     </div>
                     
-                    {/* Accordion content */}
-                    {expandedGroups.includes(groupName) && (
-                      <div className="pt-2 pb-1 space-y-2">
-                        {groupCases.map((item, index) => {
-                          const caseIndex = casesData.findIndex(c => c.id === item.id);
-                          return (
-                            <div 
-                              key={item.id} 
-                              className={`py-3 px-2 cursor-pointer transition-all ${
-                                selectedCase === caseIndex 
-                                  ? 'bg-gray-700 text-white' 
-                                  : 'border-l border-transparent hover:border-l-2 hover:border-l-gray-500'
-                              }`}
-                              onClick={() => setSelectedCase(caseIndex)}
-                            >
-                              <div className="font-light mb-1 text-sm text-teal-400">{item.title}</div>
-                              <div className="flex justify-between items-center mb-1">
-                                <div className="text-xs text-gray-400">{item.id}</div>
-                                <div className="text-xs text-gray-400">{item.date}</div>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                {groupBy === 'category' ? 
-                                  renderStatusIndicator(item.status) : 
-                                  <div className="text-xs text-gray-400">{item.category}</div>
-                                }
-                              </div>
-                            </div>
-                          );
-                        })}
+                    <div 
+                      className="py-3 px-2 cursor-pointer transition-all border-l border-transparent hover:border-l-2 hover:border-l-gray-500"
+                    >
+                      <div className="font-light mb-1 text-sm text-teal-400">Medication Prior Auth - Metformin</div>
+                      <div className="flex justify-between items-center mb-1">
+                        <div className="text-xs text-gray-400">CASE-7688</div>
+                        <div className="text-xs text-gray-400">Jan 18, 2025</div>
                       </div>
-                    )}
+                      <div className="flex justify-between items-center">
+                        <div className="text-xs text-gray-400">Approved</div>
+                      </div>
+                    </div>
                   </div>
-                ))}
+                </div>
+                
+                <div className="mb-2">
+                  <div 
+                    className="flex items-center justify-between py-2 px-2 cursor-pointer mb-2 border-b border-teal-400 shadow-sm"
+                  >
+                    <div className="flex items-center">
+                      <ChevronRight size={16} className="mr-2 text-gray-400" />
+                      <span className="font-light text-sm">Referral</span>
+                    </div>
+                    <span className="text-xs text-gray-400">2</span>
+                  </div>
+                  
+                  <div className="pt-2 pb-1 space-y-2">
+                    <div 
+                      className="py-3 px-2 cursor-pointer transition-all border-l border-transparent hover:border-l-2 hover:border-l-gray-500"
+                    >
+                      <div className="font-light mb-1 text-sm text-teal-400">Endocrinologist Referral</div>
+                      <div className="flex justify-between items-center mb-1">
+                        <div className="text-xs text-gray-400">CASE-7838</div>
+                        <div className="text-xs text-gray-400">Feb 15, 2025</div>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div className="text-xs text-gray-400">Approved</div>
+                      </div>
+                    </div>
+                    
+                    <div 
+                      className="py-3 px-2 cursor-pointer transition-all border-l border-transparent hover:border-l-2 hover:border-l-gray-500"
+                    >
+                      <div className="font-light mb-1 text-sm text-teal-400">Lab Tests - Quarterly</div>
+                      <div className="flex justify-between items-center mb-1">
+                        <div className="text-xs text-gray-400">CASE-7598</div>
+                        <div className="text-xs text-gray-400">Feb 05, 2025</div>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div className="text-xs text-gray-400">Approved</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
         
-        {/* Middle column - Ron AI interface with strict containment */}
         <div className="col-span-6 h-full flex flex-col overflow-hidden">
-          {/* Bot icon and audiowave title at top center */}
           <div className="flex flex-col items-center pt-8 pb-4 flex-shrink-0">
             <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-gradient-to-br from-blue-500 to-teal-400 shadow-lg shadow-teal-400/30">
               <Bot size={32} className="text-gray-900" />
             </div>
-            <AudioWaveTitle />
+            <div className="flex items-center justify-center mb-8">
+              <h1 className="text-4xl font-extralight tracking-wider bg-gradient-to-r from-ron-teal-400 to-blue-500 bg-clip-text text-transparent">
+                RON AI
+              </h1>
+            </div>
+            
+            {/* Audio Visualizer - Fixed position relative to RON AI text */}
+            <div 
+              ref={audioAnimationRef} 
+              className={`flex justify-center space-x-3 mb-5 -mt-4 relative z-10 transition-opacity duration-300 ${
+                isModelSpeaking ? 'visualizer-container-active' : ''
+              }`}
+            >
+              {audioLevels.map((level, index) => (
+                <div 
+                  key={index}
+                  className={`w-2 rounded-full bg-gradient-to-t from-ron-teal-400 to-blue-500 transition-all duration-150 ease-in-out transform audio-bar ${
+                    isModelSpeaking ? 'glow-effect active' : ''
+                  }`}
+                  style={{
+                    height: isModelSpeaking ? `${Math.max(8, Math.min(36, level * 36))}px` : `${8 + index % 9}px`,
+                    opacity: isModelSpeaking ? Math.min(1, 0.5 + level * 0.5) : (0.5 + (index % 10) * 0.05),
+                    transform: isModelSpeaking ? `scaleY(${1 + level * 0.7})` : 'scaleY(1)',
+                  }}
+                ></div>
+              ))}
+            </div>
           </div>
           
-          {/* Conversation area - with flex-1 to fill available space */}
           <div className="flex-1 flex flex-col px-8 overflow-y-auto" ref={messagesContainerRef}>
-            {/* Initial welcome message */}
-            {messages.length === 0 && !isLoading && (
-              <div className="flex justify-center my-8">
-                <div className={cardClass}>
-                  <p className="text-gray-400 text-sm font-light">
-                    {selectedCase !== null ? (
-                      <>I'm ready to help with <span className="font-normal text-white">{casesData[selectedCase].title}</span>.</>
-                    ) : (
-                      <>I'm ready to assist you with any questions or tasks.</>
-                    )}
-                    {' '}You can ask me to analyze documentation, suggest next steps, or draft communications.
-                  </p>
-                </div>
+            <div className="flex justify-center my-8">
+              <div className={darkMode ? "card dark-mode-card" : "card light-mode-card"}>
+                <p className="text-gray-400 text-sm font-light">
+                  I'm ready to assist you with any questions or tasks.
+                </p>
               </div>
-            )}
+            </div>
             
-            {/* Messages */}
             <div className="space-y-4 py-4">
               {messages.map((msg, idx) => renderMessage(msg, idx))}
               <div ref={messagesEndRef} />
             </div>
           </div>
           
-          {/* Enhanced input area with voice and attachment at bottom - fixed height */}
-          <div className="p-6 flex-shrink-0">
-            <div className={`${cardClass} ${isDeepThinking ? 'border border-purple-500' : isConversationMode ? 'border border-blue-500' : ''}`}>
+          <div className="p-6 flex-shrink-0 border-t border-gray-800 bg-gray-900">
+            <div className={darkMode ? "card dark-mode-card" : "card light-mode-card"}>
               <div className="flex items-center">
-                {/* Attachment button */}
                 <button 
                   className="p-3 rounded-full hover:bg-gray-700"
                   aria-label="Attach file"
@@ -463,52 +517,16 @@ const RonAiTab: React.FC<RonAiTabProps> = ({
                   <Paperclip size={20} className="text-gray-400" />
                 </button>
                 
-                {/* Main input */}
                 <input
                   type="text"
                   value={currentMessage}
                   onChange={handleInputChange}
                   onKeyPress={handleKeyPress}
-                  placeholder={selectedCase === null ? "Ask Ron AI a question..." : "Ask Ron AI about this patient's care journey..."}
+                  placeholder="Ask Ron AI a question..."
                   disabled={isLoading}
                   className="bg-transparent border-none focus:outline-none flex-1 px-3 py-2 text-sm"
                 />
                 
-                {/* Deep Thinking button */}
-                <button 
-                  className={`p-3 rounded-full hover:bg-gray-700 ${isDeepThinking ? 'bg-purple-700 text-white' : ''}`}
-                  onClick={toggleDeepThinking}
-                  aria-label={isDeepThinking ? "Disable deep thinking" : "Enable deep thinking"}
-                  title={isDeepThinking ? "Disable deep thinking" : "Enable deep thinking"}
-                >
-                  <Brain size={20} className={isDeepThinking ? "text-white" : "text-gray-400"} />
-                </button>
-                
-                {/* Conversation button */}
-                <button 
-                  className={`p-3 rounded-full hover:bg-gray-700 ${isConversationMode ? 'bg-blue-600 text-white' : ''}`}
-                  onClick={toggleConversationMode}
-                  aria-label={isConversationMode ? "End conversation" : "Start conversation"}
-                  title={isConversationMode ? "End conversation" : "Start conversation"}
-                >
-                  <Phone size={20} className={isConversationMode ? "text-white" : "text-gray-400"} />
-                </button>
-                
-                {/* Voice recording button with recording state */}
-                <button 
-                  className={`p-3 rounded-full ${isRecording ? 'bg-red-500 text-white' : ''}`}
-                  onClick={toggleRecording}
-                  aria-label={isRecording ? "Stop recording" : "Start voice recording"}
-                  title={isRecording ? "Stop recording" : "Start voice recording"}
-                >
-                  {isRecording ? (
-                    <X size={20} className="text-white" />
-                  ) : (
-                    <Mic size={20} className="text-gray-400" />
-                  )}
-                </button>
-                
-                {/* Send button */}
                 <button 
                   className="p-3 rounded-full bg-teal-500 ml-1 opacity-90 hover:opacity-100 transition-opacity"
                   onClick={(e) => handleSubmit(e)}
@@ -521,79 +539,73 @@ const RonAiTab: React.FC<RonAiTabProps> = ({
               </div>
             </div>
             
-            {/* Mode indicators */}
-            <div className="flex items-center justify-center mt-3 space-x-4">
-              {isRecording && (
-                <div className="flex items-center">
-                  <span className="text-sm text-ron-error">Recording...</span>
-                </div>
-              )}
-              {isDeepThinking && (
-                <div className="flex items-center">
-                  <span className="text-sm text-purple-400">Deep Thinking Mode</span>
-                </div>
-              )}
-              {isConversationMode && (
-                <div className="flex items-center">
-                  <span className="text-sm text-blue-400">Conversation Mode</span>
-                </div>
-              )}
+            <div className="flex items-center justify-between mt-3">
+              <div className="flex space-x-2">
+                <button
+                  onClick={toggleDeepThinking}
+                  className={`px-3 py-1.5 rounded-md flex items-center transition-colors ${
+                    isDeepThinking ? 'bg-amber-700 text-amber-200' : 'text-gray-400 hover:bg-gray-800 hover:text-amber-400'
+                  }`}
+                  aria-label={isDeepThinking ? "Turn off deep thinking mode" : "Turn on deep thinking mode"}
+                  title={isDeepThinking ? "Turn off deep thinking mode" : "Turn on deep thinking mode"}
+                >
+                  <Brain size={16} />
+                  <span className="ml-1.5 text-xs font-medium">Deep Thinking</span>
+                </button>
+                
+                <button
+                  onClick={toggleRealtimeAudio}
+                  className={`px-3 py-1.5 rounded-md flex items-center transition-colors ${
+                    isRealtimeAudioActive ? 'bg-green-700 text-green-200' : (isConnecting ? 'bg-yellow-700 text-yellow-200' : 'text-gray-400 hover:bg-gray-800 hover:text-green-400')
+                  }`}
+                  disabled={isLoading}
+                  aria-label={isRealtimeAudioActive ? "Turn off real time audio" : "Turn on real time audio"}
+                  title={isRealtimeAudioActive ? "Turn off real time audio" : "Turn on real time audio"}
+                >
+                  <Mic size={16} />
+                  <span className="ml-1.5 text-xs font-medium">Real Time</span>
+                  {isConnecting && 
+                    <div className="flex space-x-1 ml-1.5">
+                      <span className="w-1 h-1 bg-yellow-400 rounded-full animate-pulse"></span>
+                      <span className="w-1 h-1 bg-yellow-400 rounded-full animate-pulse delay-75"></span>
+                      <span className="w-1 h-1 bg-yellow-400 rounded-full animate-pulse delay-150"></span>
+                    </div>
+                  }
+                </button>
+                
+                <button
+                  onClick={toggleSpeechToText}
+                  className={`px-3 py-1.5 rounded-md flex items-center transition-colors ${
+                    isSpeechToTextActive ? 'bg-purple-700 text-purple-200' : 'text-gray-400 hover:bg-gray-800 hover:text-purple-400'
+                  }`}
+                  aria-label={isSpeechToTextActive ? "Turn off speech to text" : "Turn on speech to text"}
+                  title={isSpeechToTextActive ? "Turn off speech to text" : "Turn on speech to text"}
+                >
+                  <MessageSquare size={16} />
+                  <span className="ml-1.5 text-xs font-medium">Speech to Text</span>
+                </button>
+              </div>
+
+              <div className="flex items-center">
+                <div className="w-2 h-2 rounded-full mr-2 bg-teal-400 shadow-glow-teal"></div>
+                <span className="text-xs text-gray-400">AI System Operational</span>
+              </div>
             </div>
           </div>
         </div>
         
-        {/* Right column - Context panel with strict containment */}
         <div className="col-span-3 h-full border-l border-gray-700 flex flex-col overflow-hidden">
           <div className="h-full flex flex-col p-6 overflow-hidden">
             <h3 className="text-lg font-light mb-6 flex-shrink-0">Case Context</h3>
             
-            {/* Context content - scrollable if needed */}
             <div className="flex-1 overflow-y-auto custom-scrollbar">
-              {selectedCase === null ? (
-                <div className="flex items-center justify-center h-full">
-                  <p className="text-gray-500 text-sm font-light">
-                    Select a case to view context
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-6 pb-4">
-                  <div>
-                    <h4 className="text-sm text-gray-400 mb-2">Case Type</h4>
-                    <p className="font-light">{casesData[selectedCase].category}</p>
-                  </div>
-                  
-                  <div>
-                    <h4 className="text-sm text-gray-400 mb-2">Status</h4>
-                    {renderStatusIndicator(casesData[selectedCase].status)}
-                  </div>
-                  
-                  <div>
-                    <h4 className="text-sm text-gray-400 mb-2">Patient Information</h4>
-                    <div className={cardClass}>
-                      <div>
-                        <div className="text-xs text-gray-400">Primary Diagnosis</div>
-                        <div className="text-sm">{patientInfo.primaryDiagnosis}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-gray-400">Insurance</div>
-                        <div className="text-sm">{patientInfo.insurance}</div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h4 className="text-sm text-gray-400 mb-2">AI Assistance</h4>
-                    <div className={cardClass}>
-                      <div className="text-gray-300">
-                        Ready to assist with {casesData[selectedCase].title}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+              <div className="flex items-center justify-center h-full">
+                <p className="text-gray-500 text-sm font-light">
+                  Select a case to view context
+                </p>
+              </div>
             </div>
             
-            {/* Status indicator - fixed at bottom */}
             <div className="mt-auto pt-4 border-t border-gray-700 flex-shrink-0">
               <div className="text-xs text-gray-400 flex items-center">
                 <div className="w-2 h-2 rounded-full mr-2 bg-ron-teal-400 shadow-glow-hover"></div>

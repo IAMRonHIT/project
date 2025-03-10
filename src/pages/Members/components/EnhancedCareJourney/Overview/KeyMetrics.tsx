@@ -17,7 +17,7 @@ interface Metric {
 }
 
 interface KeyMetricsProps {
-  metrics: Metric[];
+  metrics: ReadonlyArray<Metric>;
 }
 
 export function KeyMetrics({ metrics }: KeyMetricsProps) {

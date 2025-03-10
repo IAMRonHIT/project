@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import React, { FC } from 'react';
 import RonAIExperience from '../../components/RonAI/RonExperience';
 
 export const RonAIPage: FC = () => {

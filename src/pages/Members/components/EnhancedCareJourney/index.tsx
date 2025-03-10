@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ClinicalReviewsTable } from './ClinicalReviewsTable';
+import { ClinicalReviewsTable } from './ClinicalReviewsTable/index';
 import { PlansOfCare } from './PlansOfCare';
 import { Claims } from './Claims';
 import { Overview } from './Overview';
-import { Activity, AlertCircle, FileText, MessageSquare, ArrowLeft } from 'lucide-react';
+import { Activity, AlertCircle, FileText, MessageSquare, ArrowLeft, User } from 'lucide-react';
+import { PatientDashboard } from '../../../../components/PatientProfile';
+import { PatientData, loadPatientFromFHIR } from '../../../../services/fhirPatientService';
 
 const TABS = {
   OVERVIEW: 'overview',
+  PATIENT_PROFILE: 'patient-profile',
   CLINICAL_REVIEWS: 'clinical-reviews',
   PLANS_OF_CARE: 'plans-of-care',
   CLAIMS: 'claims',
@@ -26,6 +29,10 @@ interface PlansOfCareProps {
 }
 
 interface ClaimsProps {
+  careJourneyId: string;
+}
+
+interface OverviewProps {
   careJourneyId: string;
 }
 
@@ -134,6 +141,25 @@ export function EnhancedCareJourney() {
   const [activeTab, setActiveTab] = useState<TabType>(TABS.OVERVIEW);
   const [showNewReviewModal, setShowNewReviewModal] = useState(false);
   const [isDark] = useState(document.documentElement.classList.contains('dark'));
+  const [patientData, setPatientData] = useState<PatientData | null>(null);
+  const [patientLoading, setPatientLoading] = useState<boolean>(true);
+
+  // Load patient data from mock FHIR bundle
+  useEffect(() => {
+    const loadPatient = async () => {
+      try {
+        setPatientLoading(true);
+        const data = await loadPatientFromFHIR('/mockData/patientBundle.json');
+        setPatientData(data);
+      } catch (error) {
+        console.error('Error loading patient data:', error);
+      } finally {
+        setPatientLoading(false);
+      }
+    };
+    
+    loadPatient();
+  }, []);
 
   // Get the care journey data
   const careJourney = journeyId ? mockCareJourneys[journeyId] : null;
@@ -150,8 +176,38 @@ export function EnhancedCareJourney() {
     navigate(`/members/${memberId}`);
   };
 
+  const handleCareJourneySelected = (selectedJourneyId: string) => {
+    // Find the journey in mock journeys, or use the one from FHIR data
+    if (mockCareJourneys[selectedJourneyId]) {
+      navigate(`/members/${memberId}/journey/${selectedJourneyId}`);
+    } else if (patientData?.careJourneys) {
+      const selectedJourney = patientData.careJourneys.find(journey => journey.id === selectedJourneyId);
+      if (selectedJourney) {
+        // TODO: In a real implementation, we would create a new care journey record 
+        // and navigate to it. For now, just show an alert.
+        alert(`Selected care journey: ${selectedJourney.title}`);
+      }
+    }
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
+      case TABS.PATIENT_PROFILE:
+        return (
+          <div className="mt-6">
+            {patientLoading ? (
+              <div className="flex items-center justify-center p-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
+              </div>
+            ) : (
+              <PatientDashboard 
+                patientFhirUrl="/mockData/patientBundle.json"
+                isDark={isDark}
+                onCareJourneySelected={handleCareJourneySelected}
+              />
+            )}
+          </div>
+        );
       case TABS.CLINICAL_REVIEWS:
         return <ClinicalReviewsTable 
           careJourneyId={careJourney.id} 
@@ -199,37 +255,103 @@ export function EnhancedCareJourney() {
         </div>
       </div>
 
-      {/* Main Navigation */}
-      <div className="mb-8 border-b border-ron-divider">
-        <nav className="flex gap-6">
-          {[
-            { id: TABS.OVERVIEW, label: 'Overview', icon: Activity },
-            { id: TABS.CLINICAL_REVIEWS, label: 'Clinical Reviews', icon: FileText },
-            { id: TABS.PLANS_OF_CARE, label: 'Plans of Care', icon: FileText },
-            { id: TABS.CLAIMS, label: 'Claims', icon: AlertCircle },
-            { id: TABS.COMMUNICATIONS, label: 'Communications', icon: MessageSquare }
-          ].map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 pb-4 border-b-2 transition-colors ${
-                  activeTab === tab.id
-                    ? `${isDark ? 'border-[#CCFF00] text-[#CCFF00]' : 'border-ron-primary text-ron-primary'}`
-                    : `border-transparent ${isDark ? 'text-white hover:text-white/80' : 'text-dark-gun-metal/60 hover:text-dark-gun-metal'}`
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {tab.label}
-              </button>
-            );
-          })}
-        </nav>
+      {/* Navigation Tabs */}
+      <div className="border-b border-ron-divider dark:border-white/10 mt-6">
+        <div className="flex space-x-4">
+          <button
+            onClick={() => setActiveTab(TABS.OVERVIEW)}
+            className={`py-3 border-b-2 font-medium transition-colors ${
+              activeTab === TABS.OVERVIEW
+                ? isDark
+                  ? 'border-white text-white'
+                  : 'border-ron-primary text-ron-primary'
+                : isDark
+                ? 'border-transparent text-white/60 hover:text-white'
+                : 'border-transparent text-dark-gun-metal/60 hover:text-dark-gun-metal'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Activity className="w-4 h-4" />
+              <span>Overview</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setActiveTab(TABS.PATIENT_PROFILE)}
+            className={`py-3 border-b-2 font-medium transition-colors ${
+              activeTab === TABS.PATIENT_PROFILE
+                ? isDark
+                  ? 'border-white text-white'
+                  : 'border-ron-primary text-ron-primary'
+                : isDark
+                ? 'border-transparent text-white/60 hover:text-white'
+                : 'border-transparent text-dark-gun-metal/60 hover:text-dark-gun-metal'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <User className="w-4 h-4" />
+              <span>Patient Profile</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setActiveTab(TABS.CLINICAL_REVIEWS)}
+            className={`py-3 border-b-2 font-medium transition-colors ${
+              activeTab === TABS.CLINICAL_REVIEWS
+                ? isDark
+                  ? 'border-white text-white'
+                  : 'border-ron-primary text-ron-primary'
+                : isDark
+                ? 'border-transparent text-white/60 hover:text-white'
+                : 'border-transparent text-dark-gun-metal/60 hover:text-dark-gun-metal'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4" />
+              <span>Clinical Reviews ({careJourney.metrics.reviews})</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setActiveTab(TABS.PLANS_OF_CARE)}
+            className={`py-3 border-b-2 font-medium transition-colors ${
+              activeTab === TABS.PLANS_OF_CARE
+                ? isDark
+                  ? 'border-white text-white'
+                  : 'border-ron-primary text-ron-primary'
+                : isDark
+                ? 'border-transparent text-white/60 hover:text-white'
+                : 'border-transparent text-dark-gun-metal/60 hover:text-dark-gun-metal'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              <span>Plans of Care ({careJourney.metrics.activePlans})</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setActiveTab(TABS.CLAIMS)}
+            className={`py-3 border-b-2 font-medium transition-colors ${
+              activeTab === TABS.CLAIMS
+                ? isDark
+                  ? 'border-white text-white'
+                  : 'border-ron-primary text-ron-primary'
+                : isDark
+                ? 'border-transparent text-white/60 hover:text-white'
+                : 'border-transparent text-dark-gun-metal/60 hover:text-dark-gun-metal'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4" />
+              <span>Claims ({careJourney.metrics.claims})</span>
+            </div>
+          </button>
+        </div>
       </div>
 
-      {/* Content Area */}
-      <div className="min-h-[400px]">
+      {/* Tab Content */}
+      <div className="mt-6">
         {renderTabContent()}
       </div>
     </div>

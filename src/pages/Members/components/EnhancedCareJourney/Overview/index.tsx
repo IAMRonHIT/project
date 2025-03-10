@@ -7,10 +7,11 @@ import { KeyMetrics } from './KeyMetrics';
 import { JourneyTimeline } from './JourneyTimeline';
 import { mockCareJourneyData } from './mockData';
 import { JourneyType } from './types';
+import styles from './styles.module.css';
 
-interface OverviewProps extends Readonly<{
-  careJourneyId?: string;
-}> {}
+export interface OverviewProps {
+  careJourneyId: string;
+}
 
 interface CardWrapperProps extends Readonly<{
   children: ReactNode;
@@ -56,6 +57,11 @@ function JourneyHeader({ type, diagnosis, duration, phase, severity, careTeam }:
     return 'bg-ron-mint-500';
   };
 
+  const getWidthClass = (percentage: number): string => {
+    const roundedPercentage = Math.round(percentage / 5) * 5;
+    return `w-[${roundedPercentage}%]`;
+  };
+
   return (
     <div className={`p-6 ${isDark ? 'bg-white/5' : 'bg-white'} border ${
       isDark ? 'border-white/10' : 'border-ron-divider'
@@ -95,8 +101,7 @@ function JourneyHeader({ type, diagnosis, duration, phase, severity, careTeam }:
               <div className="mt-1 flex items-center gap-2">
                 <div className="w-24 h-2 rounded-full bg-black/10 dark:bg-white/10">
                   <div 
-                    className={`h-full rounded-full ${getSeverityColor()} transition-all duration-300`}
-                    style={{ width: `${severity}%` }}
+                    className={`h-full rounded-full ${getSeverityColor()} transition-all duration-300 ${getWidthClass(severity)}`}
                   />
                 </div>
                 <span className="text-sm font-medium">{severity}%</span>
@@ -136,7 +141,7 @@ function JourneyHeader({ type, diagnosis, duration, phase, severity, careTeam }:
   );
 }
 
-export function Overview() {
+export function Overview({ careJourneyId }: OverviewProps) {
   const [isDark] = useState(document.documentElement.classList.contains('dark'));
   const [activeTab, setActiveTab] = useState('overview');
 

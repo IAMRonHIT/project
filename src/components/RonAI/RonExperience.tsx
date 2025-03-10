@@ -591,7 +591,7 @@ const RonExperience: React.FC = () => {
                       type="button"
                       onClick={toggleAccordion}
                       className="ml-2 p-1 rounded-md hover:bg-gray-700 transition-colors"
-                      aria-expanded={isExpanded ? "true" : "false"}
+                      aria-expanded="false"
                       aria-label={isExpanded ? "Collapse chain of thought" : "Expand chain of thought"}
                     >
                       {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}

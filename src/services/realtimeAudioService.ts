@@ -58,7 +58,8 @@ class RealtimeAudioService {
   private peerConnection: RTCPeerConnection | null = null;
   private dataChannel: RTCDataChannel | null = null;
   private microphoneStream: MediaStream | null = null;
-  private audioElement: HTMLAudioElement | null = null;
+  // Changed from private to public to allow access in RonAITab component
+  public audioElement: HTMLAudioElement | null = null;
   private recordingState: 'inactive' | 'requested' | 'recording' = 'inactive';
   private ephemeralToken: string | null = null;
   private voice: string = 'ash';

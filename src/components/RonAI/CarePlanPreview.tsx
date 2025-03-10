@@ -25,6 +25,36 @@ const CarePlanPreview: React.FC<CarePlanPreviewProps> = ({ code, onClose, isVisi
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
+    let styleElement = document.getElementById('device-size-styles');
+    if (!styleElement) {
+      styleElement = document.createElement('style');
+      styleElement.id = 'device-size-styles';
+      document.head.appendChild(styleElement);
+    }
+
+    styleElement.textContent = `
+      .device-mobile {
+        width: ${deviceSizes.mobile.width}px;
+        height: ${deviceSizes.mobile.height}px;
+        max-width: 100%;
+        max-height: 100%;
+      }
+      .device-tablet {
+        width: ${deviceSizes.tablet.width}px;
+        height: ${deviceSizes.tablet.height}px;
+        max-width: 100%;
+        max-height: 100%;
+      }
+      .device-desktop {
+        width: ${deviceSizes.desktop.width}px;
+        height: ${deviceSizes.desktop.height}px;
+        max-width: 100%;
+        max-height: 100%;
+      }
+    `;
+  }, []);
+
+  useEffect(() => {
     if (!isVisible || !code) return;
     
     const renderCode = async () => {
@@ -185,14 +215,8 @@ const CarePlanPreview: React.FC<CarePlanPreviewProps> = ({ code, onClose, isVisi
         ) : (
           <div 
             className={`relative bg-white rounded-md shadow-lg overflow-hidden transition-all duration-300 ${
-              isFullscreen ? 'w-full h-full max-w-none max-h-none' : ''
+              isFullscreen ? 'w-full h-full max-w-none max-h-none' : `device-${deviceSize}`
             }`}
-            style={!isFullscreen ? {
-              width: deviceSizes[deviceSize].width,
-              height: deviceSizes[deviceSize].height,
-              maxWidth: '100%',
-              maxHeight: '100%'
-            } : {}}
           >
             <iframe
               ref={iframeRef}

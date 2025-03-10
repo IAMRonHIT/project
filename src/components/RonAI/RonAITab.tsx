@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Search, Bot, Send, Mic, Paperclip, X, ChevronRight, ChevronDown, Brain, Phone, MessageSquare, Eye } from 'lucide-react';
+import { ArrowLeft, Search, Bot, Send, Mic, Paperclip, X, ChevronRight, ChevronDown, Brain, Phone, MessageSquare, Eye, FileText } from 'lucide-react';
 import CarePlanPreview from './CarePlanPreview';
 import realtimeAudioService, { ConnectionState } from '../../services/realtimeAudioService';
+import { generatePatientContent } from '../../services/patientContentService';
 import './audioVisualization.css';
 
 // Sample care plan code for demonstration
@@ -146,6 +147,8 @@ declare global {
   interface Window {
     SpeechRecognition: any;
     webkitSpeechRecognition: any;
+    AudioContext: typeof AudioContext;
+    webkitAudioContext: typeof AudioContext;
   }
 }
 
@@ -193,8 +196,12 @@ const RonAiTab: React.FC<RonAiTabProps> = ({
   const [audioLevels, setAudioLevels] = useState<number[]>([0.1, 0.2, 0.5, 0.6, 0.4, 0.3, 0.5, 0.2, 0.4, 0.3]);
   const [showCarePlanPreview, setShowCarePlanPreview] = useState(false);
   const [carePlanCode, setCarePlanCode] = useState<string>('');
+  const [isPatientContentMode, setIsPatientContentMode] = useState(false);
+  const [isGrokResponsePending, setIsGrokResponsePending] = useState(false);
   const analyzerRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const lastAudioActivityRef = useRef<number | null>(null);
+  const visRef = useRef<HTMLDivElement | null>(null);
   
   const isDeepThinking = propIsDeepThinking !== undefined ? propIsDeepThinking : localIsDeepThinking;
   const isConversationMode = propIsConversationMode !== undefined ? propIsConversationMode : localIsConversationMode;
@@ -227,23 +234,31 @@ const RonAiTab: React.FC<RonAiTabProps> = ({
   // Toggle local speech-to-text (using Web Speech API, not OpenAI)
   const toggleSpeechToText = () => {
     if (isSpeechToTextActive) {
+      // Stop recognition if it's active
       if (recognitionRef.current) {
         recognitionRef.current.stop();
         recognitionRef.current = null;
       }
       setIsSpeechToTextActive(false);
+      setTranscript('');
     } else {
+      // Start speech recognition
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        console.error('Speech recognition not supported');
+        return;
+      }
+      
       try {
-        const SpeechRecognition: any = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) {
-          console.error("Speech recognition not supported in this browser");
-          return;
-        }
-        
         const recognition = new SpeechRecognition();
         recognition.continuous = true;
         recognition.interimResults = true;
         recognition.lang = 'en-US';
+        
+        recognition.onstart = () => {
+          setIsSpeechToTextActive(true);
+          setTranscript('');
+        };
         
         recognition.onresult = (event) => {
           let interimTranscript = '';
@@ -259,7 +274,8 @@ const RonAiTab: React.FC<RonAiTabProps> = ({
           }
           
           if (finalTranscript) {
-            setCurrentMessage((prev: string) => prev + ' ' + finalTranscript.trim());
+            const trimmedText = finalTranscript.trim();
+            setCurrentMessage(currentMessage + ' ' + trimmedText);
           }
           setTranscript(interimTranscript);
         };
@@ -271,19 +287,21 @@ const RonAiTab: React.FC<RonAiTabProps> = ({
         
         recognition.onend = () => {
           if (isSpeechToTextActive) {
+            // If it's still active when it ends, restart it
             recognition.start();
           }
         };
         
-        recognition.start();
         recognitionRef.current = recognition;
-        setIsSpeechToTextActive(true);
+        recognition.start();
       } catch (error) {
-        console.error('Error starting speech recognition:', error);
+        console.error('Error initializing speech recognition:', error);
+        setIsSpeechToTextActive(false);
       }
     }
   };
   
+  // Toggle real-time audio functionality
   const toggleRealtimeAudio = async () => {
     try {
       if (!isRealtimeAudioActive) {
@@ -339,30 +357,16 @@ const RonAiTab: React.FC<RonAiTabProps> = ({
     }
   };
   
-  const handleRecordingToggle = async () => {
-    try {
-      await toggleRealtimeAudio();
-    } catch (error) {
-      console.error('Error toggling recording:', error);
-    }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCurrentMessage(e.target.value);
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e);
-    }
-  };
-
   // Setup audio analyzer to detect when model is speaking
   useEffect(() => {
     // Clean up previous animation frame if it exists
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
+    }
+
+    // Initialize lastAudioActivityRef if null
+    if (lastAudioActivityRef.current === null) {
+      lastAudioActivityRef.current = Date.now();
     }
 
     // Only run analysis when connected and the model might be speaking
@@ -371,7 +375,7 @@ const RonAiTab: React.FC<RonAiTabProps> = ({
         if (!realtimeAudioService.audioElement) return;
         
         // Create audio context if it doesn't exist
-        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         
         // Create analyzer node
         const analyzer = audioContext.createAnalyser();
@@ -391,77 +395,67 @@ const RonAiTab: React.FC<RonAiTabProps> = ({
             const analyzeAudio = () => {
               if (!analyzerRef.current) return;
               
-              const data = new Uint8Array(analyzerRef.current.frequencyBinCount);
-              analyzerRef.current.getByteFrequencyData(data);
+              const dataArray = new Uint8Array(analyzerRef.current.frequencyBinCount);
+              analyzerRef.current.getByteFrequencyData(dataArray);
               
-              // Calculate average level - focusing on speech frequencies (300-3000 Hz)
-              let sum = 0;
-              let count = 0;
-              const speechLowBin = Math.floor(300 * analyzer.fftSize / audioContext.sampleRate);
-              const speechHighBin = Math.floor(3000 * analyzer.fftSize / audioContext.sampleRate);
+              // Check if there's audio activity by calculating average level
+              const average = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
               
-              for (let i = speechLowBin; i < speechHighBin && i < data.length; i++) {
-                sum += data[i];
-                count++;
-              }
-              
-              const speechAvg = count > 0 ? sum / count : 0;
-              
-              // Detect if model is speaking based on speech frequency levels
-              // Using hysteresis to prevent rapid on/off switching
-              if (speechAvg > 15) {
-                setIsModelSpeaking(true);
-              } else if (speechAvg < 5) {
-                // Only turn off if level drops significantly to prevent flicker
-                setIsModelSpeaking(false);
-              }
-              
-              // Generate new audio levels based on frequency data
-              if (speechAvg > 5) {
-                const newLevels = Array.from({ length: 10 }, (_, i) => {
-                  // Use different frequency bands for each bar
-                  const bandStart = Math.floor(i * data.length / 10);
-                  const bandEnd = Math.floor((i + 1) * data.length / 10);
-                  let bandSum = 0;
+              // Update visualization
+              if (visRef.current) {
+                const bars = visRef.current.querySelectorAll('.audio-bar');
+                const barCount = bars.length;
+                
+                // Map audio data to bar heights
+                for (let i = 0; i < barCount; i++) {
+                  const index = Math.floor(i * (dataArray.length / barCount));
+                  const value = dataArray[index];
+                  const height = Math.max(3, (value / 255) * 50); // Min 3px, max 50px
                   
-                  for (let j = bandStart; j < bandEnd; j++) {
-                    bandSum += data[j];
+                  if (bars[i]) {
+                    (bars[i] as HTMLElement).style.height = `${height}px`;
                   }
-                  
-                  const bandAvg = (bandEnd - bandStart) > 0 ? bandSum / (bandEnd - bandStart) : 0;
-                  // Normalize to 0-1 range with a minimum value
-                  return Math.min(1, Math.max(0.2, bandAvg / 255));
-                });
-                setAudioLevels(newLevels);
+                }
               }
               
-              // Continue analyzing
+              // Detect if AI is speaking based on audio levels
+              const currentTime = Date.now();
+              if (average > 5) { // Threshold for activity
+                if (audioConnectionState !== 'speaking') {
+                  setAudioConnectionState('speaking');
+                }
+                lastAudioActivityRef.current = currentTime;
+              } else if (audioConnectionState === 'speaking' && 
+                         lastAudioActivityRef.current !== null &&
+                         currentTime - lastAudioActivityRef.current > 500) {
+                // Wait a bit before changing state to avoid flicker
+                setAudioConnectionState('connected');
+              }
+              
+              // Continue animation loop
               animationFrameRef.current = requestAnimationFrame(analyzeAudio);
             };
             
-            analyzeAudio();
+            // Start animation loop
+            animationFrameRef.current = requestAnimationFrame(analyzeAudio);
           }
         } catch (error) {
-          console.error('Error setting up audio analyzer:', error);
+          console.error("Error setting up audio analyzer:", error);
         }
       };
       
-      // Wait a moment for audio element to be ready
-      const timeoutId = setTimeout(setupAudioAnalyzer, 500);
-      
-      return () => {
-        clearTimeout(timeoutId);
-        if (animationFrameRef.current) {
-          cancelAnimationFrame(animationFrameRef.current);
-        }
-      };
-    } else {
-      // Reset when not connected
-      setIsModelSpeaking(false);
-      return () => {};
+      // Set a small delay to ensure audio element is ready
+      setTimeout(setupAudioAnalyzer, 500);
     }
+    
+    // Cleanup function
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
   }, [audioConnectionState]);
-  
+
   // Monitor messages to detect when model might be speaking
   useEffect(() => {
     if (events.length > 0) {
@@ -473,6 +467,53 @@ const RonAiTab: React.FC<RonAiTabProps> = ({
       }
     }
   }, [events]);
+
+  // Toggle patient content mode
+  const togglePatientContentMode = () => {
+    setIsPatientContentMode(!isPatientContentMode);
+  };
+
+  // Modify the handleSubmit function to handle routing to Grok
+  const originalHandleSubmit = handleSubmit;
+  
+  // Override handleSubmit prop with our custom implementation
+  const customHandleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!currentMessage.trim()) return;
+    
+    if (isPatientContentMode) {
+      // Handle sending to Grok
+      try {
+        setIsGrokResponsePending(true);
+        
+        // Send message to Grok via patientContentService
+        const response = await generatePatientContent({
+          prompt: currentMessage,
+          patientInfo: {
+            name: "Sarah Johnson",
+            age: 42,
+            conditions: ["Type 2 Diabetes", "Hypertension"],
+            medications: ["Metformin", "Lisinopril"]
+          },
+          contentType: 'care-plan'
+        });
+        
+        // Set the response code and show the preview
+        setCarePlanCode(response);
+        setShowCarePlanPreview(true);
+        setIsGrokResponsePending(false);
+        setCurrentMessage('');
+        
+      } catch (error) {
+        console.error('Error getting response from Grok:', error);
+        setIsGrokResponsePending(false);
+      }
+    } else {
+      // Use original OpenAI handling
+      originalHandleSubmit(e);
+    }
+  };
 
   return (
     <div className={darkMode ? "container dark-mode" : "container light-mode"}>
@@ -615,19 +656,36 @@ const RonAiTab: React.FC<RonAiTabProps> = ({
                 isModelSpeaking ? 'visualizer-container-active' : ''
               }`}
             >
-              {audioLevels.map((level, index) => (
-                <div 
-                  key={index}
-                  className={`w-2 rounded-full bg-gradient-to-t from-ron-teal-400 to-blue-500 transition-all duration-150 ease-in-out transform audio-bar ${
-                    isModelSpeaking ? 'glow-effect active' : ''
-                  }`}
-                  style={{
-                    height: isModelSpeaking ? `${Math.max(8, Math.min(36, level * 36))}px` : `${8 + index % 9}px`,
-                    opacity: isModelSpeaking ? Math.min(1, 0.5 + level * 0.5) : (0.5 + (index % 10) * 0.05),
-                    transform: isModelSpeaking ? `scaleY(${1 + level * 0.7})` : 'scaleY(1)',
-                  }}
-                ></div>
-              ))}
+              {audioLevels.map((level, index) => {
+                // Calculate height value dynamically
+                const heightValue = isModelSpeaking ? 
+                  Math.max(8, Math.min(36, level * 36)) : 
+                  (8 + index % 9);
+                
+                // Calculate opacity class
+                const opacityValue = isModelSpeaking ? 
+                  Math.min(1, 0.5 + level * 0.5) : 
+                  (0.5 + (index % 10) * 0.05);
+                
+                // Convert opacity to Tailwind opacity classes (0-100 in steps of 5)
+                const opacityClass = `opacity-${Math.round(opacityValue * 100 / 5) * 5}`;
+                
+                // Calculate scale effect
+                const scaleClass = isModelSpeaking ? 
+                  `scale-y-${Math.round(10 + level * 7)}0` : 
+                  'scale-y-100';
+                
+                return (
+                  <div 
+                    key={index}
+                    className={`w-2 rounded-full bg-gradient-to-t from-ron-teal-400 to-blue-500 
+                      transition-all duration-150 ease-in-out transform audio-bar 
+                      h-[${heightValue}px]
+                      ${isModelSpeaking ? 'glow-effect active' : ''}
+                      ${opacityClass} ${scaleClass}`}
+                  ></div>
+                );
+              })}
             </div>
           </div>
           
@@ -660,8 +718,13 @@ const RonAiTab: React.FC<RonAiTabProps> = ({
                 <input
                   type="text"
                   value={currentMessage}
-                  onChange={handleInputChange}
-                  onKeyPress={handleKeyPress}
+                  onChange={(e) => setCurrentMessage(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      customHandleSubmit(e);
+                    }
+                  }}
                   placeholder="Ask Ron AI a question..."
                   disabled={isLoading}
                   className="bg-transparent border-none focus:outline-none flex-1 px-3 py-2 text-sm"
@@ -669,7 +732,7 @@ const RonAiTab: React.FC<RonAiTabProps> = ({
                 
                 <button 
                   className="p-3 rounded-full bg-teal-500 ml-1 opacity-90 hover:opacity-100 transition-opacity"
-                  onClick={(e) => handleSubmit(e)}
+                  onClick={(e) => customHandleSubmit(e)}
                   disabled={isLoading || !currentMessage.trim()}
                   aria-label="Send message"
                   title="Send message"
@@ -724,8 +787,26 @@ const RonAiTab: React.FC<RonAiTabProps> = ({
                   <MessageSquare size={16} />
                   <span className="ml-1.5 text-xs font-medium">Speech to Text</span>
                 </button>
+                
+                <button
+                  onClick={togglePatientContentMode}
+                  className={`px-3 py-1.5 rounded-md flex items-center transition-colors ${
+                    isPatientContentMode ? 'bg-blue-700 text-blue-200' : 'text-gray-400 hover:bg-gray-800 hover:text-blue-400'
+                  }`}
+                  aria-label={isPatientContentMode ? "Turn off patient content mode" : "Turn on patient content mode"}
+                  title={isPatientContentMode ? "Turn off patient content mode" : "Turn on patient content mode"}
+                >
+                  <FileText size={16} />
+                  <span className="ml-1.5 text-xs font-medium">Patient Content</span>
+                  {isGrokResponsePending && 
+                    <div className="flex space-x-1 ml-1.5">
+                      <span className="w-1 h-1 bg-blue-400 rounded-full animate-pulse"></span>
+                      <span className="w-1 h-1 bg-blue-400 rounded-full animate-pulse delay-75"></span>
+                      <span className="w-1 h-1 bg-blue-400 rounded-full animate-pulse delay-150"></span>
+                    </div>
+                  }
+                </button>
               </div>
-
               <div className="flex items-center">
                 <div className="w-2 h-2 rounded-full mr-2 bg-teal-400 shadow-glow-teal"></div>
                 <span className="text-xs text-gray-400">AI System Operational</span>
@@ -767,7 +848,6 @@ const RonAiTab: React.FC<RonAiTabProps> = ({
                   </p>
                 </div>
               </div>
-              
               <div className="mt-auto pt-4 border-t border-gray-700 flex-shrink-0">
                 <div className="text-xs text-gray-400 flex items-center">
                   <div className="w-2 h-2 rounded-full mr-2 bg-ron-teal-400 shadow-glow-hover"></div>

@@ -12,6 +12,7 @@ export interface PatientProfile {
   phone?: string;
   email?: string;
   photo?: string;
+  condition?: string;
   riskScore: number;
   careStatus: string;
   healthPlan?: string;

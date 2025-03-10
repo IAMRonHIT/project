@@ -22,3 +22,62 @@
 .shadow-glow-hover {
   box-shadow: 0 0 5px rgba(56, 178, 172, 0.4);
 }
+
+/* Dynamic height classes for audio bars */
+.audio-bar-height {
+  height: var(--bar-height, 4px);
+}
+
+/* Generate height classes to avoid inline styles */
+@media screen {
+  .height-1 { --bar-height: 1px; }
+  .height-2 { --bar-height: 2px; }
+  .height-3 { --bar-height: 3px; }
+  .height-4 { --bar-height: 4px; }
+  .height-5 { --bar-height: 5px; }
+  .height-6 { --bar-height: 6px; }
+  .height-7 { --bar-height: 7px; }
+  .height-8 { --bar-height: 8px; }
+  .height-9 { --bar-height: 9px; }
+  .height-10 { --bar-height: 10px; }
+  .height-11 { --bar-height: 11px; }
+  .height-12 { --bar-height: 12px; }
+  .height-13 { --bar-height: 13px; }
+  .height-14 { --bar-height: 14px; }
+  .height-15 { --bar-height: 15px; }
+  .height-16 { --bar-height: 16px; }
+  .height-17 { --bar-height: 17px; }
+  .height-18 { --bar-height: 18px; }
+  .height-19 { --bar-height: 19px; }
+  .height-20 { --bar-height: 20px; }
+  .height-21 { --bar-height: 21px; }
+  .height-22 { --bar-height: 22px; }
+  .height-23 { --bar-height: 23px; }
+  .height-24 { --bar-height: 24px; }
+  .height-25 { --bar-height: 25px; }
+  .height-26 { --bar-height: 26px; }
+  .height-27 { --bar-height: 27px; }
+  .height-28 { --bar-height: 28px; }
+  .height-29 { --bar-height: 29px; }
+  .height-30 { --bar-height: 30px; }
+  .height-31 { --bar-height: 31px; }
+  .height-32 { --bar-height: 32px; }
+  .height-33 { --bar-height: 33px; }
+  .height-34 { --bar-height: 34px; }
+  .height-35 { --bar-height: 35px; }
+  .height-36 { --bar-height: 36px; }
+  .height-37 { --bar-height: 37px; }
+  .height-38 { --bar-height: 38px; }
+  .height-39 { --bar-height: 39px; }
+  .height-40 { --bar-height: 40px; }
+  .height-41 { --bar-height: 41px; }
+  .height-42 { --bar-height: 42px; }
+  .height-43 { --bar-height: 43px; }
+  .height-44 { --bar-height: 44px; }
+  .height-45 { --bar-height: 45px; }
+  .height-46 { --bar-height: 46px; }
+  .height-47 { --bar-height: 47px; }
+  .height-48 { --bar-height: 48px; }
+  .height-49 { --bar-height: 49px; }
+  .height-50 { --bar-height: 50px; }
+}

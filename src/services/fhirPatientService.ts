@@ -232,7 +232,7 @@ const extractObservations = (fhirBundle: any): Observation[] => {
 };
 
 const extractMedications = (fhirBundle: any): Medication[] => {
-  // Find all MedicationAdministration resources in the bundle
+  // Find all MedicationAdministration and MedicationStatement resources in the bundle
   const medicationResources = fhirBundle.entry
     .filter((entry: any) => 
       entry.resource.resourceType === 'MedicationAdministration' || 
@@ -243,12 +243,32 @@ const extractMedications = (fhirBundle: any): Medication[] => {
   return medicationResources.map((medication: any) => {
     // Extract medication details
     let medicationName = 'Unknown Medication';
+    let dosage = '';
+    let frequency = '';
     
     // Try different paths to find medication info
     if (medication.medicationCodeableConcept) {
+      // Most common pattern in FHIR data
       medicationName = medication.medicationCodeableConcept.coding?.[0]?.display || 
-                       medication.medicationCodeableConcept.text || 
-                       medicationName;
+                     medication.medicationCodeableConcept.text || 
+                     medicationName;
+                     
+      // Some FHIR implementations include dosage in the medication name
+      // Try to extract dosage information if present
+      if (medicationName.includes(' ')) {
+        const parts = medicationName.split(' ');
+        const lastPart = parts[parts.length - 1];
+        const secondLastPart = parts.length > 1 ? parts[parts.length - 2] : null;
+        
+        // Check if last part or second last part contains dosage info (e.g., "500 MG" or "10mg")
+        if (lastPart.match(/^[0-9]+(\.[0-9]+)?\s*(mg|mcg|ml|g|ug|units|mcg\/ml|mg\/ml)/i) ||
+            (secondLastPart && /^[0-9]+(\.[0-9]+)?$/.test(secondLastPart) && 
+             lastPart.match(/^(mg|mcg|ml|g|ug|units|tablet|capsule)/i))) {
+          dosage = (secondLastPart && /^[0-9]+(\.[0-9]+)?$/.test(secondLastPart)) 
+                    ? `${secondLastPart} ${lastPart}` 
+                    : lastPart;
+        }
+      }
     } else if (medication.medication?.reference) {
       // If it's a reference, we need to find the medication in the bundle
       const medicationRef = medication.medication.reference;
@@ -258,17 +278,78 @@ const extractMedications = (fhirBundle: any): Medication[] => {
       
       if (medicationResource) {
         medicationName = medicationResource.code?.coding?.[0]?.display ||
-                         medicationResource.code?.text ||
-                         medicationName;
+                       medicationResource.code?.text ||
+                       medicationName;
       }
     }
 
-    // Extract dosage
-    let dosage = '';
-    if (medication.dosage?.dose?.value) {
-      dosage = `${medication.dosage.dose.value} ${medication.dosage.dose.unit || ''}`;
-    } else if (medication.dosage?.text) {
-      dosage = medication.dosage.text;
+    // Extract dosage information - FHIR dosage is often an array
+    if (!dosage && medication.dosage) {
+      // Handle both array and single object cases
+      const dosageInstructions = Array.isArray(medication.dosage) 
+                              ? medication.dosage 
+                              : [medication.dosage];
+      
+      if (dosageInstructions.length > 0) {
+        // Use first dosage instruction (most important)
+        const firstDosage = dosageInstructions[0];
+        
+        if (firstDosage.dose?.value) {
+          dosage = `${firstDosage.dose.value} ${firstDosage.dose.unit || ''}`;
+        } else if (firstDosage.doseQuantity?.value) {
+          dosage = `${firstDosage.doseQuantity.value} ${firstDosage.doseQuantity.unit || ''}`;
+        } else if (firstDosage.text && !frequency) {
+          // If text contains dosage info, parse it out
+          const doseMatch = firstDosage.text.match(/(\d+(\.\d+)?)\s*(mg|mcg|ml|g|tablet|capsule|unit)/i);
+          if (doseMatch) {
+            dosage = doseMatch[0];
+          } else {
+            // If we can't extract a specific dose, use the full text
+            dosage = firstDosage.text;
+          }
+        }
+        
+        // Extract frequency information
+        if (!frequency) {
+          if (firstDosage.timing?.code?.text) {
+            frequency = firstDosage.timing.code.text;
+          } else if (firstDosage.timing?.repeat?.frequency) {
+            const repeat = firstDosage.timing.repeat;
+            frequency = `${repeat.frequency} time(s)${repeat.period ? ` per ${repeat.period} ${repeat.periodUnit || 'day'}` : ' daily'}`;
+          } else if (firstDosage.text) {
+            // Try to extract frequency from text
+            const freqPatterns = [
+              /once daily/i, /twice daily/i, /three times daily/i, /every (\d+) hours/i,
+              /(\d+) times? (a|per) (day|week|month)/i, /as needed/i, /prn/i
+            ];
+            
+            for (const pattern of freqPatterns) {
+              const match = firstDosage.text.match(pattern);
+              if (match) {
+                frequency = match[0];
+                break;
+              }
+            }
+            
+            // If we couldn't extract frequency but have dosage text, use it
+            if (!frequency && firstDosage.text && !dosage.includes(firstDosage.text)) {
+              frequency = firstDosage.text;
+            }
+          }
+        }
+      }
+    }
+    
+    // Fallback for frequency if still not found
+    if (!frequency) {
+      if (medication.effectivePeriod?.start) {
+        const startDate = new Date(medication.effectivePeriod.start);
+        frequency = medication.effectivePeriod?.end ? 
+          `From ${startDate.toLocaleDateString()} to ${new Date(medication.effectivePeriod.end).toLocaleDateString()}` : 
+          `Since ${startDate.toLocaleDateString()}`;
+      } else {
+        frequency = 'As directed';
+      }
     }
 
     // Generate random adherence rate between 70 and 100
@@ -278,10 +359,10 @@ const extractMedications = (fhirBundle: any): Medication[] => {
       id: medication.id || uuidv4(),
       name: medicationName,
       dosage: dosage,
-      frequency: medication.dosage?.timing?.code?.text || 'As directed',
+      frequency: frequency,
       refillDate: new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       adherenceRate,
-      lastTaken: medication.effectiveTimeDateTime,
+      lastTaken: medication.effectiveDateTime || medication.effectivePeriod?.start,
       nextDue: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       status: medication.status === 'completed' ? 'COMPLETED' : 
               medication.status === 'stopped' ? 'STOPPED' : 
@@ -428,6 +509,117 @@ export const loadPatientFromFHIR = async (patientFilePath: string): Promise<Pati
     return transformFHIRToPatientProfile(fhirData);
   } catch (error) {
     console.error('Error loading patient data:', error);
+    throw error;
+  }
+};
+
+export const loadPatientDataForForm = async (patientFilePath: string): Promise<{
+  patientName: string;
+  patientAge: string;
+  patientGender: string;
+  condition: string;
+  symptoms: string;
+  currentMedications: string;
+  relevantHistory: string;
+  goals: string;
+}> => {
+  try {
+    const patientData = await loadPatientFromFHIR(patientFilePath);
+    
+    // Extract patient profile data
+    const patientProfile = patientData.profile;
+    
+    // Calculate age from birthDate
+    let age = '';
+    if (patientProfile.birthDate) {
+      const birthDate = new Date(patientProfile.birthDate);
+      const today = new Date();
+      age = String(today.getFullYear() - birthDate.getFullYear());
+      
+      // Adjust age if birthday hasn't occurred yet this year
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age = String(parseInt(age) - 1);
+      }
+    }
+    
+    // Get primary condition
+    let primaryCondition = '';
+    let symptoms = '';
+    
+    if (patientData.conditions.length > 0) {
+      // Find the most recent active condition
+      const activeConditions = patientData.conditions.filter(c => c.status === 'active');
+      if (activeConditions.length > 0) {
+        // Sort by onset date if available
+        activeConditions.sort((a, b) => {
+          if (!a.onsetDate) return 1;
+          if (!b.onsetDate) return -1;
+          return new Date(b.onsetDate).getTime() - new Date(a.onsetDate).getTime();
+        });
+        primaryCondition = activeConditions[0].display;
+        
+        // Extract some symptoms based on observations related to this condition
+        const relevantObservations = patientData.observations
+          .filter(obs => obs.date && new Date(obs.date) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)) // Last 30 days
+          .map(obs => `- ${obs.display}: ${obs.value || ''} ${obs.unit || ''}`)
+          .join('\n');
+        
+        symptoms = relevantObservations || 'No recent symptoms documented.';
+      }
+    }
+    
+    // Get current medications
+    const activeMedications = patientData.medications
+      .filter(med => med.status === 'ACTIVE')
+      .map(med => {
+        let medicationText = `- ${med.name}`;
+        if (med.dosage) medicationText += ` ${med.dosage}`;
+        if (med.frequency) medicationText += ` ${med.frequency}`;
+        return medicationText;
+      })
+      .join('\n');
+    
+    // Compile relevant history from older conditions
+    const relevantHistory = patientData.conditions
+      .filter(c => c.status !== 'active')
+      .map(c => `- ${c.display} (${c.status})`)
+      .join('\n');
+    
+    // Set generic goals based on condition type
+    let goals = '';
+    const conditionObj = patientData.conditions.find(c => c.display === primaryCondition);
+    if (conditionObj) {
+      switch(conditionObj.type) {
+        case 'Chronic':
+          goals = '- Improve management of chronic condition\n- Reduce symptom frequency and severity\n- Maintain quality of life';
+          break;
+        case 'Acute':
+          goals = '- Resolve acute condition\n- Prevent complications\n- Return to normal activities';
+          break;
+        case 'Injury':
+          goals = '- Heal injury completely\n- Restore full function\n- Prevent re-injury';
+          break;
+        case 'Mental Health':
+          goals = '- Improve mental health status\n- Develop coping mechanisms\n- Enhance daily functioning';
+          break;
+        default:
+          goals = '- Improve overall health status\n- Manage symptoms effectively';
+      }
+    }
+    
+    return {
+      patientName: patientProfile.name,
+      patientAge: age,
+      patientGender: patientProfile.gender || '',
+      condition: primaryCondition,
+      symptoms: symptoms,
+      currentMedications: activeMedications || 'No current medications documented.',
+      relevantHistory: relevantHistory || 'No relevant history documented.',
+      goals: goals
+    };
+  } catch (error) {
+    console.error('Error loading patient data for form:', error);
     throw error;
   }
 };

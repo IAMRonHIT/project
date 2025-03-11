@@ -208,12 +208,15 @@ const RonExperience: React.FC = () => {
     // Configure the realtime audio service
     realtimeAudioService.config({
       instructions: "You are Ron AI, a helpful healthcare assistant that provides accurate and concise information.",
-      voice: "ash",
+      voice: "ash", // Using 'ash' as explicitly requested by the user
+      modalities: ["text", "audio"], // Explicitly set both modalities
       onTranscriptUpdate: (text) => {
         setAudioTranscript(text);
+        console.log("Realtime transcript update:", text);
       },
       onConnectionStateChange: (state) => {
         setAudioConnectionState(state);
+        console.log("Realtime audio connection state:", state);
         // When speaking is done, extract the final answer
         if (state === 'connected' && audioTranscript) {
           // Add the transcript as an assistant message
@@ -248,7 +251,11 @@ const RonExperience: React.FC = () => {
 
     // Clean up on component unmount
     return () => {
-      realtimeAudioService.stopSession();
+      // Make sure to stop any active session
+      if (realtimeAudioService.connectionState !== 'disconnected') {
+        console.log("Cleaning up realtime audio service on unmount");
+        realtimeAudioService.stopSession();
+      }
     };
   }, []);
 

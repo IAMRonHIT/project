@@ -1,554 +1,351 @@
 import React, { useState, useEffect } from 'react';
-import { PlusCircle, MinusCircle, Code } from 'lucide-react';
+import { X, FileSearch } from 'lucide-react';
+import { loadPatientDataForForm } from '../../services/fhirPatientService';
 
 interface CarePlanFormProps {
-  code: string;
-  onUpdate: (updatedCode: string) => void;
-  onToggleView: () => void;
+  onSubmit: (formData: CarePlanFormData) => void;
+  onClose: () => void;
 }
 
-interface FormData {
+export interface CarePlanFormData {
   patientName: string;
-  patientId: string;
-  primaryCondition: string;
-  assessment: string[];
-  diagnosis: string[];
-  shortTermGoals: string[];
-  longTermGoals: string[];
-  medications: string[];
-  dietaryInterventions: string[];
-  activityPlan: string[];
-  monitoringSchedule: string[];
-  successIndicators: string[];
-  createdDate: string;
-  reviewDate: string;
-  careCoordinator: string;
+  patientAge: string;
+  patientGender: string;
+  condition: string;
+  symptoms: string;
+  currentMedications: string;
+  relevantHistory: string;
+  goals: string;
 }
 
-const CarePlanForm: React.FC<CarePlanFormProps> = ({ code, onUpdate, onToggleView }) => {
-  const [formData, setFormData] = useState<FormData>({
-    patientName: '',
-    patientId: '',
-    primaryCondition: '',
-    assessment: [''],
-    diagnosis: [''],
-    shortTermGoals: [''],
-    longTermGoals: [''],
-    medications: [''],
-    dietaryInterventions: [''],
-    activityPlan: [''],
-    monitoringSchedule: [''],
-    successIndicators: [''],
-    createdDate: new Date().toLocaleDateString(),
-    reviewDate: '',
-    careCoordinator: ''
+const commonConditions = [
+  "Hypertension",
+  "Diabetes Type 1",
+  "Diabetes Type 2",
+  "Asthma",
+  "COPD",
+  "Heart Failure",
+  "Coronary Artery Disease",
+  "Stroke",
+  "Arthritis",
+  "Depression",
+  "Anxiety",
+  "Alzheimer's",
+  "Dementia",
+  "Parkinson's",
+  "Multiple Sclerosis",
+  "Epilepsy",
+  "Cancer",
+  "Chronic Kidney Disease",
+  "Hepatitis",
+  "HIV/AIDS",
+  "Obesity",
+  "Osteoporosis",
+  "Migraines",
+  "Fibromyalgia",
+  "Other"
+];
+
+const CarePlanForm: React.FC<CarePlanFormProps> = ({ onSubmit, onClose }) => {
+  const [formData, setFormData] = useState<CarePlanFormData>({
+    patientName: "",
+    patientAge: "",
+    patientGender: "",
+    condition: "",
+    symptoms: "",
+    currentMedications: "",
+    relevantHistory: "",
+    goals: ""
   });
-
-  // Parse the code to extract data for the form
+  
+  const [customCondition, setCustomCondition] = useState("");
+  const [otherSelected, setOtherSelected] = useState(false);
+  const [patientFiles, setPatientFiles] = useState<string[]>([]);
+  const [selectedPatientFile, setSelectedPatientFile] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  
   useEffect(() => {
-    if (!code) return;
+    // Fetch list of patient files
+    const fetchPatientFiles = async () => {
+      try {
+        // In a real application, this would be an API call
+        // Here we're simulating this by using a fixed path to the backend data
+        const files = Array.from({length: 10}, (_, i) => {
+          // Get random files from the directory
+          const patientFiles = [
+            "FL_HepB_Morales742_Carmen185.fhir.json",
+            "MD_HepB_Nguyen735_Minh602.fhir.json",
+            "WA_Covid_Carlson729_Olivia453.fhir.json",
+            "VA_HepC_Patel789_Anjali123.fhir.json",
+            "MI_HepC_Gustafson724_Leif319.fhir.json",
+            "NH_Covid_Callahan742_Margaret315.fhir.json",
+            "KY_HepC_Stonebraker984_Amelia315.fhir.json",
+            "NY_Covid_Fitzgerald743_Walter159.fhir.json",
+            "MS_Salmonella_Hawkins723_Tamara851.fhir.json",
+            "MA_HepB_Prendergast783_Everett159.fhir.json"
+          ];
+          return patientFiles[i];
+        });
+        setPatientFiles(files);
+      } catch (error) {
+        console.error("Error fetching patient files:", error);
+      }
+    };
     
+    fetchPatientFiles();
+  }, []);
+  
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    
+    if (name === "condition" && value === "Other") {
+      setOtherSelected(true);
+      setFormData({ ...formData, condition: "" });
+    } else if (name === "condition") {
+      setOtherSelected(false);
+      setFormData({ ...formData, [name]: value });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
+  };
+  
+  const handleCustomConditionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCustomCondition(e.target.value);
+    setFormData({ ...formData, condition: e.target.value });
+  };
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(formData);
+  };
+  
+  const handlePatientSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedPatientFile(e.target.value);
+  };
+  
+  const loadPatientData = async () => {
+    if (!selectedPatientFile) return;
+    
+    setIsLoading(true);
     try {
-      // Extract patient name
-      const patientNameMatch = code.match(/Patient:\s*([^<]+)/);
-      const patientName = patientNameMatch ? patientNameMatch[1].trim() : '';
+      const filePath = `backend/data/Patients/${selectedPatientFile}`;
+      const patientFormData = await loadPatientDataForForm(filePath);
       
-      // Extract patient ID (if available)
-      const patientIdMatch = code.match(/ID:\s*([^<]+)/);
-      const patientId = patientIdMatch ? patientIdMatch[1].trim() : '';
+      // Update form data with loaded patient data
+      setFormData(patientFormData);
       
-      // Extract primary condition
-      const conditionMatch = code.match(/Condition:\s*([^<]+)/) || code.match(/Diagnosis:\s*([^<]+)/);
-      const primaryCondition = conditionMatch ? conditionMatch[1].trim() : '';
-      
-      // Extract assessment items
-      const assessmentItems: string[] = [];
-      const assessmentSection = code.match(/<section[^>]*>[\s\S]*?Assessment[\s\S]*?<ul[^>]*>([\s\S]*?)<\/ul>/);
-      if (assessmentSection) {
-        const listItems = assessmentSection[1].match(/<li[^>]*>([\s\S]*?)<\/li>/g);
-        if (listItems) {
-          listItems.forEach(item => {
-            const content = item.replace(/<li[^>]*>/, '').replace(/<\/li>/, '').trim();
-            assessmentItems.push(content);
-          });
-        }
+      // Check if condition is in the list or should be "Other"
+      const isCommonCondition = commonConditions.includes(patientFormData.condition);
+      setOtherSelected(!isCommonCondition);
+      if (!isCommonCondition) {
+        setCustomCondition(patientFormData.condition);
       }
-      
-      // Extract diagnosis items
-      const diagnosisItems: string[] = [];
-      const diagnosisSection = code.match(/<section[^>]*>[\s\S]*?Diagnosis[\s\S]*?<ul[^>]*>([\s\S]*?)<\/ul>/);
-      if (diagnosisSection) {
-        const listItems = diagnosisSection[1].match(/<li[^>]*>([\s\S]*?)<\/li>/g);
-        if (listItems) {
-          listItems.forEach(item => {
-            const content = item.replace(/<li[^>]*>/, '').replace(/<\/li>/, '').trim();
-            diagnosisItems.push(content);
-          });
-        }
-      }
-      
-      // Extract short-term goals
-      const shortTermGoals: string[] = [];
-      const shortTermSection = code.match(/Short-term Goals[\s\S]*?<ul[^>]*>([\s\S]*?)<\/ul>/);
-      if (shortTermSection) {
-        const listItems = shortTermSection[1].match(/<li[^>]*>([\s\S]*?)<\/li>/g);
-        if (listItems) {
-          listItems.forEach(item => {
-            const content = item.replace(/<li[^>]*>/, '').replace(/<\/li>/, '').trim();
-            shortTermGoals.push(content);
-          });
-        }
-      }
-      
-      // Extract long-term goals
-      const longTermGoals: string[] = [];
-      const longTermSection = code.match(/Long-term Goals[\s\S]*?<ul[^>]*>([\s\S]*?)<\/ul>/);
-      if (longTermSection) {
-        const listItems = longTermSection[1].match(/<li[^>]*>([\s\S]*?)<\/li>/g);
-        if (listItems) {
-          listItems.forEach(item => {
-            const content = item.replace(/<li[^>]*>/, '').replace(/<\/li>/, '').trim();
-            longTermGoals.push(content);
-          });
-        }
-      }
-      
-      // Extract medications
-      const medications: string[] = [];
-      const medicationSection = code.match(/Medication Management[\s\S]*?<ul[^>]*>([\s\S]*?)<\/ul>/);
-      if (medicationSection) {
-        const listItems = medicationSection[1].match(/<li[^>]*>([\s\S]*?)<\/li>/g);
-        if (listItems) {
-          listItems.forEach(item => {
-            const content = item.replace(/<li[^>]*>/, '').replace(/<\/li>/, '').trim();
-            medications.push(content);
-          });
-        }
-      }
-      
-      // Extract dietary interventions
-      const dietaryInterventions: string[] = [];
-      const dietarySection = code.match(/Dietary Interventions[\s\S]*?<ul[^>]*>([\s\S]*?)<\/ul>/);
-      if (dietarySection) {
-        const listItems = dietarySection[1].match(/<li[^>]*>([\s\S]*?)<\/li>/g);
-        if (listItems) {
-          listItems.forEach(item => {
-            const content = item.replace(/<li[^>]*>/, '').replace(/<\/li>/, '').trim();
-            dietaryInterventions.push(content);
-          });
-        }
-      }
-      
-      // Extract activity plan
-      const activityPlan: string[] = [];
-      const activitySection = code.match(/Activity Plan[\s\S]*?<ul[^>]*>([\s\S]*?)<\/ul>/);
-      if (activitySection) {
-        const listItems = activitySection[1].match(/<li[^>]*>([\s\S]*?)<\/li>/g);
-        if (listItems) {
-          listItems.forEach(item => {
-            const content = item.replace(/<li[^>]*>/, '').replace(/<\/li>/, '').trim();
-            activityPlan.push(content);
-          });
-        }
-      }
-      
-      // Extract monitoring schedule
-      const monitoringSchedule: string[] = [];
-      const monitoringSection = code.match(/Monitoring Schedule[\s\S]*?<ul[^>]*>([\s\S]*?)<\/ul>/);
-      if (monitoringSection) {
-        const listItems = monitoringSection[1].match(/<li[^>]*>([\s\S]*?)<\/li>/g);
-        if (listItems) {
-          listItems.forEach(item => {
-            const content = item.replace(/<li[^>]*>/, '').replace(/<\/li>/, '').trim();
-            monitoringSchedule.push(content);
-          });
-        }
-      }
-      
-      // Extract success indicators
-      const successIndicators: string[] = [];
-      const successSection = code.match(/Success Indicators[\s\S]*?<ul[^>]*>([\s\S]*?)<\/ul>/);
-      if (successSection) {
-        const listItems = successSection[1].match(/<li[^>]*>([\s\S]*?)<\/li>/g);
-        if (listItems) {
-          listItems.forEach(item => {
-            const content = item.replace(/<li[^>]*>/, '').replace(/<\/li>/, '').trim();
-            successIndicators.push(content);
-          });
-        }
-      }
-      
-      // Extract dates and care coordinator
-      const metadataMatch = code.match(/Care Plan Created:\s*([^|]+)\s*\|\s*Next Review:\s*([^<]+)/);
-      const createdDate = metadataMatch ? metadataMatch[1].trim() : new Date().toLocaleDateString();
-      const reviewDate = metadataMatch ? metadataMatch[2].trim() : '';
-      
-      const coordinatorMatch = code.match(/Care Coordinator:\s*([^|]+)\s*\|\s*Contact:/);
-      const careCoordinator = coordinatorMatch ? coordinatorMatch[1].trim() : '';
-      
-      // Update form data
-      setFormData({
-        patientName,
-        patientId,
-        primaryCondition,
-        assessment: assessmentItems.length > 0 ? assessmentItems : [''],
-        diagnosis: diagnosisItems.length > 0 ? diagnosisItems : [''],
-        shortTermGoals: shortTermGoals.length > 0 ? shortTermGoals : [''],
-        longTermGoals: longTermGoals.length > 0 ? longTermGoals : [''],
-        medications: medications.length > 0 ? medications : [''],
-        dietaryInterventions: dietaryInterventions.length > 0 ? dietaryInterventions : [''],
-        activityPlan: activityPlan.length > 0 ? activityPlan : [''],
-        monitoringSchedule: monitoringSchedule.length > 0 ? monitoringSchedule : [''],
-        successIndicators: successIndicators.length > 0 ? successIndicators : [''],
-        createdDate,
-        reviewDate,
-        careCoordinator
-      });
     } catch (error) {
-      console.error('Error parsing care plan code:', error);
-    }
-  }, [code]);
-
-  // Form handling functions
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleAddItem = (field: keyof FormData) => {
-    if (Array.isArray(formData[field])) {
-      setFormData({
-        ...formData,
-        [field]: [...(formData[field] as string[]), '']
-      });
+      console.error("Error loading patient data:", error);
+      alert("Failed to load patient data. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
-
-  const handleRemoveItem = (field: keyof FormData, index: number) => {
-    if (Array.isArray(formData[field])) {
-      const newItems = [...(formData[field] as string[])];
-      newItems.splice(index, 1);
-      setFormData({ ...formData, [field]: newItems });
-    }
-  };
-
-  const handleItemChange = (field: keyof FormData, index: number, value: string) => {
-    if (Array.isArray(formData[field])) {
-      const newItems = [...(formData[field] as string[])];
-      newItems[index] = value;
-      setFormData({ ...formData, [field]: newItems });
-    }
-  };
-
-  // Generate code from form data
-  const generateCode = () => {
-    const code = `
-const CarePlan = () => {
+  
   return (
-    <div className="font-sans max-w-full text-gray-800">
-      <header className="bg-gradient-to-r from-teal-500 to-blue-500 p-4 rounded-t-lg">
-        <h1 className="text-2xl font-bold text-white">${formData.primaryCondition} Care Plan</h1>
-        <p className="text-white opacity-90">Patient: ${formData.patientName}</p>
-      </header>
-      
-      <div className="p-6 bg-white rounded-b-lg shadow-md">
-        {/* Assessment */}
-        <section className="mb-6">
-          <h2 className="text-xl font-semibold text-teal-700 border-b border-teal-200 pb-2 mb-3">
-            Assessment
-          </h2>
-          <ul className="list-disc pl-6 space-y-2">
-            ${formData.assessment.map(item => `<li>${item}</li>`).join('\n            ')}
-          </ul>
-        </section>
-        
-        {/* Diagnosis */}
-        <section className="mb-6">
-          <h2 className="text-xl font-semibold text-teal-700 border-b border-teal-200 pb-2 mb-3">
-            Diagnosis
-          </h2>
-          <ul className="list-disc pl-6 space-y-2">
-            ${formData.diagnosis.map(item => `<li>${item}</li>`).join('\n            ')}
-          </ul>
-        </section>
-        
-        {/* Planning */}
-        <section className="mb-6">
-          <h2 className="text-xl font-semibold text-teal-700 border-b border-teal-200 pb-2 mb-3">
-            Planning
-          </h2>
-          <div className="space-y-4">
-            <div>
-              <h3 className="font-medium text-teal-600">Short-term Goals (1-2 weeks)</h3>
-              <ul className="list-disc pl-6 space-y-1 mt-2">
-                ${formData.shortTermGoals.map(item => `<li>${item}</li>`).join('\n                ')}
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-medium text-teal-600">Long-term Goals (3-6 months)</h3>
-              <ul className="list-disc pl-6 space-y-1 mt-2">
-                ${formData.longTermGoals.map(item => `<li>${item}</li>`).join('\n                ')}
-              </ul>
-            </div>
-          </div>
-        </section>
-        
-        {/* Implementation */}
-        <section className="mb-6">
-          <h2 className="text-xl font-semibold text-teal-700 border-b border-teal-200 pb-2 mb-3">
-            Implementation
-          </h2>
-          <div className="space-y-4">
-            <div>
-              <h3 className="font-medium text-teal-600">Medication Management</h3>
-              <ul className="list-disc pl-6 space-y-1 mt-2">
-                ${formData.medications.map(item => `<li>${item}</li>`).join('\n                ')}
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-medium text-teal-600">Dietary Interventions</h3>
-              <ul className="list-disc pl-6 space-y-1 mt-2">
-                ${formData.dietaryInterventions.map(item => `<li>${item}</li>`).join('\n                ')}
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-medium text-teal-600">Activity Plan</h3>
-              <ul className="list-disc pl-6 space-y-1 mt-2">
-                ${formData.activityPlan.map(item => `<li>${item}</li>`).join('\n                ')}
-              </ul>
-            </div>
-          </div>
-        </section>
-        
-        {/* Evaluation */}
-        <section className="mb-6">
-          <h2 className="text-xl font-semibold text-teal-700 border-b border-teal-200 pb-2 mb-3">
-            Evaluation
-          </h2>
-          <div className="space-y-4">
-            <div>
-              <h3 className="font-medium text-teal-600">Monitoring Schedule</h3>
-              <ul className="list-disc pl-6 space-y-1 mt-2">
-                ${formData.monitoringSchedule.map(item => `<li>${item}</li>`).join('\n                ')}
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-medium text-teal-600">Success Indicators</h3>
-              <ul className="list-disc pl-6 space-y-1 mt-2">
-                ${formData.successIndicators.map(item => `<li>${item}</li>`).join('\n                ')}
-              </ul>
-            </div>
-          </div>
-        </section>
-        
-        <div className="mt-8 pt-4 border-t border-gray-200">
-          <p className="text-sm text-gray-500">
-            Care Plan Created: ${formData.createdDate} | Next Review: ${formData.reviewDate}
-          </p>
-          <p className="text-sm text-gray-500 mt-1">
-            Care Coordinator: ${formData.careCoordinator} | Contact: 555-123-4567
-          </p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="bg-gray-900 text-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-xl">
+        <div className="flex items-center justify-between p-4 border-b border-gray-700">
+          <h2 className="text-xl font-semibold">Create Personalized Care Plan</h2>
+          <button 
+            onClick={onClose}
+            className="p-1 hover:bg-gray-700 rounded-full transition-colors"
+          >
+            <X size={20} />
+          </button>
         </div>
-      </div>
-    </div>
-  );
-};
-`;
-    
-    return code;
-  };
-
-  const handleSubmit = () => {
-    const generatedCode = generateCode();
-    onUpdate(generatedCode);
-  };
-
-  // Render list items with add/remove buttons
-  const renderListItems = (field: keyof FormData, label: string) => {
-    if (!Array.isArray(formData[field])) return null;
-    
-    return (
-      <div className="mb-4">
-        <h4 className="text-sm font-medium text-gray-300 mb-2">{label}</h4>
-        {(formData[field] as string[]).map((item, index) => (
-          <div key={index} className="flex items-center mb-2">
-            <input
-              type="text"
-              value={item}
-              onChange={(e) => handleItemChange(field, index, e.target.value)}
-              className="flex-1 bg-gray-700 text-white px-3 py-2 rounded-md text-sm"
-              aria-label={`${label} ${index + 1}`}
-              placeholder={`Enter ${label.toLowerCase()}`}
-            />
-            <button
-              type="button"
-              onClick={() => handleRemoveItem(field, index)}
-              className="ml-2 text-red-400 hover:text-red-300"
-              aria-label={`Remove ${label} item`}
-              title={`Remove ${label} item`}
-            >
-              <MinusCircle size={18} />
-            </button>
+        
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+          {/* Patient selection dropdown */}
+          <div className="mb-6 p-4 bg-gray-800 rounded-lg">
+            <div className="flex flex-col md:flex-row md:items-end gap-4">
+              <div className="flex-1">
+                <label className="block mb-2 text-sm font-medium text-gray-300">
+                  Auto-fill from Patient File
+                </label>
+                <select
+                  value={selectedPatientFile}
+                  onChange={handlePatientSelect}
+                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select a patient file</option>
+                  {patientFiles.map((file) => (
+                    <option key={file} value={file}>
+                      {file.replace('.fhir.json', '')}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button
+                type="button"
+                onClick={loadPatientData}
+                disabled={!selectedPatientFile || isLoading}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 flex items-center gap-2"
+              >
+                <FileSearch size={16} />
+                {isLoading ? "Loading..." : "Auto-fill Form"}
+              </button>
+            </div>
           </div>
-        ))}
-        <button
-          type="button"
-          onClick={() => handleAddItem(field)}
-          className="flex items-center text-teal-400 hover:text-teal-300 mt-1 text-sm"
-          aria-label={`Add ${label} item`}
-          title={`Add ${label} item`}
-        >
-          <PlusCircle size={18} className="mr-1" />
-          <span>Add Item</span>
-        </button>
-      </div>
-    );
-  };
-
-  return (
-    <div className="flex flex-col h-full overflow-y-auto">
-      <div className="flex items-center justify-between p-4 border-b border-gray-700">
-        <h3 className="text-lg font-light">Care Plan Form</h3>
-        <button
-          onClick={onToggleView}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-gray-700 text-gray-200 hover:bg-gray-600"
-          title="Switch to Code View"
-        >
-          <Code size={16} />
-          <span className="text-xs font-medium">Code View</span>
-        </button>
-      </div>
-
-      <div className="flex-1 p-4 overflow-y-auto">
-        <div className="space-y-6">
-          {/* Patient Information */}
-          <div className="p-4 bg-gray-800 rounded-md">
-            <h4 className="text-md font-medium text-teal-400 mb-3">Patient Information</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm text-gray-400 mb-1" htmlFor="patientName">Name</label>
+                <label className="block mb-2 text-sm font-medium text-gray-300">
+                  Patient Name
+                </label>
                 <input
                   type="text"
-                  id="patientName"
                   name="patientName"
                   value={formData.patientName}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-700 text-white px-3 py-2 rounded-md text-sm"
-                  placeholder="Enter patient name"
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
                 />
               </div>
+              
               <div>
-                <label className="block text-sm text-gray-400 mb-1" htmlFor="patientId">ID</label>
+                <label className="block mb-2 text-sm font-medium text-gray-300">
+                  Age
+                </label>
                 <input
                   type="text"
-                  id="patientId"
-                  name="patientId"
-                  value={formData.patientId}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-700 text-white px-3 py-2 rounded-md text-sm"
-                  placeholder="Enter patient ID"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm text-gray-400 mb-1" htmlFor="primaryCondition">Primary Condition</label>
-                <input
-                  type="text"
-                  id="primaryCondition"
-                  name="primaryCondition"
-                  value={formData.primaryCondition}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-700 text-white px-3 py-2 rounded-md text-sm"
-                  placeholder="Enter primary condition"
+                  name="patientAge"
+                  value={formData.patientAge}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
                 />
               </div>
             </div>
-          </div>
-
-          {/* Assessment */}
-          <div className="p-4 bg-gray-800 rounded-md">
-            <h4 className="text-md font-medium text-teal-400 mb-3">Assessment</h4>
-            {renderListItems('assessment', 'Assessment Item')}
-          </div>
-
-          {/* Diagnosis */}
-          <div className="p-4 bg-gray-800 rounded-md">
-            <h4 className="text-md font-medium text-teal-400 mb-3">Diagnosis</h4>
-            {renderListItems('diagnosis', 'Diagnosis Item')}
-          </div>
-
-          {/* Planning */}
-          <div className="p-4 bg-gray-800 rounded-md">
-            <h4 className="text-md font-medium text-teal-400 mb-3">Planning</h4>
-            {renderListItems('shortTermGoals', 'Short-term Goal')}
-            {renderListItems('longTermGoals', 'Long-term Goal')}
-          </div>
-
-          {/* Implementation */}
-          <div className="p-4 bg-gray-800 rounded-md">
-            <h4 className="text-md font-medium text-teal-400 mb-3">Implementation</h4>
-            {renderListItems('medications', 'Medication')}
-            {renderListItems('dietaryInterventions', 'Dietary Intervention')}
-            {renderListItems('activityPlan', 'Activity Plan Item')}
-          </div>
-
-          {/* Evaluation */}
-          <div className="p-4 bg-gray-800 rounded-md">
-            <h4 className="text-md font-medium text-teal-400 mb-3">Evaluation</h4>
-            {renderListItems('monitoringSchedule', 'Monitoring Schedule Item')}
-            {renderListItems('successIndicators', 'Success Indicator')}
-          </div>
-
-          {/* Metadata */}
-          <div className="p-4 bg-gray-800 rounded-md">
-            <h4 className="text-md font-medium text-teal-400 mb-3">Care Plan Metadata</h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm text-gray-400 mb-1" htmlFor="createdDate">Created Date</label>
-                <input
-                  type="text"
-                  id="createdDate"
-                  name="createdDate"
-                  value={formData.createdDate}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-700 text-white px-3 py-2 rounded-md text-sm"
-                  placeholder="Enter created date"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-400 mb-1" htmlFor="reviewDate">Review Date</label>
-                <input
-                  type="text"
-                  id="reviewDate"
-                  name="reviewDate"
-                  value={formData.reviewDate}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-700 text-white px-3 py-2 rounded-md text-sm"
-                  placeholder="Enter review date"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-400 mb-1" htmlFor="careCoordinator">Care Coordinator</label>
-                <input
-                  type="text"
-                  id="careCoordinator"
-                  name="careCoordinator"
-                  value={formData.careCoordinator}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-700 text-white px-3 py-2 rounded-md text-sm"
-                  placeholder="Enter care coordinator name"
-                />
-              </div>
+            
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-300">
+                Gender
+              </label>
+              <select
+                name="patientGender"
+                value={formData.patientGender}
+                onChange={handleChange}
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              >
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
             </div>
-          </div>
+            
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-300">
+                Medical Condition
+              </label>
+              <select
+                name="condition"
+                value={otherSelected ? "Other" : formData.condition}
+                onChange={handleChange}
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              >
+                <option value="">Select Condition</option>
+                {commonConditions.map((condition) => (
+                  <option key={condition} value={condition}>
+                    {condition}
+                  </option>
+                ))}
+              </select>
+              
+              {otherSelected && (
+                <div className="mt-3">
+                  <label className="block mb-2 text-sm font-medium text-gray-300">
+                    Specify Condition
+                  </label>
+                  <input
+                    type="text"
+                    value={customCondition}
+                    onChange={handleCustomConditionChange}
+                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter specific condition"
+                    required
+                  />
+                </div>
+              )}
+            </div>
+            
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-300">
+                Current Symptoms
+              </label>
+              <textarea
+                name="symptoms"
+                value={formData.symptoms}
+                onChange={handleChange}
+                rows={3}
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Describe current symptoms"
+                required
+              ></textarea>
+            </div>
+            
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-300">
+                Current Medications
+              </label>
+              <textarea
+                name="currentMedications"
+                value={formData.currentMedications}
+                onChange={handleChange}
+                rows={2}
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="List any current medications"
+              ></textarea>
+            </div>
+            
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-300">
+                Relevant Medical History
+              </label>
+              <textarea
+                name="relevantHistory"
+                value={formData.relevantHistory}
+                onChange={handleChange}
+                rows={2}
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Any relevant medical history"
+              ></textarea>
+            </div>
+            
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-300">
+                Treatment Goals
+              </label>
+              <textarea
+                name="goals"
+                value={formData.goals}
+                onChange={handleChange}
+                rows={2}
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="What are the goals for this care plan?"
+              ></textarea>
+            </div>
+            
+            <div className="pt-4 border-t border-gray-700">
+              <button
+                type="submit"
+                className="px-6 py-3 bg-gradient-to-r from-teal-500 to-blue-500 text-white font-medium rounded-md hover:from-teal-600 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                Generate Care Plan
+              </button>
+            </div>
+          </form>
         </div>
-      </div>
-
-      <div className="p-4 border-t border-gray-700">
-        <button
-          onClick={handleSubmit}
-          className="w-full py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-md font-medium"
-        >
-          Update Care Plan
-        </button>
       </div>
     </div>
   );

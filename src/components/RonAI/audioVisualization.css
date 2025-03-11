@@ -4,15 +4,17 @@
 
 .audio-bar {
   transition: height 0.15s ease-in-out, opacity 0.15s ease-in-out;
+  will-change: transform;
+  transform-origin: bottom;
 }
 
 .glow-effect {
-  box-shadow: 0 0 0 rgba(56, 178, 172, 0);
+  box-shadow: 0px 0px 2px rgba(80, 227, 194, 0.5);
   transition: box-shadow 0.3s ease-in-out;
 }
 
 .glow-effect.active {
-  box-shadow: 0 0 8px rgba(56, 178, 172, 0.6);
+  box-shadow: 0px 0px 8px rgba(80, 227, 194, 0.8);
 }
 
 .shadow-glow-teal {
@@ -80,4 +82,29 @@
   .height-48 { --bar-height: 48px; }
   .height-49 { --bar-height: 49px; }
   .height-50 { --bar-height: 50px; }
+}
+
+/* Custom scrollbar styling */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #4a5568;
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #718096;
+}
+
+/* For Firefox */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #4a5568 transparent;
 }

@@ -1,7 +1,9 @@
+import react from 'react'
 import { useState } from 'react';
 import PatientDetailsView from '../../components/PatientDetailsView';
 import CampaignTracker, { CampaignDetailsModal } from '../../components/CampaignTracker';
 import GoogleMapsComponent from '../../components/GoogleMapsComponent';
+import React from 'react';
 
 // Sample data with SDOH information and patients
 const sampleHealthLocations = [

@@ -1,0 +1,17 @@
+schemaVersion: 2.0.0
+metadata:
+  name: nextjs-vite-typescript-project
+  version: 1.0.0
+components:
+  - name: dev
+    container:
+      image: public.ecr.aws/aws-mde/universal-image:latest
+commands:
+  - id: install
+    exec:
+      component: dev
+      commandLine: "npm install && cd backend && npm install"
+  - id: build
+    exec:
+      component: dev
+      commandLine: "npm run build && cd backend && npm run build"

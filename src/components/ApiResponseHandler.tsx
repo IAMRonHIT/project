@@ -89,14 +89,16 @@ const isPubMedResponse = (content: string): boolean => {
       // Check for common PubMed API response patterns
       const isPubMed = (
         // Look for PubMed-specific fields
-        (data.articles && Array.isArray(data.articles)) ||
+        (data.articles && Array.isArray(data.articles) && 
+          data.articles.some(article => article.pmid || article.pmcid)) ||
         (data.pmid !== undefined) ||
         // Check for specific PubMed response format
         (data.count !== undefined && data.articles !== undefined) ||
         // Check for array of authors which is common in PubMed responses
-        (Array.isArray(data.authors)) ||
+        (Array.isArray(data.authors) && data.title && !data.openfda) ||
         // Check for abstract which is common in PubMed responses
-        (typeof data.abstract === 'string' || Array.isArray(data.abstract))
+        ((typeof data.abstract === 'string' || Array.isArray(data.abstract)) && 
+          !data.openfda && !data.device_name && !data.product_ndc && !data.recall_number)
       );
 
       console.log('Is PubMed response:', isPubMed);
@@ -262,26 +264,7 @@ const ApiResponseHandler: React.FC<ApiResponseHandlerProps> = ({ content }) => {
     if (matches) {
       for (const match of matches) {
         try {
-          // Check for FDA response first
-          const isFDA = isFDAResponse(match);
-          console.log('Is FDA response:', isFDA);
-
-          if (isFDA) {
-            const response = extractFDAResponse(match);
-            console.log('Extracted FDA response:', response);
-
-            if (response) {
-              return (
-                <div className="w-full max-w-4xl mx-auto my-4 border border-gray-700 rounded-lg">
-                  <FDAResults results={response} />
-                </div>
-              );
-            } else {
-              console.log('FDA extraction returned null');
-            }
-          }
-
-          // If not FDA, check for PubMed response
+          // Check for PubMed response first
           const isPubMed = isPubMedResponse(match);
           console.log('Is PubMed response:', isPubMed);
 
@@ -297,6 +280,25 @@ const ApiResponseHandler: React.FC<ApiResponseHandlerProps> = ({ content }) => {
               );
             } else {
               console.log('PubMed extraction returned null');
+            }
+          }
+          
+          // If not PubMed, check for FDA response
+          const isFDA = isFDAResponse(match);
+          console.log('Is FDA response:', isFDA);
+
+          if (isFDA) {
+            const response = extractFDAResponse(match);
+            console.log('Extracted FDA response:', response);
+
+            if (response) {
+              return (
+                <div className="w-full max-w-4xl mx-auto my-4 border border-gray-700 rounded-lg">
+                  <FDAResults results={response} />
+                </div>
+              );
+            } else {
+              console.log('FDA extraction returned null');
             }
           }
         } catch (error) {

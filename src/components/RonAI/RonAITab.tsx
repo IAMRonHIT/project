@@ -1,1204 +1,662 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Search, Bot, Send, Mic, Paperclip, X, ChevronRight, ChevronDown, Brain, Phone, MessageSquare, Eye, FileText, RefreshCw } from 'lucide-react';
-import CarePlanPreview from './CarePlanPreview';
-import CarePlanForm, { CarePlanFormData } from './CarePlanForm';
-import realtimeAudioService, { ConnectionState } from '../../services/realtimeAudioService';
-import { generatePatientContent, clearRonAIConversation } from '../../services/patientContentService';
-import './audioVisualization.css';
+import React, { useState, useRef, useEffect } from 'react';
+import banner from './banner.png';
+import { 
+  Bot, Send, Mic, Paperclip,
+  ChevronRight, Brain, MessageSquare, 
+  FileText, Search, User,
+  Headphones, AlertCircle, Clock,
+  FileQuestion, Stethoscope, MapPin,
+  X
+} from 'lucide-react';
+import ModeDropdown, { ModeType } from './ModeDropdown';
+import ProviderSearchModal, { ProviderSearchParams } from './ProviderSearchModal';
+import ProviderMapPreview from './ProviderMapPreview';
+import ErrorBoundary from '../ErrorBoundary';
+import FDAAccordion from './FDAAccordion';
+import CareFormWrapper from './CareFormWrapper';
 
-// Sample care plan code for demonstration
-const sampleCarePlanCode = `
-const CarePlan = () => {
-  return (
-    <div className="font-sans w-full text-gray-800">
-      <header className="bg-gradient-to-r from-teal-500 to-blue-500 p-4 rounded-t-lg">
-        <h1 className="text-2xl font-bold text-white">Condition Management Care Plan</h1>
-        <p className="text-white opacity-90">Patient: {patientName}</p>
-      </header>
-      
-      <div className="p-6 bg-white rounded-b-lg shadow-md">
-        {/* Assessment */}
-        <section className="mb-6">
-          <h2 className="text-xl font-semibold text-teal-700 border-b border-teal-200 pb-2 mb-3">
-            Assessment
-          </h2>
-          <ul className="list-disc pl-6 space-y-2">
-            <li>Current symptoms...</li>
-            <li>Vital signs...</li>
-            <li>Relevant test results...</li>
-          </ul>
-        </section>
-      </div>
-    </div>
-  );
-};
-`;
-
-// Add type definitions for the Web Speech API
-declare global {
-  interface Window {
-    SpeechRecognition: any;
-    webkitSpeechRecognition: any;
-    AudioContext: typeof AudioContext;
-    webkitAudioContext: typeof AudioContext;
-  }
+// Import the Message type to use it in RonAITabProps
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+  isStreaming?: boolean;
+  toolExecution?: boolean;
+  id?: string;
+  feedback?: 'positive' | 'negative' | null;
+  mode?: ModeType;
+  isDeepThinking?: boolean;
+  isAudio?: boolean;
 }
 
-interface RonAiTabProps {
-  messages: any[];
-  currentMessage: string;
-  setCurrentMessage: (message: string) => void;
-  handleSubmit: (e: any) => void;
-  isLoading: boolean;
-  messagesContainerRef: React.RefObject<HTMLDivElement>;
-  messagesEndRef: React.RefObject<HTMLDivElement>;
-  renderMessage: (msg: any, idx: number) => React.ReactNode;
+interface RonAITabProps {
+  onClose?: () => void;
+  patientId?: string;
+  className?: string;
+  // Props passed from RonExperience
+  messages?: Message[];
+  currentMessage?: string;
+  setCurrentMessage?: React.Dispatch<React.SetStateAction<string>>;
+  handleSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
+  isLoading?: boolean;
+  messagesContainerRef?: React.RefObject<HTMLDivElement>;
+  messagesEndRef?: React.RefObject<HTMLDivElement>;
+  renderMessage?: (msg: Message, idx: number) => JSX.Element;
   isDeepThinking?: boolean;
   isConversationMode?: boolean;
   toggleDeepThinking?: () => void;
   toggleConversationMode?: () => void;
+  activeMode?: ModeType;
+  onModeChange?: (mode: ModeType) => void;
+  fdaAccordionData?: any; 
+  setFdaAccordionData?: React.Dispatch<React.SetStateAction<any>>;
+  // Provider search related props
+  isProviderSearchModalOpen?: boolean;
+  setIsProviderSearchModalOpen?: React.Dispatch<React.SetStateAction<boolean>>;
+  isProviderMapVisible?: boolean;
+  setIsProviderMapVisible?: React.Dispatch<React.SetStateAction<boolean>>;
+  providerSearchParams?: ProviderSearchParams;
+  handleProviderSearch?: (params: ProviderSearchParams) => void;
 }
 
-const RonAiTab: React.FC<RonAiTabProps> = ({
-  messages,
-  currentMessage,
-  setCurrentMessage,
-  handleSubmit,
-  isLoading,
-  messagesContainerRef,
-  messagesEndRef,
-  renderMessage,
-  isDeepThinking: propIsDeepThinking,
-  isConversationMode: propIsConversationMode,
-  toggleDeepThinking: propToggleDeepThinking,
-  toggleConversationMode: propToggleConversationMode
+interface CareJourney {
+  id: string;
+  name: string;
+  type: string;
+  status: string;
+  reviews: Array<{
+    id: string;
+    type: string;
+    title: string;
+    status: string;
+    date: string;
+  }>;
+}
+
+const RonAITab: React.FC<RonAITabProps> = ({ 
+  onClose,
+  patientId, 
+  className,
+  // RonExperience props
+  messages: externalMessages,
+  currentMessage: externalCurrentMessage,
+  setCurrentMessage: externalSetCurrentMessage,
+  handleSubmit: externalHandleSubmit,
+  isLoading: externalIsLoading,
+  messagesContainerRef: externalMessagesContainerRef,
+  messagesEndRef: externalMessagesEndRef,
+  renderMessage: externalRenderMessage,
+  isDeepThinking: externalIsDeepThinking,
+  isConversationMode: externalIsConversationMode,
+  toggleDeepThinking: externalToggleDeepThinking,
+  toggleConversationMode: externalToggleConversationMode,
+  activeMode: externalActiveMode,
+  onModeChange,
+  fdaAccordionData: externalFdaAccordionData, // Receive FDA data
+  setFdaAccordionData: externalSetFdaAccordionData, // Receive setter
+  // Provider search related props
+  isProviderSearchModalOpen: externalIsProviderSearchModalOpen,
+  setIsProviderSearchModalOpen: externalSetIsProviderSearchModalOpen,
+  isProviderMapVisible: externalIsProviderMapVisible,
+  setIsProviderMapVisible: externalSetIsProviderMapVisible,
+  providerSearchParams: externalProviderSearchParams,
+  handleProviderSearch: externalHandleProviderSearch,
 }) => {
-  const [darkMode, setDarkMode] = useState(true);
-  const [selectedCase, setSelectedCase] = useState<number | null>(null);
-  const [isSpeechToTextRecording, setIsSpeechToTextRecording] = useState(false);
-  const [isRealtimeAudioActive, setIsRealtimeAudioActive] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [audioConnectionState, setAudioConnectionState] = useState<ConnectionState>('disconnected');
-  const [transcript, setTranscript] = useState('');
-  const [events, setEvents] = useState<any[]>([]);  
-  const audioAnimationRef = useRef<HTMLDivElement>(null);
-  const [localIsDeepThinking, setLocalIsDeepThinking] = useState(false);
-  const [localIsConversationMode, setLocalIsConversationMode] = useState(false);
-  const [isModelSpeaking, setIsModelSpeaking] = useState(false);
-  const [audioLevels, setAudioLevels] = useState<number[]>([0.1, 0.2, 0.5, 0.6, 0.4, 0.3, 0.5, 0.2, 0.4, 0.3]);
-  const [showCarePlanPreview, setShowCarePlanPreview] = useState(false);
-  const [carePlanCode, setCarePlanCode] = useState<string>('');
-  const [isPatientContentMode, setIsPatientContentMode] = useState(false);
-  const [isRonAIResponsePending, setIsRonAIResponsePending] = useState(false);
-  const analyzerRef = useRef<AnalyserNode | null>(null);
-  const animationFrameRef = useRef<number | null>(null);
-  const lastAudioActivityRef = useRef<number | null>(null);
-  const visRef = useRef<HTMLDivElement | null>(null);
-  const [showCarePlanForm, setShowCarePlanForm] = useState(false);
+  // State management
+  const [isDeepThinking, setIsDeepThinking] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [currentMessage, setCurrentMessage] = useState('');
+  const [activeCategory, setActiveCategory] = useState('clinical-reviews');
+  const [activeCareJourney, setActiveCareJourney] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [sarahStatus, setSarahStatus] = useState<'online' | 'busy' | 'offline'>('online');
+  const [activeMode, setActiveMode] = useState<ModeType>('default');
+  const [isProviderSearchModalOpen, setIsProviderSearchModalOpen] = useState(false);
+  const [isProviderMapVisible, setIsProviderMapVisible] = useState(false);
+  const [isCarePlanFormVisible, setIsCarePlanFormVisible] = useState(false);
+  const [providerSearchParams, setProviderSearchParams] = useState<ProviderSearchParams>({
+    searchType: 'specialty',
+    specialty: 'primary-care',
+    postalCode: '84101',
+    enumerationType: 'ind',
+    limit: 20
+  });
   
-  const isDeepThinking = propIsDeepThinking !== undefined ? propIsDeepThinking : localIsDeepThinking;
-  const isConversationMode = propIsConversationMode !== undefined ? propIsConversationMode : localIsConversationMode;
+  // Refs
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageInputRef = useRef<HTMLInputElement>(null);
   
-  // State for speech-to-text functionality
-  const [isSpeechToTextActive, setIsSpeechToTextActive] = useState(false);
-  const recognitionRef = useRef<any>(null);
-
-  // Toggle deep thinking mode - use prop function if provided
-  const toggleDeepThinking = () => {
-    if (propToggleDeepThinking) {
-      propToggleDeepThinking();
-    } else {
-      setLocalIsDeepThinking(!localIsDeepThinking);
-    }
-  };
-  
-  // Toggle conversation mode - use prop function if provided
-  const toggleConversationMode = () => {
-    if (propToggleConversationMode) {
-      propToggleConversationMode();
-    } else {
-      setLocalIsConversationMode(!localIsConversationMode);
-      if (isSpeechToTextRecording) {
-        setIsSpeechToTextRecording(false);
-      }
-    }
-  };
-  
-  // Toggle local speech-to-text (using Web Speech API, not OpenAI)
-  const toggleSpeechToText = () => {
-    if (isSpeechToTextActive) {
-      // Stop recognition if it's active
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-        recognitionRef.current = null;
-      }
-      setIsSpeechToTextActive(false);
-      setTranscript('');
-    } else {
-      // Start speech recognition
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        console.error('Speech recognition not supported');
-        return;
-      }
-      
-      try {
-        const recognition = new SpeechRecognition();
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.lang = 'en-US';
-        
-        recognition.onstart = () => {
-          setIsSpeechToTextActive(true);
-          setTranscript('');
-        };
-        
-        recognition.onresult = (event) => {
-          let interimTranscript = '';
-          let finalTranscript = '';
-          
-          for (let i = event.resultIndex; i < event.results.length; i++) {
-            const transcript = event.results[i][0].transcript;
-            if (event.results[i].isFinal) {
-              finalTranscript += transcript;
-            } else {
-              interimTranscript += transcript;
-            }
-          }
-          
-          if (finalTranscript) {
-            const trimmedText = finalTranscript.trim();
-            setCurrentMessage(currentMessage + ' ' + trimmedText);
-          }
-          setTranscript(interimTranscript);
-        };
-        
-        recognition.onerror = (event) => {
-          console.error('Speech recognition error', event.error);
-          setIsSpeechToTextActive(false);
-        };
-        
-        recognition.onend = () => {
-          if (isSpeechToTextActive) {
-            // If it's still active when it ends, restart it
-            recognition.start();
-          }
-        };
-        
-        recognitionRef.current = recognition;
-        recognition.start();
-      } catch (error) {
-        console.error('Error initializing speech recognition:', error);
-        setIsSpeechToTextActive(false);
-      }
-    }
-  };
-  
-  // Toggle real-time audio functionality
-  const toggleRealtimeAudio = async () => {
-    try {
-      if (!isRealtimeAudioActive) {
-        setIsConnecting(true);
-        
-        // First check for microphone permissions
-        try {
-          console.log("Requesting microphone access...");
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          // We got access, stop the tracks - realtimeAudioService will request them again
-          stream.getTracks().forEach(track => track.stop());
-          console.log("Microphone access granted");
-        } catch (micError) {
-          console.error("Microphone access denied:", micError);
-          alert("Microphone access is required for the audio feature to work. Please allow microphone access.");
-          setIsConnecting(false);
-          return;
+  // Mock care journeys data
+  const careJourneys: CareJourney[] = [
+    {
+      id: 'diabetes-management',
+      name: 'Diabetes Management',
+      type: 'chronic',
+      status: 'active',
+      reviews: [
+        {
+          id: 'insulin-auth',
+          type: 'prior-auth',
+          title: 'Insulin Pump Authorization',
+          status: 'pending',
+          date: '2025-03-19'
+        },
+        {
+          id: 'endocrinologist-ref',
+          type: 'referral',
+          title: 'Endocrinologist Referral',
+          status: 'approved',
+          date: '2025-03-15'
         }
-        
-        // Step 1: Create the session
-        await realtimeAudioService.startSession();
-        
-        // Step 2: Set up event handlers
-        realtimeAudioService.onConnectionStateChange = (state) => {
-          setAudioConnectionState(state);
-          
-          // Only set active when fully connected and wait for data channel to be ready
-          if (state === 'connected') {
-            setIsRealtimeAudioActive(true);
-            setIsConnecting(false);
-            
-            // Check for audio output devices
-            if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-              navigator.mediaDevices.enumerateDevices()
-                .then(devices => {
-                  const audioOutputs = devices.filter(device => device.kind === 'audiooutput');
-                  console.log("Available audio output devices:", audioOutputs);
-                  
-                  if (audioOutputs.length === 0) {
-                    console.warn("No audio output devices found");
-                    alert("No audio output devices detected. Please connect speakers or headphones.");
-                  }
-                })
-                .catch(err => console.error("Error enumerating devices:", err));
-            }
-          } else if (state === 'disconnected' || state === 'error') {
-            setIsRealtimeAudioActive(false);
-            setIsConnecting(false);
-          }
-        };
-        
-        realtimeAudioService.onMessage = (message) => {
-          setEvents((prev) => [message, ...prev]);
-          
-          // Check if this is a "start speaking" event using the correct message type
-          if (message.type === 'response.audio_begin') {
-            console.log("Ron AI started speaking");
-          }
-        };
-        
-        realtimeAudioService.onTranscriptUpdate = (text) => {
-          setTranscript(text);
-        };
-        
-        // Handle potential errors
-        realtimeAudioService.onError = (error) => {
-          console.error("Realtime audio error:", error);
-          
-          // Check if the error is related to audio playback
-          if (error.message && (
-              error.message.includes('audio') || 
-              error.message.includes('playback') ||
-              error.message.includes('voice'))) {
-            // Attempt recovery
-            console.log("Attempting to recover from audio error...");
-            
-            // Force stop and restart if needed
-            if (isRealtimeAudioActive) {
-              setTimeout(() => {
-                realtimeAudioService.stopSession();
-                
-                // Wait a moment then try reconnecting
-                setTimeout(() => {
-                  toggleRealtimeAudio();
-                }, 1000);
-              }, 500);
-            }
-          }
-        };
-        
-        // Step 3: Start recording only when everything is set up and ready
-        // This will be triggered by the onConnectionStateChange handler
-        realtimeAudioService.onDataChannelOpen = () => {
-          // Wait a moment to ensure everything is ready
-          setTimeout(() => {
-            if (realtimeAudioService.connectionState === 'connected') {
-              console.log("Data channel is open, starting recording");
-              realtimeAudioService.startRecording();
-              
-              // Also try to ensure audio playback is working
-              if (realtimeAudioService.audioElement) {
-                // Ensure the audio context is resumed (may be needed for Chrome)
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioContext.state === 'suspended') {
-                  console.log("Resuming suspended audio context");
-                  audioContext.resume().then(() => {
-                    console.log("Audio context resumed");
-                  });
-                }
-                
-                // Try to force audio element to play
-                console.log("Attempting to ensure audio playback");
-                realtimeAudioService.playAudio()
-                  .catch(err => console.warn("Initial playAudio attempt failed:", err));
-              }
-            }
-          }, 500);
-        };
+      ]
+    },
+    {
+      id: 'cardiac-care',
+      name: 'Cardiac Care',
+      type: 'acute',
+      status: 'active',
+      reviews: [
+        {
+          id: 'stress-test',
+          type: 'prior-auth',
+          title: 'Stress Test Authorization',
+          status: 'in-review',
+          date: '2025-03-18'
+        }
+      ]
+    }
+  ];
+
+  // Scroll to bottom of messages when needed
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+  
+  // Sync external mode state with our dropdown
+  useEffect(() => {
+    // Only run if we're connected to RonExperience
+    if (externalIsDeepThinking !== undefined || externalIsConversationMode !== undefined) {
+      if (externalIsDeepThinking) {
+        setActiveMode('deep-thinking');
+      } else if (externalIsConversationMode) {
+        setActiveMode('realtime-audio');
       } else {
-        // Stop in reverse order
-        console.log("Stopping realtime audio session");
-        realtimeAudioService.stopRecording();
-        setTimeout(() => {
-          realtimeAudioService.stopSession();
-          setIsRealtimeAudioActive(false);
-          // Set transcript to empty when stopping
-          setTranscript('');
-        }, 200);
+        // Reset to default if no special modes are active
+        setActiveMode('default');
       }
-    } catch (error) {
-      console.error('Error in toggleRealtimeAudio:', error);
-      setIsRealtimeAudioActive(false);
-      setIsConnecting(false);
-      
-      // Show user-friendly error
-      alert(`Error with audio: ${error.message || 'Unknown error'}`);
     }
-  };
-  
-  // Setup audio analyzer to detect when model is speaking
-  useEffect(() => {
-    // Clean up previous animation frame if it exists
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-    }
+  }, [externalIsDeepThinking, externalIsConversationMode]);
 
-    // Initialize lastAudioActivityRef if null
-    if (lastAudioActivityRef.current === null) {
-      lastAudioActivityRef.current = Date.now();
+  // Enhanced categories with icons and counts
+  const categories = [
+    {
+      id: 'clinical-reviews',
+      label: 'Clinical Reviews',
+      icon: <Stethoscope className="w-[18px] h-[18px]" />,
+      count: careJourneys.reduce((acc, journey) => acc + journey.reviews.length, 0),
+    },
+    {
+      id: 'appointments',
+      label: 'Appointments',
+      icon: <Clock className="w-[18px] h-[18px]" />,
+      count: 3,
+    },
+    {
+      id: 'claims',
+      label: 'Claims',
+      icon: <FileQuestion className="w-[18px] h-[18px]" />,
+      count: 2,
+    },
+    {
+      id: 'care-plans',
+      label: 'Care Plans',
+      icon: <FileText className="w-[18px] h-[18px]" />,
+      count: 1,
+    },
+    {
+      id: 'tickets',
+      label: 'Tickets',
+      icon: <AlertCircle className="w-[18px] h-[18px]" />,
+      count: 4,
+    },
+    {
+      id: 'tasks',
+      label: 'Tasks',
+      icon: <FileText className="w-[18px] h-[18px]" />,
+      count: 5,
     }
+  ];
 
-    // Only run analysis when connected and the model might be speaking
-    if (audioConnectionState === 'connected' || audioConnectionState === 'speaking') {
-      const setupAudioAnalyzer = () => {
-        if (!realtimeAudioService.audioElement) return;
+  // Handle mode selection from dropdown
+  const handleModeChange = (mode: ModeType) => {
+    console.log('RonAITab handleModeChange called with mode:', mode);
+    
+    // Process mode change based on selection
+    switch (mode) {
+      case 'patient-content':
+        setIsCarePlanFormVisible(true);
+        setActiveMode('patient-content');
+        break;
         
-        // Create audio context if it doesn't exist
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        
-        // Create analyzer node
-        const analyzer = audioContext.createAnalyser();
-        analyzer.fftSize = 256; // Higher resolution
-        analyzer.smoothingTimeConstant = 0.6; // More responsive
-        
-        // Connect audio element to analyzer
-        try {
-          if (realtimeAudioService.audioElement && realtimeAudioService.audioElement.srcObject) {
-            const source = audioContext.createMediaStreamSource(
-              realtimeAudioService.audioElement.srcObject as MediaStream
-            );
-            source.connect(analyzer);
-            analyzerRef.current = analyzer;
-            
-            // Start analyzing audio
-            const analyzeAudio = () => {
-              if (!analyzerRef.current) return;
-              
-              const dataArray = new Uint8Array(analyzerRef.current.frequencyBinCount);
-              analyzerRef.current.getByteFrequencyData(dataArray);
-              
-              // Check if there's audio activity by calculating average level
-              const average = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
-              
-              // Update visualization
-              if (visRef.current) {
-                const bars = visRef.current.querySelectorAll('.audio-bar');
-                const barCount = bars.length;
-                
-                // Map audio data to bar heights
-                for (let i = 0; i < barCount; i++) {
-                  const index = Math.floor(i * (dataArray.length / barCount));
-                  const value = dataArray[index];
-                  const height = Math.max(3, (value / 255) * 50); // Min 3px, max 50px
-                  
-                  if (bars[i]) {
-                    (bars[i] as HTMLElement).style.height = `${height}px`;
-                  }
-                }
-              }
-              
-              // Detect if AI is speaking based on audio levels
-              const currentTime = Date.now();
-              if (average > 5) { // Threshold for activity
-                if (audioConnectionState !== 'speaking') {
-                  setAudioConnectionState('speaking');
-                }
-                lastAudioActivityRef.current = currentTime;
-              } else if (audioConnectionState === 'speaking' && 
-                         lastAudioActivityRef.current !== null &&
-                         currentTime - lastAudioActivityRef.current > 500) {
-                // Wait a bit before changing state to avoid flicker
-                setAudioConnectionState('connected');
-              }
-              
-              // Continue animation loop
-              animationFrameRef.current = requestAnimationFrame(analyzeAudio);
-            };
-            
-            // Start animation loop
-            animationFrameRef.current = requestAnimationFrame(analyzeAudio);
-          }
-        } catch (error) {
-          console.error("Error setting up audio analyzer:", error);
+      case 'deep-thinking':
+        if (externalToggleDeepThinking) {
+          externalToggleDeepThinking();
+        } else {
+          setIsDeepThinking(!isDeepThinking);
         }
-      };
-      
-      // Set a small delay to ensure audio element is ready
-      setTimeout(setupAudioAnalyzer, 500);
+        setActiveMode('deep-thinking');
+        break;
+        
+      case 'realtime-audio':
+        if (externalToggleConversationMode) {
+          externalToggleConversationMode();
+        } else {
+          handleSpecialMode('realtime-audio');
+        }
+        setActiveMode('realtime-audio');
+        break;
+        
+      case 'medication-reconciliation':
+        setIsCarePlanFormVisible(true); // Show the care plan form
+        setActiveMode('medication-reconciliation');
+        break;
+        
+      case 'provider-search':
+        if (externalSetIsProviderSearchModalOpen) {
+          externalSetIsProviderSearchModalOpen(true);
+        } else {
+          setProviderSearchParams({
+            searchType: 'specialty',
+            specialty: 'primary-care',
+            postalCode: '84101',
+            enumerationType: 'ind',
+            limit: 20
+          });
+          setIsProviderSearchModalOpen(true);
+        }
+        setActiveMode('provider-search');
+        break;
+        
+      default:
+        setActiveMode('default');
+        break;
     }
-    
-    // Cleanup function
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, [audioConnectionState]);
 
-  // Monitor messages to detect when model might be speaking
-  useEffect(() => {
-    if (events.length > 0) {
-      const lastEvent = events[0]; // Events are added at the beginning
-      if (lastEvent.type === 'audio_started') {
-        setIsModelSpeaking(true);
-      } else if (lastEvent.type === 'audio_ended') {
-        setIsModelSpeaking(false);
-      }
-    }
-  }, [events]);
-
-  // Toggle patient content mode
-  const togglePatientContentMode = () => {
-    const newMode = !isPatientContentMode;
-    setIsPatientContentMode(newMode);
-    
-    if (newMode) {
-      // Switching TO Ron AI mode
-      // Clear any previous Ron AI conversation
-      clearRonAIConversation();
-      
-      // Adding to messages array when switching to Ron AI mode
-      const systemMessage = {
-        role: "system",
-        content: `# Ron AI Patient Content Mode
-
-You're now using Ron AI, which can create interactive care plans and discuss healthcare topics.
-
-### How to use:
-
-1. **Ask for a care plan** - Examples:
-   - "Create a care plan for hypertension"
-   - "Make a care plan for asthma management"
-   - "I need a care plan for a stroke patient" 
-   
-   When you request a care plan, you'll be prompted to fill out a detailed form with patient information for more personalized results.
-
-2. **Answer Ron AI's questions** if you have additional details
-3. **View the generated care plan** in the preview pane
-
-You can toggle between the rendered view and source code in the preview pane.
-
----
-
-💬 *You can also ask general healthcare questions!*`
-      };
-      messages.push(systemMessage);
-    } else {
-      // Switching FROM Ron AI mode
-      // Close the preview if it's open
-      setShowCarePlanPreview(false);
-      // Add a message indicating we're back to normal mode
-      const systemMessage = {
-        role: "system",
-        content: "Returning to standard Ron AI mode."
-      };
-      messages.push(systemMessage);
+    // If external mode handler exists, call it after our internal state is updated
+    if (onModeChange) {
+      onModeChange(mode);
     }
   };
-
-  // Function to clear Ron AI conversation
-  const handleClearRonAIConversation = async () => {
-    // Clear backend conversation history
-    await clearRonAIConversation();
-    
-    // Clear UI messages except for the initial system message
-    const initialMessages = messages.filter(msg => 
-      msg.role !== "user" && 
-      msg.role !== "assistant" && 
-      !msg.content.includes("Ron AI Patient Content Mode")
-    );
-    
-    // Add the system message back
-    const systemMessage = {
-      role: "system",
-      content: `# Ron AI Patient Content Mode
-
-You're now using Ron AI, which can create interactive care plans and discuss healthcare topics.
-
-### How to use:
-
-1. **Ask for a care plan** - Examples:
-   - "Create a care plan for hypertension"
-   - "Make a care plan for asthma management"
-   - "I need a care plan for a stroke patient" 
-   
-   When you request a care plan, you'll be prompted to fill out a detailed form with patient information for more personalized results.
-
-2. **Answer Ron AI's questions** if you have additional details
-3. **View the generated care plan** in the preview pane
-
-You can toggle between the rendered view and source code in the preview pane.
-
----
-
-💬 *You can also ask general healthcare questions!*`
-    };
-    
-    // Update messages with only system messages and the new activation message
-    messages.splice(0, messages.length, ...initialMessages, systemMessage);
-    
-    // Close the preview if it's open
-    setShowCarePlanPreview(false);
-  };
-
-  // Override the renderMessage function to customize display for Ron AI mode
-  const originalRenderMessage = renderMessage;
-
-  const customRenderMessage = (msg: any, idx: number) => {
-    // If we're not in patient content mode, use the original renderer
-    if (!isPatientContentMode) {
-      return originalRenderMessage(msg, idx);
-    }
-    
-    // For system messages in Ron AI mode
-    if (msg.role === "system" && msg.content && msg.content.includes("Ron AI Patient Content Mode")) {
-      return (
-        <div key={idx} className="system-message mb-2 px-3 py-2 rounded-md bg-teal-900 bg-opacity-20 border border-teal-800 text-gray-300">
-          <div className="flex items-start space-x-2">
-            <div className="rounded-full bg-teal-700 p-1 mt-0.5 flex-shrink-0">
-              <Bot size={12} className="text-teal-200" />
-            </div>
-            <div className="flex-1 text-sm" dangerouslySetInnerHTML={{ __html: formatMessageContent(msg.content) }}></div>
-          </div>
-        </div>
-      );
-    }
-    
-    // For user messages in Ron AI mode
-    if (msg.role === "user") {
-      return (
-        <div key={idx} className="user-message mb-2 px-3 py-2 text-white">
-          <div className="flex items-start space-x-2">
-            <div className="rounded-full bg-blue-600 p-1 mt-0.5 flex-shrink-0">
-              <MessageSquare size={12} className="text-white" />
-            </div>
-            <div className="flex-1 text-sm" dangerouslySetInnerHTML={{ __html: formatMessageContent(msg.content) }}></div>
-          </div>
-        </div>
-      );
-    }
-    
-    // For assistant messages in Ron AI mode
-    if (msg.role === "assistant") {
-      return (
-        <div key={idx} className="assistant-message mb-2 px-3 py-2 rounded-md bg-gray-800 border border-gray-700 text-gray-200">
-          <div className="flex items-start space-x-2">
-            <div className="rounded-full bg-teal-600 p-1 mt-0.5 flex-shrink-0">
-              <Bot size={12} className="text-white" />
-            </div>
-            <div className="flex-1">
-              <div className="text-[10px] text-teal-400 mb-0.5">Ron AI</div>
-              <div className="text-sm" dangerouslySetInnerHTML={{ __html: formatMessageContent(msg.content) }}></div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    
-    // Fallback to original renderer for any other message types
-    return originalRenderMessage(msg, idx);
-  };
-
-  // Helper function to format message content with Markdown-like syntax
-  const formatMessageContent = (content: string) => {
-    let formatted = content;
-    
-    // Format headings
-    formatted = formatted.replace(/^#\s+(.*)$/gm, '<h3 class="text-lg font-bold text-white mb-1">$1</h3>');
-    formatted = formatted.replace(/^##\s+(.*)$/gm, '<h4 class="text-md font-semibold text-white mb-1">$1</h4>');
-    formatted = formatted.replace(/^###\s+(.*)$/gm, '<h5 class="text-sm font-semibold text-teal-300 mb-1">$1</h5>');
-    
-    // Format lists
-    formatted = formatted.replace(/^\d\.\s+(.*)$/gm, '<div class="ml-4 flex"><span class="mr-2 text-teal-400">•</span><span>$1</span></div>');
-    formatted = formatted.replace(/^-\s+(.*)$/gm, '<div class="ml-4 flex"><span class="mr-2 text-gray-400">•</span><span>$1</span></div>');
-    
-    // Format inline styles
-    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong class="text-teal-300">$1</strong>');
-    formatted = formatted.replace(/\*(.*?)\*/g, '<em class="text-gray-300">$1</em>');
-    
-    // Format horizontal rule
-    formatted = formatted.replace(/^---$/gm, '<hr class="my-2 border-gray-700" />');
-    
-    // Format emojis with larger size
-    formatted = formatted.replace(/([\uD800-\uDBFF][\uDC00-\uDFFF])/g, '<span class="text-xl">$1</span>');
-    
-    // Replace newlines with <br />
-    formatted = formatted.replace(/\n/g, '<br />');
-    
-    return formatted;
-  };
-
-  // Modify the handleSubmit function to handle routing to Ron AI
-  const originalHandleSubmit = handleSubmit;
   
-  // Override handleSubmit prop with our custom implementation
-  const customHandleSubmit = async (e: React.FormEvent) => {
+  // Enhanced message handling
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!currentMessage.trim()) return;
     
-    if (isPatientContentMode) {
-      // Handle sending to Ron AI
-      try {
-        // Add user message to chat
-        const userMessage = {
-          role: "user",
-          content: currentMessage
-        };
-        messages.push(userMessage);
-        
-        // Clear input field
-        setCurrentMessage('');
-        
-        // Show thinking indicator
-        setIsRonAIResponsePending(true);
-        
-        // Check if this is explicitly requesting a care plan
-        const isExplicitCareplanRequest = 
-          currentMessage.toLowerCase().includes('care plan') ||
-          currentMessage.toLowerCase().includes('treatment plan') ||
-          currentMessage.toLowerCase().includes('health plan') ||
-          currentMessage.toLowerCase().includes('management plan') ||
-          currentMessage.toLowerCase().includes('plan for') ||
-          currentMessage.toLowerCase().includes('plan to manage');
-        
-        // If this is a care plan request, show the form instead of sending directly
-        if (isExplicitCareplanRequest && !currentMessage.includes('Patient Name:')) {
-          // This is a simple request for a care plan, show the form
-          setShowCarePlanForm(true);
-          setIsRonAIResponsePending(false);
-          return;
-        }
-        
-        // Call the generatePatientContent API
-        const response = await generatePatientContent({
-          prompt: currentMessage,
-          patientInfo: {
-            fullName: "Sarah Johnson",
-            age: 58,
-            gender: "Female",
-            height: "5'6\"",
-            weight: "165 lbs",
-            bloodPressure: "138/88",
-            conditions: ["Type 2 Diabetes", "Hypertension"],
-            medications: ["Metformin", "Lisinopril"]
-          },
-          contentType: isExplicitCareplanRequest ? 'care-plan' : 'conversation'
-        });
-        
-        console.log("Raw response from Ron AI:", response.substring(0, 100) + "...");
-        
-        // If it's a care plan request, handle the code rendering
-        if ((isExplicitCareplanRequest && 
-            (response.includes('export default') || 
-             response.includes('const CarePlan') || 
-             response.includes('function CarePlan')))) {
-          // Add Ron AI's response to the chat
-          const assistantMessage = {
-            role: "assistant",
-            content: `### Care Plan Created ✓ 
-
-I've created the requested care plan based on the information provided.
-
-**View Options:**
-- **Preview Mode**: See the rendered care plan
-- **Code Mode**: View or copy the source code
-
-You can switch between views using the toggle button in the preview pane.`
-          };
-          messages.push(assistantMessage);
-          
-          // Set the care plan code and show preview
-          console.log("Setting care plan code for preview");
-          setCarePlanCode(response);
-          setShowCarePlanPreview(true);
-        } else {
-          // For regular conversation, just show the response directly
-          const assistantMessage = {
-            role: "assistant",
-            content: response
-          };
-          messages.push(assistantMessage);
-        }
-        
-        setIsRonAIResponsePending(false);
-        
-      } catch (error) {
-        console.error('Error getting response from Ron AI:', error);
-        setIsRonAIResponsePending(false);
-        
-        // Add error message to chat
-        const errorMessage = {
-          role: "system",
-          content: "Sorry, there was an error processing your request. Please try again."
-        };
-        messages.push(errorMessage);
-      }
-    } else {
-      // Use original OpenAI handling
-      originalHandleSubmit(e);
+    setIsProcessing(true);
+    try {
+      // Message handling logic here
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulated API call
+      setCurrentMessage('');
+    } catch (error) {
+      console.error('Error sending message:', error);
+    } finally {
+      setIsProcessing(false);
     }
   };
-
-  // Handle care plan form submission
-  const handleCarePlanFormSubmit = (formData: CarePlanFormData) => {
-    // Close the form
-    setShowCarePlanForm(false);
+  
+  // Handle special modes that need processing
+  const handleSpecialMode = (mode: string) => {
+    console.log(`Processing special mode: ${mode}`);
     
-    // Create a structured prompt from the form data
-    const structuredPrompt = `
-Please create a care plan for the following patient:
-
-Patient Name: ${formData.patientName}
-Age: ${formData.patientAge}
-Gender: ${formData.patientGender}
-Medical Condition: ${formData.condition}
-
-Current Symptoms: 
-${formData.symptoms}
-
-${formData.currentMedications ? `Current Medications:
-${formData.currentMedications}` : ''}
-
-${formData.relevantHistory ? `Relevant Medical History:
-${formData.relevantHistory}` : ''}
-
-${formData.goals ? `Treatment Goals:
-${formData.goals}` : ''}
-
-IMPORTANT INSTRUCTIONS:
-1. Create a comprehensive care plan for this patient focusing SPECIFICALLY on their ${formData.condition} condition.
-2. Include appropriate assessments, diagnoses, short and long-term goals.
-3. Make sure to include Interventions (NOT Implementation) and Evaluation sections.
-4. DO NOT ask any follow-up questions - the form has already collected all necessary information.
-5. Generate the complete care plan immediately.
-6. Use the full width of the display for your response.
-7. DO NOT include any general information about diabetes unless that is specifically the condition requested.
-`;
-
-    // Set the message and submit
-    setCurrentMessage(structuredPrompt);
-    // Submit after a short delay to ensure state is updated
+    setIsProcessing(true);
     setTimeout(() => {
-      const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
-      customHandleSubmit(fakeEvent);
-    }, 100);
+      setIsProcessing(false);
+      
+      // Additional mode-specific logic if needed
+    }, 1000);
+  };
+  
+  // Handle provider search submission
+  const handleProviderSearch = (searchParams: ProviderSearchParams) => {
+    console.log('Provider search params:', searchParams);
+    
+    // Use external handler if available
+    if (externalHandleProviderSearch) {
+      externalHandleProviderSearch(searchParams);
+      return;
+    }
+    
+    // Create search message based on search type
+    let searchMessage = '';
+    
+    switch (searchParams.searchType) {
+      case 'npi':
+        searchMessage = `Looking up provider with NPI number: ${searchParams.npiNumber || 'unknown'}`;
+        break;
+      case 'name':
+        searchMessage = `Find healthcare provider ${searchParams.firstName || ''} ${searchParams.lastName || ''} ${searchParams.postalCode ? `in zip code ${searchParams.postalCode}` : ''}`;
+        break;
+      case 'specialty':
+        searchMessage = `Find me a ${searchParams.specialty || 'healthcare'} provider ${searchParams.postalCode ? `in zip code ${searchParams.postalCode}` : ''}`;
+        break;
+    }
+    
+    // CRITICAL: Store search parameters first
+    setProviderSearchParams(searchParams);
+    
+    // CRITICAL: Make map visible immediately
+    setIsProviderMapVisible(true);
+    
+    // Close the modal immediately
+    setIsProviderSearchModalOpen(false);
+    
+    // Then handle the conversation message if needed
+    if (externalSetCurrentMessage) {
+      externalSetCurrentMessage(searchMessage);
+      
+      if (externalHandleSubmit) {
+        setTimeout(() => {
+          try {
+            const formEvent = new Event('submit', { bubbles: true, cancelable: true }) as unknown as React.FormEvent<HTMLFormElement>;
+            externalHandleSubmit(formEvent);
+          } catch (err) {
+            console.error('Error submitting form:', err);
+          }
+        }, 500);
+      }
+    } else {
+      // Use internal state when not connected to RonExperience
+      setCurrentMessage(searchMessage);
+      
+      // Local handling is already done by showing the map
+    }
+    
+    // Debug log to confirm the process completed
+    console.log('Provider search initiated with params:', searchParams);
+    console.log('Provider map should now be visible');
+  };
+  
+  // Handle closing the provider map
+  const handleCloseProviderMap = () => {
+    setIsProviderMapVisible(false);
   };
 
-  // Audio diagnostics for debugging
-  const renderAudioDiagnostics = () => {
-    if (!isRealtimeAudioActive) return null;
-    
-    return (
-      <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded text-xs">
-        <div className="flex items-center justify-between">
-          <span>Audio diagnostics:</span>
-          <button 
-            onClick={() => {
-              // Force play the audio element
-              if (realtimeAudioService.audioElement) {
-                console.log("Attempting to play audio element directly");
-                realtimeAudioService.audioElement.play()
-                  .then(() => console.log("Play successful"))
-                  .catch(err => console.error("Play failed:", err));
-              }
-            }}
-            className="px-1 py-0.5 bg-blue-500 text-white rounded text-xs"
-          >
-            Test Audio
-          </button>
-        </div>
-        <div>Status: {audioConnectionState}</div>
-        <div>Audio element: {realtimeAudioService.audioElement ? 'Created' : 'Not created'}</div>
-        {realtimeAudioService.audioElement && (
-          <div>
-            <div>Audio stream: {realtimeAudioService.audioElement.srcObject ? 'Active' : 'Not set'}</div>
-            <div>Muted: {realtimeAudioService.audioElement.muted ? 'Yes' : 'No'}</div>
-            <div>Volume: {realtimeAudioService.audioElement.volume}</div>
-          </div>
-        )}
-        
-        <div className="mt-2">
-          <div className="font-semibold">Recent API Messages:</div>
-          <div className="max-h-20 overflow-y-auto bg-gray-900 text-gray-200 p-1 rounded text-xs font-mono">
-            {events.slice(0, 5).map((event, idx) => (
-              <div key={idx} className="whitespace-nowrap overflow-hidden text-ellipsis">
-                {event.type}: {JSON.stringify(event).substring(0, 40)}...
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+  const handleCareJourneySelect = (journeyId: string) => {
+    setActiveCareJourney(journeyId === activeCareJourney ? null : journeyId);
   };
 
   return (
-    <div className={darkMode ? "container dark-mode" : "container light-mode"}>
-      <div className="grid grid-cols-12 h-full">
-        <div className="col-span-3 h-full flex flex-col overflow-hidden">
-          <div className={darkMode ? "sidebar dark-mode-sidebar" : "sidebar light-mode-sidebar"}>
-            <div className="p-4 flex-shrink-0">
-              <button 
-                className="p-2 rounded-full border border-gray-700"
-                aria-label="Go back"
-                title="Go back"
+    <div className={`flex w-full h-[calc(100vh-65px)] overflow-hidden bg-gradient-to-b from-gray-900 to-gray-800 text-gray-100 relative ${className}`}>
+      {/* Left Panel */}
+      <div className="w-[280px] flex-shrink-0 border-r border-indigo-500/30 flex flex-col bg-gradient-to-b from-gray-900/90 via-gray-800/90 to-gray-900/90 backdrop-blur-sm">
+        {/* Sarah AI Contact Section */}
+        <div className="p-4 border-b border-indigo-500/30 bg-gray-800/50 relative">
+          {/* Decorative elements */}
+          <div className="absolute left-0 top-0 w-1/3 h-0.5 bg-gradient-to-r from-indigo-500/80 to-transparent"></div>
+          <div className="absolute right-0 bottom-0 w-1/4 h-0.5 bg-gradient-to-l from-teal-500/80 to-transparent"></div>
+          
+          <div className="flex items-center gap-3">
+            <div className="relative group">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-500/20 to-teal-500/20 border border-indigo-500/30 shadow-[0_0_15px_rgba(79,70,229,0.3)]">
+                <Bot className="w-5 h-5 text-indigo-400" />
+              </div>
+              <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-gray-900 shadow-[0_0_5px_rgba(79,70,229,0.5)] ${
+                sarahStatus === 'online' ? 'bg-emerald-500' :
+                sarahStatus === 'busy' ? 'bg-amber-500' :
+                'bg-gray-500'
+              }`} />
+              {/* Glow effect */}
+              <div className="absolute inset-0 rounded-full bg-indigo-500/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-white">Sarah AI</h3>
+              <p className="text-xs text-indigo-300/80">Healthcare Assistant</p>
+            </div>
+            <button className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-indigo-500/20 transition-colors relative group">
+              <MessageSquare className="w-4 h-4" />
+              <span className="absolute -bottom-1 left-0 w-0 h-px bg-indigo-500 group-hover:w-full transition-all duration-300"></span>
+            </button>
+          </div>
+        </div>
+
+        {/* Enhanced Categories */}
+        <div className="flex-1 overflow-y-auto">
+          {categories.map(category => (
+            <div key={category.id} className="border-b border-gray-700">
+              <button
+                onClick={() => setActiveCategory(category.id)}
+                className={`w-full px-4 py-3 flex items-center justify-between transition-all duration-200 relative group ${
+                  activeCategory === category.id 
+                    ? 'bg-indigo-600/20 border-l-2 border-indigo-500' 
+                    : 'hover:bg-indigo-600/10 border-l-2 border-transparent'
+                }`}
               >
-                <ArrowLeft size={18} />
+                <div className="flex items-center gap-3">
+                  <div className={`p-1.5 rounded-md transition-colors duration-200 ${
+                    activeCategory === category.id 
+                      ? 'bg-indigo-500/20 text-indigo-400' 
+                      : 'text-gray-400 group-hover:text-indigo-400'
+                  }`}>
+                    {category.icon}
+                  </div>
+                  <span className={`text-sm transition-colors duration-200 ${
+                    activeCategory === category.id ? 'text-white' : 'text-gray-400 group-hover:text-white'
+                  }`}>{category.label}</span>
+                  {category.count > 0 && (
+                    <span className={`px-1.5 py-0.5 text-xs rounded-full transition-colors duration-200 ${
+                      activeCategory === category.id 
+                        ? 'bg-indigo-500/20 text-indigo-400' 
+                        : 'bg-gray-800 text-gray-400'
+                    }`}>
+                      {category.count}
+                    </span>
+                  )}
+                </div>
+                <ChevronRight className={`w-4 h-4 text-gray-500 transition-transform ${
+                  activeCategory === category.id ? 'rotate-90' : ''
+                }`} />
               </button>
-            </div>
-            
-            <div className="p-8 flex-shrink-0">
-              <div className="text-xl font-light mb-1">Sarah Johnson</div>
-              <div className="text-sm text-gray-400">SJ-78954</div>
-            </div>
-            
-            <div className="px-6 pt-6 pb-3 flex-shrink-0">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="text-lg font-light">Care Journey</h3>
-              </div>
-            </div>
-            
-            <div className="px-6 mb-4 flex-shrink-0">
-              <div className={`flex items-center rounded-full px-4 py-2 border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                <Search size={16} className="mr-2 text-gray-400" />
-                <input 
-                  type="text" 
-                  placeholder="Search cases"
-                  className="bg-transparent border-none focus:outline-none flex-1 text-sm"
-                />
-              </div>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto custom-scrollbar px-4">
-              <div className="pb-4">
-                <div className="mb-2">
-                  <div 
-                    className="flex items-center justify-between py-2 px-2 cursor-pointer mb-2 border-b border-teal-400 shadow-sm"
-                  >
-                    <div className="flex items-center">
-                      <ChevronRight size={16} className="mr-2 text-gray-400" />
-                      <span className="font-light text-sm">Prior Authorization</span>
-                    </div>
-                    <span className="text-xs text-gray-400">2</span>
-                  </div>
-                  
-                  <div className="pt-2 pb-1 space-y-2">
-                    <div 
-                      className="py-3 px-2 cursor-pointer transition-all border-l border-transparent hover:border-l-2 hover:border-l-gray-500"
-                    >
-                      <div className="font-light mb-1 text-sm text-teal-400">Continuous Glucose Monitor Prior Auth</div>
-                      <div className="flex justify-between items-center mb-1">
-                        <div className="text-xs text-gray-400">CASE-7851</div>
-                        <div className="text-xs text-gray-400">Feb 20, 2025</div>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <div className="text-xs text-gray-400">Pending Review</div>
-                      </div>
-                    </div>
-                    
-                    <div 
-                      className="py-3 px-2 cursor-pointer transition-all border-l border-transparent hover:border-l-2 hover:border-l-gray-500"
-                    >
-                      <div className="font-light mb-1 text-sm text-teal-400">Medication Prior Auth - Metformin</div>
-                      <div className="flex justify-between items-center mb-1">
-                        <div className="text-xs text-gray-400">CASE-7688</div>
-                        <div className="text-xs text-gray-400">Jan 18, 2025</div>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <div className="text-xs text-gray-400">Approved</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="mb-2">
-                  <div 
-                    className="flex items-center justify-between py-2 px-2 cursor-pointer mb-2 border-b border-teal-400 shadow-sm"
-                  >
-                    <div className="flex items-center">
-                      <ChevronRight size={16} className="mr-2 text-gray-400" />
-                      <span className="font-light text-sm">Referral</span>
-                    </div>
-                    <span className="text-xs text-gray-400">2</span>
-                  </div>
-                  
-                  <div className="pt-2 pb-1 space-y-2">
-                    <div 
-                      className="py-3 px-2 cursor-pointer transition-all border-l border-transparent hover:border-l-2 hover:border-l-gray-500"
-                    >
-                      <div className="font-light mb-1 text-sm text-teal-400">Endocrinologist Referral</div>
-                      <div className="flex justify-between items-center mb-1">
-                        <div className="text-xs text-gray-400">CASE-7838</div>
-                        <div className="text-xs text-gray-400">Feb 15, 2025</div>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <div className="text-xs text-gray-400">Approved</div>
-                      </div>
-                    </div>
-                    
-                    <div 
-                      className="py-3 px-2 cursor-pointer transition-all border-l border-transparent hover:border-l-2 hover:border-l-gray-500"
-                    >
-                      <div className="font-light mb-1 text-sm text-teal-400">Lab Tests - Quarterly</div>
-                      <div className="flex justify-between items-center mb-1">
-                        <div className="text-xs text-gray-400">CASE-7598</div>
-                        <div className="text-xs text-gray-400">Feb 05, 2025</div>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <div className="text-xs text-gray-400">Approved</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="col-span-6 h-full flex flex-col overflow-hidden">
-          <div className="flex flex-col items-center pt-4 pb-2 flex-shrink-0">
-            <div className="w-12 h-12 rounded-full flex items-center justify-center mb-2 bg-gradient-to-br from-blue-500 to-teal-400 shadow-lg shadow-teal-400/30">
-              <Bot size={24} className="text-gray-900" />
-            </div>
-            <div className="flex items-center justify-center mb-4">
-              <h1 className="text-3xl font-extralight tracking-wider bg-gradient-to-r from-ron-teal-400 to-blue-500 bg-clip-text text-transparent">
-                RON AI
-              </h1>
-            </div>
-            
-            {/* Audio Visualizer - Fixed position relative to RON AI text */}
-            <div 
-              ref={audioAnimationRef} 
-              className={`flex justify-center space-x-3 mb-3 -mt-2 relative z-10 transition-opacity duration-300 ${
-                isModelSpeaking ? 'visualizer-container-active' : ''
-              }`}
-            >
-              {audioLevels.map((level, index) => {
-                // Calculate height value dynamically
-                const heightValue = isModelSpeaking ? 
-                  Math.max(8, Math.min(36, level * 36)) : 
-                  (8 + index % 9);
-                
-                // Calculate opacity class
-                const opacityValue = isModelSpeaking ? 
-                  Math.min(1, 0.5 + level * 0.5) : 
-                  (0.5 + (index % 10) * 0.05);
-                
-                // Convert opacity to Tailwind opacity classes (0-100 in steps of 5)
-                const opacityClass = `opacity-${Math.round(opacityValue * 100 / 5) * 5}`;
-                
-                // Calculate scale effect
-                const scaleClass = isModelSpeaking ? 
-                  `scale-y-${Math.round(10 + level * 7)}0` : 
-                  'scale-y-100';
-                
-                return (
-                  <div 
-                    key={index}
-                    className={`w-2 rounded-full bg-gradient-to-t from-ron-teal-400 to-blue-500 
-                      transition-all duration-150 ease-in-out transform audio-bar 
-                      h-[${heightValue}px]
-                      ${isModelSpeaking ? 'glow-effect active' : ''}
-                      ${opacityClass} ${scaleClass}`}
-                  ></div>
-                );
-              })}
-            </div>
-          </div>
-          
-          <div className="flex-1 flex flex-col px-4 overflow-hidden">
-            <div className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent pr-2" ref={messagesContainerRef}>
-              <div className="space-y-3 pt-1 pb-2">
-                {messages.map((msg, idx) => customRenderMessage(msg, idx))}
-                <div ref={messagesEndRef} />
-              </div>
-            </div>
-          </div>
-          
-          <div className="p-6 flex-shrink-0 border-t border-gray-800 bg-gray-900">
-            <div className={darkMode ? "card dark-mode-card" : "card light-mode-card"}>
-              <div className="flex items-center">
-                <input
-                  type="text"
-                  value={currentMessage}
-                  onChange={(e) => setCurrentMessage(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      customHandleSubmit(e);
-                    }
-                  }}
-                  placeholder="Ask Ron AI a question..."
-                  disabled={isLoading}
-                  className="bg-transparent border-none focus:outline-none flex-1 px-3 py-2 text-sm"
-                  autoFocus
-                />
-                
-                <button 
-                  className="p-2 rounded-full bg-teal-500 ml-1 opacity-90 hover:opacity-100 transition-opacity"
-                  onClick={(e) => customHandleSubmit(e)}
-                  disabled={isLoading || !currentMessage.trim()}
-                  aria-label="Send message"
-                  title="Send message"
-                >
-                  <Send size={18} className="text-gray-900" />
-                </button>
-              </div>
-            </div>
-            
-            <div className="flex items-center justify-between mt-2">
-              <div className="flex space-x-1">
-                <button
-                  onClick={toggleDeepThinking}
-                  className={`px-2 py-1 rounded-md flex items-center transition-colors ${
-                    isDeepThinking ? 'bg-amber-700 text-amber-200' : 'text-gray-400 hover:bg-gray-800 hover:text-amber-400'
-                  }`}
-                  aria-label={isDeepThinking ? "Turn off deep thinking mode" : "Turn on deep thinking mode"}
-                  title={isDeepThinking ? "Turn off deep thinking mode" : "Turn on deep thinking mode"}
-                >
-                  <Brain size={14} />
-                  <span className="ml-1 text-xs font-medium">Deep</span>
-                </button>
-                
-                <button
-                  onClick={toggleRealtimeAudio}
-                  className={`px-2 py-1 rounded-md flex items-center transition-colors ${
-                    isRealtimeAudioActive ? 'bg-green-700 text-green-200' : (isConnecting ? 'bg-yellow-700 text-yellow-200' : 'text-gray-400 hover:bg-gray-800 hover:text-green-400')
-                  }`}
-                  disabled={isLoading}
-                  aria-label={isRealtimeAudioActive ? "Turn off real time audio" : "Turn on real time audio"}
-                  title={isRealtimeAudioActive ? "Turn off real time audio" : "Turn on real time audio"}
-                >
-                  <Mic size={14} />
-                  <span className="ml-1 text-xs font-medium">Audio</span>
-                  {isConnecting && 
-                    <div className="flex space-x-1 ml-1">
-                      <span className="w-1 h-1 bg-yellow-400 rounded-full animate-pulse"></span>
-                      <span className="w-1 h-1 bg-yellow-400 rounded-full animate-pulse delay-75"></span>
-                      <span className="w-1 h-1 bg-yellow-400 rounded-full animate-pulse delay-150"></span>
-                    </div>
-                  }
-                </button>
-                
-                <button
-                  onClick={toggleSpeechToText}
-                  className={`px-2 py-1 rounded-md flex items-center transition-colors ${
-                    isSpeechToTextActive ? 'bg-purple-700 text-purple-200' : 'text-gray-400 hover:bg-gray-800 hover:text-purple-400'
-                  }`}
-                  aria-label={isSpeechToTextActive ? "Turn off speech to text" : "Turn on speech to text"}
-                  title={isSpeechToTextActive ? "Turn off speech to text" : "Turn on speech to text"}
-                >
-                  <MessageSquare size={14} />
-                  <span className="ml-1 text-xs font-medium">Speech</span>
-                </button>
-                
-                <button
-                  onClick={togglePatientContentMode}
-                  className={`px-2 py-1 rounded-md flex items-center transition-colors ${
-                    isPatientContentMode ? 'bg-blue-700 text-blue-200' : 'text-gray-400 hover:bg-gray-800 hover:text-blue-400'
-                  }`}
-                  aria-label={isPatientContentMode ? "Turn off patient content mode" : "Turn on patient content mode"}
-                  title={isPatientContentMode ? "Turn off patient content mode" : "Turn on patient content mode"}
-                >
-                  <FileText size={14} />
-                  <span className="ml-1 text-xs font-medium">Care Plans</span>
-                  {isRonAIResponsePending && 
-                    <div className="flex space-x-1 ml-1">
-                      <span className="w-1 h-1 bg-blue-400 rounded-full animate-pulse"></span>
-                      <span className="w-1 h-1 bg-blue-400 rounded-full animate-pulse delay-75"></span>
-                      <span className="w-1 h-1 bg-blue-400 rounded-full animate-pulse delay-150"></span>
-                    </div>
-                  }
-                </button>
-                
-                {isPatientContentMode && (
-                  <button
-                    onClick={handleClearRonAIConversation}
-                    title="Clear Ron AI conversation"
-                    className="p-1 rounded-lg hover:bg-gray-700 transition-colors text-gray-400"
-                  >
-                    <RefreshCw size={14} />
-                    <span className="sr-only">Clear conversation</span>
-                  </button>
-                )}
-              </div>
-              <div className="flex items-center">
-                <div className="w-2 h-2 rounded-full mr-2 bg-teal-400 shadow-glow-teal"></div>
-                <span className="text-xs text-gray-400">AI System Operational</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="col-span-3 h-full border-l border-gray-700 flex flex-col overflow-hidden">
-          {showCarePlanPreview ? (
-            <CarePlanPreview 
-              code={carePlanCode} 
-              onClose={() => setShowCarePlanPreview(false)} 
-              isVisible={showCarePlanPreview}
-            />
-          ) : (
-            <div className="h-full flex flex-col p-6 overflow-hidden">
-              <div className="flex items-center justify-between mb-6 flex-shrink-0">
-                <h3 className="text-lg font-light">Case Context</h3>
-                
-                <button
-                  onClick={() => {
-                    // Set a sample care plan code for demonstration
-                    setCarePlanCode(sampleCarePlanCode);
-                    setShowCarePlanPreview(true);
-                  }}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-teal-500 bg-opacity-20 text-teal-400 hover:bg-opacity-30 transition-colors"
-                  title="Preview Care Plan"
-                >
-                  <Eye size={16} />
-                  <span className="text-xs font-medium">Preview Care Plan</span>
-                </button>
-              </div>
               
-              <div className="flex-1 overflow-y-auto custom-scrollbar">
-                <div className="flex items-center justify-center h-full">
-                  <p className="text-gray-500 text-sm font-light">
-                    Select a case to view context
-                  </p>
+              {/* Care Journey Submenu for Clinical Reviews */}
+              {activeCategory === 'clinical-reviews' && category.id === 'clinical-reviews' && (
+                <div className="bg-black/20">
+                  {careJourneys.map(journey => (
+                    <div key={journey.id} className="px-2">
+                      <button
+                        onClick={() => handleCareJourneySelect(journey.id)}
+                        className={`w-full px-3 py-2.5 flex items-center justify-between text-sm transition-colors ${
+                          activeCareJourney === journey.id ? 'bg-white/10' : 'hover:bg-white/5'
+                        }`}
+                      >
+                        <span className="text-gray-100">{journey.name}</span>
+                        <span className="px-1.5 py-0.5 text-xs bg-white/10 rounded-full text-gray-400">
+                          {journey.reviews.length}
+                        </span>
+                      </button>
+                      
+                      {/* Reviews under Care Journey */}
+                      {activeCareJourney === journey.id && (
+                        <div className="p-2 space-y-2">
+                          {journey.reviews.map(review => (
+                            <div key={review.id} className="p-3 bg-white/5 rounded-lg">
+                              <div className="text-sm text-gray-100 mb-1">
+                                {review.title}
+                              </div>
+                              <div className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
+                                review.status === 'pending' ? 'bg-amber-500/20 text-amber-400' :
+                                review.status === 'approved' ? 'bg-emerald-500/20 text-emerald-400' :
+                                'bg-blue-500/20 text-blue-400'
+                              }`}>
+                                {review.status}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              </div>
-              <div className="mt-auto pt-4 border-t border-gray-700 flex-shrink-0">
-                <div className="text-xs text-gray-400 flex items-center">
-                  <div className="w-2 h-2 rounded-full mr-2 bg-ron-teal-400 shadow-glow-hover"></div>
-                  <span>AI System Operational</span>
-                </div>
-              </div>
+              )}
             </div>
-          )}
+          ))}
         </div>
       </div>
-      {isRonAIResponsePending &&
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-10">
-          <div className="bg-gray-800 rounded-lg p-6 flex flex-col items-center max-w-sm">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-teal-400 mb-4"></div>
-            <p className="text-gray-300 text-center">Ron AI is thinking...</p>
+
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col bg-gradient-to-b from-gray-900/90 via-gray-800/90 to-gray-900/90 min-w-0 backdrop-blur-sm">
+        {/* Debug output for CareFormWrapper visibility */}
+        {isCarePlanFormVisible !== undefined && null}
+        
+        {/* Enhanced Header with Logo */}
+        <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img src={banner} alt="RonAI Banner" className="h-8 object-contain" />
+          </div>
+          <div className="flex items-center gap-3">
+            {isProcessing && (
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1">
+                  <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce"></div>
+                  <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
+                  <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      }
+        
+        {/* Enhanced Message List */}
+        <div 
+          className="flex-1 overflow-y-auto p-6 min-h-0"
+          ref={externalMessagesContainerRef || undefined}
+        >
+          {/* Render messages from RonExperience if available */}
+          {externalMessages && externalRenderMessage ? (
+            externalMessages.map((msg, idx) => externalRenderMessage(msg, idx))
+          ) : (
+            // Placeholder for standalone mode
+            <div className="flex flex-col items-center justify-center h-full">
+              <p className="text-gray-400">No messages yet</p>
+            </div>
+          )}
+          <div ref={externalMessagesEndRef || messagesEndRef} />
+        </div>
+
+        {/* Enhanced Input Area */}
+        <div className="p-4 border-t border-indigo-500/30 bg-gray-800/30">
+          {/* Mode Dropdown replacing action buttons */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            <ModeDropdown
+              activeMode={externalActiveMode || activeMode}
+              onChange={handleModeChange}
+              isDisabled={externalIsLoading || isProcessing}
+            />
+          </div>
+
+          {/* Enhanced Input Form */}
+          <form 
+            onSubmit={externalHandleSubmit || handleSendMessage} 
+            className="relative"
+          >
+            <div className="bg-gray-900/90 border border-indigo-500/30 rounded-xl transition-all duration-200
+              focus-within:border-indigo-400/50 focus-within:shadow-[0_0_10px_rgba(79,70,229,0.4)]
+              backdrop-blur-sm">
+              <div className="flex items-center gap-2 p-2">
+                <button
+                  type="button"
+                  className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-indigo-500/20 transition-colors 
+                    disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-gray-400"
+                  disabled={externalIsLoading || isProcessing}
+                >
+                  <Paperclip className="w-[18px] h-[18px]" />
+                </button>
+                
+                <input
+                  ref={messageInputRef}
+                  type="text"
+                  value={externalCurrentMessage !== undefined ? externalCurrentMessage : currentMessage}
+                  onChange={(e) => {
+                    if (externalSetCurrentMessage) {
+                      externalSetCurrentMessage(e.target.value);
+                    } else {
+                      setCurrentMessage(e.target.value);
+                    }
+                  }}
+                  className="flex-1 bg-transparent border-none p-2 text-sm text-white placeholder-gray-500 focus:outline-none"
+                  placeholder="Message Ron AI..."
+                  disabled={externalIsLoading || isProcessing}
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setIsRecording(!isRecording)}
+                  className={`p-2 rounded-lg transition-all duration-200 disabled:opacity-50 ${
+                    isRecording 
+                      ? 'text-indigo-400 bg-indigo-500/20 shadow-[0_0_10px_rgba(79,70,229,0.4)]' 
+                      : 'text-gray-400 hover:text-white hover:bg-indigo-500/20'
+                  }`}
+                  disabled={externalIsLoading || isProcessing}
+                >
+                  <Mic className="w-[18px] h-[18px]" />
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={
+                    (externalCurrentMessage !== undefined ? !externalCurrentMessage.trim() : !currentMessage.trim()) || 
+                    externalIsLoading || 
+                    isProcessing
+                  }
+                  className="p-2 rounded-lg bg-gradient-to-r from-indigo-500 to-indigo-600 text-white 
+                    hover:shadow-[0_0_15px_rgba(79,70,229,0.5)] hover:brightness-110 
+                    transition-all duration-200 disabled:opacity-50 disabled:hover:brightness-100 disabled:hover:shadow-none"
+                >
+                  <Send className="w-[18px] h-[18px]" />
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {/* Patient Content Form (Care Plan) */}
+      {isCarePlanFormVisible && (
+        <ErrorBoundary>
+          <CareFormWrapper 
+            isOpen={isCarePlanFormVisible} 
+            onClose={() => setIsCarePlanFormVisible(false)}
+            initialMode={activeMode === 'medication-reconciliation' ? 'medication-reconciliation' : 'patient-content'}
+          />
+        </ErrorBoundary>
+      )}
       
-      {showCarePlanPreview && (
-        <CarePlanPreview
-          code={carePlanCode}
-          onClose={() => setShowCarePlanPreview(false)}
-          isVisible={showCarePlanPreview}
+      {/* Provider Search Modal - conditionally render when state is true */}
+      {!externalIsProviderSearchModalOpen && isProviderSearchModalOpen && (
+        <ProviderSearchModal
+          isOpen={isProviderSearchModalOpen}
+          onClose={() => setIsProviderSearchModalOpen(false)}
+          onSearch={handleProviderSearch}
         />
       )}
       
-      {showCarePlanForm && (
-        <CarePlanForm
-          onSubmit={handleCarePlanFormSubmit}
-          onClose={() => setShowCarePlanForm(false)}
+      {/* Provider Map Preview - conditionally render when state is true */}
+      {!externalIsProviderMapVisible && isProviderMapVisible && (
+        <ProviderMapPreview 
+          searchParams={providerSearchParams}
+          isVisible={isProviderMapVisible}
+          onClose={() => setIsProviderMapVisible(false)}
         />
       )}
 
-      {/* Audio debug information - only show when audio is active */}
-      {isRealtimeAudioActive && renderAudioDiagnostics()}
+      {/* Conditionally render FDA Accordion Panel */}
+      {externalFdaAccordionData && (
+        <FDAAccordion 
+          data={externalFdaAccordionData} 
+          onClose={() => externalSetFdaAccordionData && externalSetFdaAccordionData(null)} 
+        />
+      )}
     </div>
   );
 };
 
-export default RonAiTab;
+export default RonAITab;

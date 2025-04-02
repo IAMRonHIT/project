@@ -1,6 +1,11 @@
 ---
 description: 
 globs: 
+alwaysApply: false
+---
+---
+description: 
+globs: 
 alwaysApply: true
 ---
 
@@ -15,6 +20,10 @@ alwaysApply: true
 4. **Ask questions instead of making assumptions** - When requirements are unclear, ask for clarification rather than implementing your own interpretation.
 
 5. **No "surprise" optimizations or refactoring** - Code optimizations must be specifically requested and approved.
+
+6. **The models being used in this project are gemini-2.5-pro-exp-03-25 and gemini-2.0-flash. You are expressly forbidden from changing them. 
+
+7. The .env file for this project is C:\Users\thunt\demo\project\backend\.env and there is a front end .env C:\Users\thunt\demo\project\src\env.d.ts.
 
 ## Implementation Guidelines
 

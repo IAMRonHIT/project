@@ -45,11 +45,11 @@ function AppRoutes() {
         />
         <Route 
           path="/population-health" 
-          element={<PopulationHealthPage />} 
+          element={<PopulationHealthPage />}
         />
-        <Route 
-          path="/" 
-          element={<Navigate to="/dashboard" replace />} 
+        <Route
+          path="/"
+          element={<Navigate to="/dashboard" replace />}
         />
       </Routes>
     </AppShell>

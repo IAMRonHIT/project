@@ -4,91 +4,36 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
-      fontFamily: {
-        'raleway': ['Raleway', 'sans-serif'],
-      },
       colors: {
         ron: {
-          // Core colors
+          // Core brand colors
           'primary': '#00344E',
           'secondary': '#004D6B',
-          'accent': '#006688',
-          'success': '#10B981',
-          'warning': '#F59E0B',
-          'error': '#EF4444',
+          'accent': '#00F0FF',
           
-          // Dark mode colors
-          'dark': {
-            'base': '#000000', // Jet Black
-            'navy': '#000000', // Jet Black
-            'surface': '#2A3439', // Dark Gun Metal
-          },
-          
-          // Light mode colors
+          // Light mode
           'light': {
             'surface': '#FFFFFF',
-            'muted': '#64748B',
             'hover': '#F1F5F9',
+            'muted': '#64748B'
           },
           
-          // Pastel palette
-          'mint': {
-            50: '#F0FDF9',
-            100: '#CCFBEF',
-            200: '#B5EAD7',
-            300: '#99E6D0',
-            400: '#70DBC4',
-            500: '#47C1AC',
-            600: '#319B8E',
-            700: '#1F766E',
-          },
-          'teal': {
-            50: '#F0FDFA',
-            100: '#CCFBF1',
-            200: '#98D8D8',
-            300: '#7CD7D7',
-            400: '#4ABEBE',
-            500: '#2AA3A3',
-            600: '#1C8787',
-            700: '#116B6B',
-          },
-          'lime': {
-            50: '#F7FEE7',
-            100: '#ECFCCB',
-            200: '#DCFFB7',
-            300: '#C6F49D',
-            400: '#A3E635',
-            500: '#84CC16',
-            600: '#65A30D',
-            700: '#4D7C0F',
-          },
-          'coral': {
-            50: '#FFF5F5',
-            100: '#FFE5E5',
-            200: '#FFB5A7',
-            300: '#FFA192',
-            400: '#FF8C7C',
-            500: '#FF7366',
-            600: '#E65C50',
-            700: '#CC463B',
-          },
-          'pink': {
-            50: '#FFF5F7',
-            100: '#FFE5EB',
-            200: '#FFD1DC',
-            300: '#FFB8C9',
-            400: '#FF9FB6',
-            500: '#FF85A3',
-            600: '#E66B89',
-            700: '#CC526F',
+          // Dark mode
+          'dark': {
+            'base': '#000000',
+            'surface': '#111827',
+            'muted': '#374151'
           },
           
-          'divider': {
-            DEFAULT: 'rgba(148, 163, 184, 0.1)',
-            light: 'rgba(0, 52, 78, 0.1)',
-            dark: 'rgba(255, 255, 255, 0.1)'
-          }
+          // Status colors
+          'success': '#10B981',
+          'warning': '#F59E0B',
+          'error': '#EF4444'
         }
+      },
+      fontFamily: {
+        'raleway': ['Raleway', 'sans-serif'],
+        'inter': ['Inter', 'sans-serif']
       },
       boxShadow: {
         'soft': '0 2px 8px 0 rgba(0, 52, 78, 0.06), 0 1px 2px -1px rgba(0, 52, 78, 0.06)',
@@ -123,11 +68,22 @@ export default {
             opacity: '1',
             transform: 'scaleY(1)'
           }
+        },
+        'slide-up': {
+          '0%': {
+            opacity: '0',
+            transform: 'translateY(0.5rem)'
+          },
+          '100%': {
+            opacity: '1',
+            transform: 'translateY(0)'
+          }
         }
       },
       animation: {
         'fade-in-up': 'fade-in-up 0.5s ease-out forwards',
-        'grow-up': 'grow-up 0.5s ease-out forwards'
+        'grow-up': 'grow-up 0.5s ease-out forwards',
+        'slide-up': 'slide-up 0.2s ease-out forwards'
       },
       typography: (theme) => ({
         DEFAULT: {
@@ -135,10 +91,10 @@ export default {
             '--tw-prose-body': theme('colors.white'),
             '--tw-prose-headings': theme('colors.white'),
             '--tw-prose-lead': theme('colors.white'),
-            '--tw-prose-links': theme('colors.ron.teal.400'),
-            '--tw-prose-bold': theme('colors.white'),
-            '--tw-prose-counters': theme('colors.white'),
-            '--tw-prose-bullets': theme('colors.ron.teal.400'),
+            '--tw-prose-links': theme('colors.blue.400'),
+            '--tw-prose-bold': theme('colors.blue.400'),
+            '--tw-prose-counters': theme('colors.blue.400'),
+            '--tw-prose-bullets': theme('colors.blue.400'),
             '--tw-prose-hr': theme('colors.ron.divider.dark'),
             '--tw-prose-quotes': theme('colors.white'),
             '--tw-prose-quote-borders': theme('colors.ron.teal.400'),
@@ -167,6 +123,30 @@ export default {
               '--tw-prose-pre-bg': 'rgba(0, 0, 0, 0.05)',
               '--tw-prose-th-borders': theme('colors.ron.divider.light'),
               '--tw-prose-td-borders': theme('colors.ron.divider.light'),
+            },
+
+            // Healthcare-specific styles
+            h2: {
+              color: theme('colors.blue.300'),
+              borderBottom: `1px solid ${theme('colors.gray.700')}`,
+              paddingBottom: '0.5rem',
+              marginBottom: '1rem'
+            },
+            'ul > li': {
+              marginTop: '0.25rem',
+              marginBottom: '0.25rem',
+              paddingLeft: '0.5rem'
+            },
+            'ol > li': {
+              marginTop: '0.25rem',
+              marginBottom: '0.25rem',
+              paddingLeft: '0.5rem'
+            },
+            'blockquote p:first-of-type::before': {
+              content: 'none'
+            },
+            'blockquote p:last-of-type::after': {
+              content: 'none'
             },
 
             // Base styles that apply to both modes

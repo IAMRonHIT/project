@@ -1,0 +1,83 @@
+/* Base Tailwind imports */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Raleway:wght@300;400;500;600&display=swap');
+
+/* Base styles */
+@layer base {
+  :root {
+    color-scheme: light dark;
+  }
+
+  body {
+    @apply bg-ron-light-surface dark:bg-ron-dark-base
+           text-ron-primary dark:text-white
+           font-inter;
+  }
+
+  * {
+    @apply transition-colors duration-300;
+  }
+}
+
+/* Component styles */
+@layer components {
+  .custom-scrollbar::-webkit-scrollbar {
+    @apply w-1.5;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-ron-accent/20 rounded-full 
+           hover:bg-ron-accent/30 
+           transition-colors;
+  }
+
+  /* Circuit pattern background */
+  .circuit-pattern {
+    background-image: radial-gradient(circle at 2px 2px, rgba(0, 255, 255, 0.02) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Cyberpunk text glow */
+  .text-glow {
+    text-shadow: 0 0 8px rgba(0, 255, 255, 0.3);
+  }
+
+  /* Priority colors */
+  .priority-low {
+    @apply bg-[#29FFAD]/10 text-[#29FFAD];
+  }
+
+  .priority-medium {
+    @apply bg-[#FFB800]/10 text-[#FFB800];
+  }
+
+  .priority-high {
+    @apply bg-[#FF4B4B]/10 text-[#FF4B4B];
+  }
+}
+
+/* Utility styles */
+@layer utilities {
+  .prose-custom {
+    @apply prose prose-invert
+           prose-headings:text-white
+           prose-p:text-gray-300
+           prose-a:text-cyan-400 hover:prose-a:text-cyan-300
+           prose-strong:text-white
+           prose-code:text-cyan-300
+           prose-pre:bg-gray-800
+           max-w-none;
+  }
+
+  .gradient-border {
+    @apply border border-transparent bg-gradient-to-r from-cyan-500/20 to-purple-500/20 bg-clip-border;
+  }
+}

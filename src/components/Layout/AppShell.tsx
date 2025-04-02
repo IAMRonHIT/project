@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import { Sidebar } from './Sidebar';
-import TopBar from './TopBar';
-import { MobileNav } from './MobileNav';
+import { Sidebar, TopBar, MobileNav } from './index';
 import { useTheme } from '../../hooks/useTheme';
 
 interface AppShellProps {
@@ -18,9 +16,8 @@ export function AppShell({ children }: AppShellProps) {
   };
 
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'bg-black' : 'bg-white'}`}>
-      <div className="flex min-h-screen">
-        {/* Sidebar */}
+    <div className="min-h-full flex flex-col bg-ron-light-surface dark:bg-ron-dark-base">
+      <div className="flex flex-1">
         <Sidebar 
           open={sidebarOpen} 
           collapsed={sidebarCollapsed}
@@ -28,27 +25,26 @@ export function AppShell({ children }: AppShellProps) {
           onToggleCollapse={handleToggleSidebar}
         />
 
-        {/* Main content area */}
         <div className={`
           flex-1 flex flex-col min-w-0
           transition-all duration-300 ease-in-out
           ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72'}
         `}>
-          {/* Top bar */}
           <TopBar 
             onMenuClick={() => setSidebarOpen(true)} 
             onThemeToggle={toggleTheme}
           />
 
-          {/* Main content */}
-          <div className="flex-1 h-[calc(100vh-64px)]">
+          <main className="flex-1">
             {children}
-          </div>
+          </main>
         </div>
       </div>
 
-      {/* Mobile navigation */}
-      <MobileNav open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <MobileNav 
+        open={sidebarOpen} 
+        onClose={() => setSidebarOpen(false)} 
+      />
     </div>
   );
 }

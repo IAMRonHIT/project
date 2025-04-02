@@ -144,6 +144,19 @@ const CarePlan = () => {
 };
   `);
 
+  // Function to handle preview open
+  const handleOpenPreview = () => {
+    // Adding a minimal delay to ensure DOM is ready
+    setTimeout(() => {
+      setShowPreview(true);
+    }, 50);
+  };
+
+  // Function to handle preview close
+  const handleClosePreview = () => {
+    setShowPreview(false);
+  };
+
   return (
     <div className="bg-gray-900 text-white min-h-screen">
       <div className="container mx-auto px-4 py-8">
@@ -161,11 +174,24 @@ const CarePlan = () => {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6">
           <div className="bg-gray-800 rounded-lg p-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-light">Care Plan Code</h2>
-              <div className="text-xs text-gray-400">React/TSX with Tailwind</div>
+              <div className="flex items-center">
+                <div className="text-xs text-gray-400 mr-4">React/TSX with Tailwind</div>
+                
+                {!showPreview && (
+                  <button
+                    onClick={handleOpenPreview}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-teal-500 bg-opacity-20 text-teal-400 hover:bg-opacity-30 transition-colors"
+                    title="Preview Care Plan"
+                  >
+                    <Eye size={16} />
+                    <span className="text-xs font-medium">Preview Care Plan</span>
+                  </button>
+                )}
+              </div>
             </div>
             
             <div className="relative">
@@ -179,30 +205,13 @@ const CarePlan = () => {
               />
             </div>
           </div>
-          
-          <div className="bg-gray-800 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-light">Preview</h2>
-              
-              {!showPreview && (
-                <button
-                  onClick={() => setShowPreview(true)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-teal-500 bg-opacity-20 text-teal-400 hover:bg-opacity-30 transition-colors"
-                  title="Preview Care Plan"
-                >
-                  <Eye size={16} />
-                  <span className="text-xs font-medium">Preview Care Plan</span>
-                </button>
-              )}
-            </div>
-            
-            <CarePlanPreview 
-              code={carePlanCode} 
-              onClose={() => setShowPreview(false)} 
-              isVisible={showPreview} 
-            />
-          </div>
         </div>
+        
+        <CarePlanPreview 
+          code={carePlanCode} 
+          onClose={handleClosePreview} 
+          isVisible={showPreview} 
+        />
       </div>
     </div>
   );

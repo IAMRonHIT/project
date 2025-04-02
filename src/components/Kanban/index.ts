@@ -1,4 +1,6 @@
-export * from './Board';
+export * from './KanbanBoard';
+export * from './KanbanColumn';
+export * from './TaskCard';
 export * from './Views';
 export * from './Search';
 

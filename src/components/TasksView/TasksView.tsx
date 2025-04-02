@@ -1,12 +1,24 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useTheme } from '../../hooks/useTheme';
 import type { Task } from '../../types/task';
 import { themes } from '../../lib/themes';
-import { KanbanBoard } from '../Layout/KanbanBoard/KanbanBoard';
+import { KanbanBoard } from '../Kanban/KanbanBoard';
 import { ViewSwitcher } from '../Kanban/Views/ViewSwitcher';
 import { CareJourneySearch } from '../Kanban/Search/CareJourneySearch';
-import { CalendarView } from '../Kanban/Views/CalendarView';
+import { CalendarView } from '../Layout/KanbanBoard/CalendarView/index';
 import { ListView } from '../Kanban/Views/ListView';
+
+// Define prop types for the components
+interface CareJourneySearchProps {
+  onSearch: (query: string) => void;
+  theme: typeof themes[keyof typeof themes];
+}
+
+interface ViewSwitcherProps {
+  currentView: 'kanban' | 'calendar' | 'list';
+  onViewChange: (view: 'kanban' | 'calendar' | 'list') => void;
+  theme: typeof themes[keyof typeof themes];
+}
 
 export function TasksView() {
   const { theme: currentTheme } = useTheme();
@@ -103,8 +115,12 @@ export function TasksView() {
   return (
     <div className="h-full flex flex-col p-4 space-y-4">
       <div className="flex justify-between items-center">
-        <CareJourneySearch theme={theme} onSearch={handleSearch} />
-        <ViewSwitcher currentView={view} onViewChange={setView} theme={theme} />
+        <CareJourneySearch onSearch={handleSearch} theme={theme} />
+        <ViewSwitcher 
+          currentView={view} 
+          onViewChange={setView}
+          theme={theme}
+        />
       </div>
       
       <div className="flex-1 overflow-hidden">
@@ -114,23 +130,23 @@ export function TasksView() {
             onTaskMove={handleTaskMove}
             onTaskEdit={handleTaskEdit}
             onTaskDelete={handleTaskDelete}
-            theme={theme} 
+            theme={theme}
           />
         )}
         {view === 'calendar' && (
           <CalendarView 
             tasks={filteredTasks}
+            theme={theme}
             onTaskEdit={handleTaskEdit}
             onTaskDelete={handleTaskDelete}
-            theme={theme}
           />
         )}
         {view === 'list' && (
           <ListView 
             tasks={filteredTasks}
+            theme={theme}
             onTaskEdit={handleTaskEdit}
             onTaskDelete={handleTaskDelete}
-            theme={theme}
           />
         )}
       </div>

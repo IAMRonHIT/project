@@ -1,7 +1,9 @@
+import React from 'react';
 import { 
   Users, Building2, Bot, ClipboardCheck, Heart, Activity,
   FileText, MessageSquareMore, BarChart3, Settings, GraduationCap,
-  HelpCircle, ShieldCheck, Home, ChevronLeft, ChevronRight
+  HelpCircle, ShieldCheck, Home, ChevronLeft, ChevronRight,
+  MapPin
 } from 'lucide-react';
 import { NavItem } from './NavItem';
 import Logo from '../Logo';

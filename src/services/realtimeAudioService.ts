@@ -261,16 +261,7 @@ class RealtimeAudioService {
         if (dataChannel.readyState === 'open') {
           debugLog('Successfully reconnected WebRTC session');
           
-          // Send a test message to verify connection
-          try {
-            dataChannel.send(JSON.stringify({
-              type: 'message',
-              message: 'Connection reestablished'
-            }));
-            debugLog('Test message sent on reconnected data channel');
-          } catch (error) {
-            debugLog('Error sending test message on reconnected channel:', error);
-          }
+          debugLog('Connection reestablished successfully');
         } else {
           debugLog(`Data channel not open, current state: ${dataChannel.readyState}`);
           throw new Error(`Reconnection failed: data channel in ${dataChannel.readyState} state`);
@@ -1393,55 +1384,43 @@ class RealtimeAudioService {
       debugLog('Data channel opened successfully');
       this.setConnectionState('connected');
       
-      // Set up ping interval to keep the connection alive (every 10 seconds)
-      const pingInterval = setInterval(() => {
-        if (this.dataChannel && this.dataChannel.readyState === 'open') {
-          // Send a ping to prevent timeouts
-          this.dataChannel.send(JSON.stringify({
-            type: 'ping'
-          }));
-          debugLog('Sent ping to keep connection alive');
-        } else {
-          // Clear interval if data channel is closed
-          clearInterval(pingInterval);
-        }
-      }, 10000);
+      // Initialize the session with configuration
       
-      // Configure session
+      // Configure session with required parameters
       if (this.dataChannel && this.dataChannel.readyState === 'open') {
+        debugLog('Configuring initial session');
         try {
-          // First, update session with all configured parameters
-          debugLog('Sending session.update to configure the assistant');
-          const sessionConfig: any = {
-            voice: this.voice,
-            instructions: this.instructions,
-            modalities: this.modalities
-          };
-          
-          // Add optional configurations if they're set
-          if (this.input_audio_format) sessionConfig.input_audio_format = this.input_audio_format;
-          if (this.output_audio_format) sessionConfig.output_audio_format = this.output_audio_format;
-          if (this.input_audio_transcription) sessionConfig.input_audio_transcription = this.input_audio_transcription;
-          if (this.turn_detection) sessionConfig.turn_detection = this.turn_detection;
-          if (this.tools && Array.isArray(this.tools) && this.tools.length > 0) sessionConfig.tools = this.tools;
-          if (this.tool_choice !== null) sessionConfig.tool_choice = this.tool_choice;
-          if (this.temperature !== null) sessionConfig.temperature = this.temperature;
-          if (this.max_response_output_tokens !== null) sessionConfig.max_response_output_tokens = this.max_response_output_tokens;
-          
+          // First configure the session
           this.dataChannel.send(JSON.stringify({
             type: 'session.update',
-            session: sessionConfig
-          }));
-          
-          // Then, create a response with default instructions to get the model started
-          debugLog('Creating initial response');
-          this.dataChannel.send(JSON.stringify({
-            type: 'response.create',
-            response: {
-              modalities: this.modalities,
+            session: {
+              voice: this.voice,
               instructions: this.instructions,
+              modalities: ['text', 'audio'],
+              input_audio_format: 'pcm16',
+              output_audio_format: 'pcm16',
+              input_audio_transcription: { model: 'whisper-1' },
+              turn_detection: {
+                type: 'server_vad',
+                threshold: 0.5,
+                prefix_padding_ms: 300,
+                silence_duration_ms: 500,
+                create_response: true
+              }
             }
           }));
+
+          // Then create initial response
+          setTimeout(() => {
+            if (this.dataChannel?.readyState === 'open') {
+              this.dataChannel.send(JSON.stringify({
+                type: 'response.create',
+                response: {
+                  modalities: ['text', 'audio']
+                }
+              }));
+            }
+          }, 100); // Small delay to ensure session update is processed first
         } catch (error) {
           console.error('[RealtimeAudio] Error sending initialization messages:', error);
         }

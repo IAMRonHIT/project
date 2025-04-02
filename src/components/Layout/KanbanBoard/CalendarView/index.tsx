@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { format, addMonths, addWeeks, addDays } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '../ui/button';
-import type { Task } from '../../types/task';
-import type { themes } from '../../lib/themes';
+import { Button } from '../../../ui/button';
+import type { Task } from '../../../../types/task';
+import type { themes } from '../../../../lib/themes';
 import { MonthView } from './MonthView';
 import { WeekView } from './WeekView';
 import { DayView } from './DayView';
@@ -13,9 +13,11 @@ type ViewMode = 'month' | 'week' | 'day';
 interface CalendarViewProps {
   tasks: Task[];
   theme: typeof themes[keyof typeof themes];
+  onTaskEdit: (taskId: string, updates: Partial<Task>) => void;
+  onTaskDelete: (taskId: string) => void;
 }
 
-export function CalendarView({ tasks, theme }: CalendarViewProps) {
+export function CalendarView({ tasks, theme, onTaskEdit, onTaskDelete }: CalendarViewProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -59,8 +61,7 @@ export function CalendarView({ tasks, theme }: CalendarViewProps) {
           {viewModes.map(mode => (
             <Button
               key={mode.value}
-              variant={viewMode === mode.value ? 'default' : 'outline'}
-              size="sm"
+              className={viewMode === mode.value ? 'bg-primary' : ''}
               onClick={() => setViewMode(mode.value)}
             >
               {mode.label}
@@ -68,13 +69,19 @@ export function CalendarView({ tasks, theme }: CalendarViewProps) {
           ))}
         </div>
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" onClick={() => navigateDate('prev')}>
+          <Button
+            className="flex items-center"
+            onClick={() => navigateDate('prev')}
+          >
             <ChevronLeft className="w-4 h-4" />
           </Button>
           <span className={`text-lg font-medium ${theme.text}`}>
             {getDateRangeText()}
           </span>
-          <Button variant="outline" size="icon" onClick={() => navigateDate('next')}>
+          <Button
+            className="flex items-center"
+            onClick={() => navigateDate('next')}
+          >
             <ChevronRight className="w-4 h-4" />
           </Button>
         </div>

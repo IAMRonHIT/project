@@ -1,8 +1,8 @@
-import { LayoutGrid, Calendar, List } from 'lucide-react';
-import { Button } from '../../ui/button';
+import React from 'react';
+import { LayoutGrid, List, Calendar } from 'lucide-react';
 import type { themes } from '../../../lib/themes';
 
-type View = 'kanban' | 'calendar' | 'list';
+export type View = 'kanban' | 'list' | 'calendar';
 
 interface ViewSwitcherProps {
   currentView: View;
@@ -20,16 +20,20 @@ export function ViewSwitcher({ currentView, onViewChange, theme }: ViewSwitcherP
   return (
     <div className="flex items-center gap-2">
       {views.map(({ value, label, icon: Icon }) => (
-        <Button
+        <button
           key={value}
-          variant={currentView === value ? 'default' : 'outline'}
-          size="sm"
           onClick={() => onViewChange(value)}
-          className="flex items-center gap-2"
+          className={`
+            flex items-center gap-2 px-3 py-2 rounded-lg
+            ${currentView === value 
+              ? 'bg-blue-500 text-white' 
+              : 'bg-white text-gray-700 hover:bg-gray-100'
+            }
+          `}
         >
           <Icon className="w-4 h-4" />
           {label}
-        </Button>
+        </button>
       ))}
     </div>
   );

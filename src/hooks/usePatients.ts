@@ -9,7 +9,7 @@ export function usePatients() {
   useEffect(() => {
     const fetchPatients = async () => {
       try {
-        const response = await fetch('/data/Patients/New Member Schema.json');
+        const response = await fetch('/patientdata.json');
         if (!response.ok) {
           throw new Error('Failed to fetch patients data');
         }

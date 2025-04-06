@@ -5,28 +5,64 @@ import { createPortal } from 'react-dom';
 
 export interface Patient {
   member_id: string;
+  first_name: string;
+  last_name: string;
   member_name: string;
+  member_ssn: string;
+  person_code: string;
+  relationship_subscriber: string;
   member_dob: string;
   gender: string;
-  diagnosis: string;
+  member_phone_number: string;
+  member_email: string;
+  member_street_address: string;
+  member_city: string;
+  member_state: string;
+  member_zip: string;
+  full_zip: string;
+  group_id: string;
+  group_name: string;
+  medication_1: string;
+  medication_2: string;
+  medication_3: string;
+  medication_4: string;
   medications: string;
+  dx_1: string;
+  dx_2: string;
+  dx_3: string;
+  dx_4: string;
+  diagnosis: string;
+  weight_lbs: number;
+  height_inches: number;
+  body_mass_index: number;
+  plan: string;
+  effective_date: string;
+  pcp: string;
+  pcp_npi: string;
+  pcp_tax_id: string;
+  specialist?: string;
+  specialty?: string;
+  specialist_npi?: string;
+  specialist_tax_id?: string;
   allergies: string | null;
   blood_type: string;
-  mental_health_status: string;
-  social_support: string;
-  access_to_healthcare: string;
+  ethnicity: string;
   income_level: string;
   education_level: string;
   housing_status: string;
   employment_status: string;
+  access_to_healthcare: string;
   food_insecurity: string;
-  pcp: string;
-  pcp_npi: string;
-  pcp_tax_id: string;
-  specialist?: string | null;
-  specialty?: string | null;
-  specialist_npi?: string | null;
-  specialist_tax_id?: string | null;
+  social_support: string;
+  mental_health_status: string;
+  inpatient_med_1?: string;
+  inpatient_med_2?: string;
+  inpatient_med_3?: string;
+  inpatient_med_4?: string;
+  Discharged_med_1?: string;
+  Discharged_med_2?: string;
+  Discharged_med_3?: string;
+  Discharged_med_4?: string;
 }
 
 interface CareFormProps {
@@ -179,6 +215,13 @@ const CareForm: React.FC<CareFormProps> = ({ isOpen, onClose, patients, initialM
         const medicalHistory = `
 Diagnoses: ${patient.diagnosis}
 Allergies: ${patient.allergies || 'None'}
+Blood Type: ${patient.blood_type}
+Ethnicity: ${patient.ethnicity}
+Weight: ${patient.weight_lbs} lbs
+Height: ${patient.height_inches} inches
+BMI: ${patient.body_mass_index}
+Insurance Plan: ${patient.plan}
+Effective Date: ${patient.effective_date}
 
 Social Determinants:
 - Income Level: ${patient.income_level}
@@ -191,13 +234,37 @@ Social Determinants:
 - Mental Health: ${patient.mental_health_status}
 `.trim();
 
+        // Define inpatient and home medications if available
+        const inpatientMeds = [
+          patient.inpatient_med_1,
+          patient.inpatient_med_2,
+          patient.inpatient_med_3,
+          patient.inpatient_med_4
+        ].filter(Boolean).join(', ');
+
+        const dischargedMeds = [
+          patient.Discharged_med_1,
+          patient.Discharged_med_2,
+          patient.Discharged_med_3,
+          patient.Discharged_med_4
+        ].filter(Boolean).join(', ');
+
+        // Create more detailed medication information
+        let medicationDetails = patient.medications;
+        
+        if (inpatientMeds || dischargedMeds) {
+          medicationDetails += '\n\n';
+          if (inpatientMeds) medicationDetails += `Inpatient Medications: ${inpatientMeds}\n`;
+          if (dischargedMeds) medicationDetails += `Discharged Medications: ${dischargedMeds}`;
+        }
+
         setFormData({
           patientName: patient.member_name,
           patientAge: calculateAge(patient.member_dob),
           patientGender: patient.gender,
-          condition: patient.diagnosis.split(' ')[0],
+          condition: patient.dx_1.split(',')[0],
           symptoms: 'Symptoms are consistent with primary diagnosis',
-          currentMedications: patient.medications,
+          currentMedications: medicationDetails,
           medicalHistory,
           goals: {
             symptoms: 'Alleviate primary symptoms and prevent exacerbations',
@@ -216,12 +283,12 @@ Social Determinants:
           },
           providers: {
             pcp: {
-              name: patient.pcp,
+              name: patient.pcp.split(' ').slice(0, -2).join(' '),
               npi: patient.pcp_npi
             },
             ...(patient.specialist ? {
               specialist: {
-                name: patient.specialist,
+                name: patient.specialist.split(' ').slice(0, -2).join(' '),
                 specialty: patient.specialty || 'Unknown',
                 npi: patient.specialist_npi || ''
               }
@@ -271,64 +338,244 @@ Social Determinants:
     }
   };
 
+  // Update the PubMed API function to specify full-text retrieval and important fields
+  const fetchPubMedResearch = async (diagnoses: string) => {
+    try {
+      // Construct a more robust query that prioritizes full-text articles
+      const pubmedQueryParams = {
+        query: diagnoses,
+        filterFullText: true,     // Request full-text articles when available
+        maxResults: 25,           // Get a reasonable number of results
+        includeMeshTerms: true,   // Include medical subject headings
+        includeFullAbstract: true, // Include the complete abstract text
+        sortBy: 'relevance',      // Sort by relevance to query
+        fields: [
+          'pmid',                 // PubMed ID
+          'doi',                  // Digital Object Identifier
+          'title',                // Article title
+          'authors',              // Author information
+          'abstract',             // Abstract text
+          'journal',              // Journal information
+          'publicationDate',      // When published
+          'fullTextUrl',          // Link to full text if available
+          'isPubMedCentral',      // Whether article is in PubMed Central (likely full text)
+          'meshTerms',            // Medical subject headings
+          'keywordList',          // Keywords associated with the article
+          'articleType',          // Type of article (research, review, etc.)
+          'citationCount'         // Number of citations if available
+        ]
+      };
+
+      console.log('Sending PubMed query with parameters:', pubmedQueryParams);
+      
+      const response = await fetch('/api/pubmed/enhanced', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(pubmedQueryParams),
+      });
+
+      if (!response.ok) {
+        throw new Error(`PubMed API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Process the results to clearly mark articles with full text
+      if (data && data.articles) {
+        data.articles = data.articles.map(article => ({
+          ...article,
+          hasFullText: !!(article.fullTextUrl || article.isPubMedCentral),
+          displayReady: true // Mark as ready for display
+        }));
+        
+        // Group articles by availability
+        data.articlesByAvailability = {
+          fullText: data.articles.filter(a => a.hasFullText),
+          abstractOnly: data.articles.filter(a => !a.hasFullText)
+        };
+        
+        console.log(`Retrieved ${data.articles.length} articles, ${data.articlesByAvailability?.fullText?.length || 0} with full text`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error fetching PubMed data:', error);
+      return null;
+    }
+  };
+
+  // Update the handleGenerateGeminiCarePlan function
   const handleGenerateGeminiCarePlan = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setGeneratingGeminiPlan(true);
+    setErrorMessage(null);
 
     try {
-      // Default endpoint for care plans
-      let endpoint = '/api/gemini-careplan';
-      
       // Get current URL for building absolute URLs
       const baseUrl = window.location.origin;
       
       // Check if we're in medication reconciliation mode
       const isMedicationReconciliation = outputType === 'medication-reconciliation';
       
-      // Define the request body
-      const requestBody: any = { 
-        ...formData,
-        isMedicationReconciliation
-      };
+      // Find the selected patient's complete data
+      const selectedPatientData = patients.find(p => p.member_id === selectedPatient);
       
-      // If it's a medication reconciliation test, use the test medications
-      if (isMedicationReconciliation && isMedRecTest) {
-        requestBody.testMedications = {
-          home: testMedications,
-          inpatient: testMedications.slice(0, 2) // Only first two for inpatient to create discrepancies
-        };
+      if (!selectedPatientData) {
+        throw new Error('No patient selected');
       }
       
-      console.log('Sending request with body:', requestBody);
+      // Extract all medications data
+      const medicationsData = {
+        home: [
+          selectedPatientData.medication_1,
+          selectedPatientData.medication_2,
+          selectedPatientData.medication_3,
+          selectedPatientData.medication_4
+        ].filter(Boolean),
+        inpatient: [
+          selectedPatientData.inpatient_med_1,
+          selectedPatientData.inpatient_med_2, 
+          selectedPatientData.inpatient_med_3,
+          selectedPatientData.inpatient_med_4
+        ].filter(Boolean),
+        discharge: [
+          selectedPatientData.Discharged_med_1,
+          selectedPatientData.Discharged_med_2,
+          selectedPatientData.Discharged_med_3,
+          selectedPatientData.Discharged_med_4
+        ].filter(Boolean)
+      };
       
-      // Send the request to the API
-      const response = await fetch(`${baseUrl}${endpoint}`, {
+      // Extract diagnoses for PubMed search
+      const diagnoses = [
+        selectedPatientData.dx_1,
+        selectedPatientData.dx_2,
+        selectedPatientData.dx_3,
+        selectedPatientData.dx_4
+      ].filter(Boolean).join(' ');
+      
+      // STEP 1: Call Gemini Flash for medication reconciliation
+      console.log('STEP 1: Calling Gemini Flash for medication reconciliation');
+      const medicationRecResult = await fetch(`${baseUrl}/api/gemini-flash/med-reconciliation`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify({
+          patientId: selectedPatientData.member_id,
+          patientName: selectedPatientData.member_name,
+          medications: medicationsData,
+          isMedicationReconciliation: true,
+          // If it's a test, include test medications
+          ...(isMedicationReconciliation && isMedRecTest ? {
+            testMedications: {
+              home: testMedications,
+              inpatient: testMedications.slice(0, 2)
+            }
+          } : {})
+        }),
+      }).then(res => {
+        if (!res.ok) throw new Error(`Med Rec API error: ${res.status}`);
+        return res.json();
+      }).catch(err => {
+        console.error('Medication reconciliation error:', err);
+        return null;
+      });
+      
+      // STEP 2: Get PubMed research data for publications
+      console.log('STEP 2: Fetching PubMed research data');
+      const pubMedResult = await fetchPubMedResearch(diagnoses).catch(err => {
+        console.error('PubMed research error:', err);
+        return null;
+      });
+      
+      // If we're just doing med reconciliation, show results and stop
+      if (isMedicationReconciliation && medicationRecResult) {
+        setGeneratedCarePlan(medicationRecResult);
+        setActiveSection('medication-reconciliation');
+        setIsLoading(false);
+        setGeneratingGeminiPlan(false);
+        
+        // Open the output section automatically
+        if (!openSections.includes(outputType)) {
+          setOpenSections(prev => [...prev, outputType]);
+        }
+        
+        return;
+      }
+      
+      // STEP 3: Send to Pro Experimental model with both datasets
+      console.log('STEP 3: Sending to Pro Experimental model');
+      const deepResearchPayload = {
+        patientData: {
+          id: selectedPatientData.member_id,
+          name: selectedPatientData.member_name,
+          age: calculateAge(selectedPatientData.member_dob),
+          gender: selectedPatientData.gender,
+          diagnoses: diagnoses,
+          medications: medicationsData
+        },
+        formData: {
+          patientName: formData.patientName,
+          patientAge: formData.patientAge,
+          patientGender: formData.patientGender,
+          condition: formData.condition,
+          medicalHistory: formData.medicalHistory,
+          symptoms: formData.symptoms,
+          currentMedications: formData.currentMedications,
+          goals: `${formData.goals.symptoms}; ${formData.goals.qualityOfLife}; ${formData.goals.understanding}`
+        },
+        medicationReconciliation: medicationRecResult,
+        pubMedData: pubMedResult,
+        pubMedContext: pubMedResult ? {
+          totalArticles: pubMedResult.articles?.length || 0,
+          fullTextCount: pubMedResult.articlesByAvailability?.fullText?.length || 0,
+          topJournals: pubMedResult.articles
+            ?.map(a => a.journal?.title)
+            ?.filter(Boolean)
+            ?.slice(0, 10) || [],
+          primaryMeshTerms: [...new Set(
+            pubMedResult.articles
+              ?.flatMap(a => a.meshTerms || [])
+              ?.filter(Boolean)
+              ?.slice(0, 20) || []
+          )]
+        } : null,
+        outputType: outputType
+      };
+      
+      console.log('Sending comprehensive payload to deep research:', deepResearchPayload);
+      
+      const deepResearchResponse = await fetch(`${baseUrl}/api/gemini-pro-exp/deepresearch`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(deepResearchPayload),
       });
 
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
+      if (!deepResearchResponse.ok) {
+        throw new Error(`Deep research API error: ${deepResearchResponse.status}`);
       }
 
-      const data = await response.json();
-      console.log('Received response:', data);
+      const finalResult = await deepResearchResponse.json();
+      console.log('Final result from Pro Experimental model:', finalResult);
       
-      // Handle the response differently based on mode
-      if (isMedicationReconciliation) {
-        setGeneratedCarePlan(data.reconciliationResults || data);
-        setActiveSection('medication-reconciliation');
-      } else {
-        setGeneratedCarePlan(data);
-        setActiveSection('generated-careplan');
+      // Set results and update UI
+      setGeneratedCarePlan(finalResult);
+      setResearchData(finalResult);
+      setActiveSection('generated-careplan');
+      
+      // Open the output section automatically
+      if (!openSections.includes(outputType)) {
+        setOpenSections(prev => [...prev, outputType]);
       }
     } catch (error) {
-      console.error('Error generating care plan:', error);
-      setErrorMessage('An error occurred while generating the care plan. Please try again.');
+      console.error('Error in care plan generation workflow:', error);
+      setErrorMessage(`An error occurred: ${error.message}`);
     } finally {
       setIsLoading(false);
       setGeneratingGeminiPlan(false);
@@ -576,6 +823,7 @@ Social Determinants:
           <button
             onClick={handleClose}
             className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 transition-colors relative group"
+            aria-label="Close care plan form"
           >
             <X size={18} />
             <span className="absolute -bottom-1 left-0 w-0 h-px bg-indigo-500 group-hover:w-full transition-all duration-300"></span>
@@ -737,6 +985,7 @@ Social Determinants:
                               focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50
                               shadow-[inset_0_1px_3px_rgba(0,0,0,0.3)] backdrop-blur-sm transition-all duration-200
                               hover:border-indigo-400/50 hover:shadow-[0_0_5px_rgba(79,70,229,0.4)]"
+                              aria-label="Primary Condition"
                             />
                           </div>
                           <div>
@@ -749,6 +998,7 @@ Social Determinants:
                               readOnly
                               className="w-full px-3 py-2 bg-gray-900/90 border border-gray-700/50 rounded-md text-white text-sm 
                               shadow-[inset_0_1px_3px_rgba(0,0,0,0.3)] backdrop-blur-sm cursor-default"
+                              aria-label="Patient Age"
                             />
                           </div>
                         </div>
@@ -796,6 +1046,7 @@ Social Determinants:
                               focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50
                               shadow-[inset_0_1px_3px_rgba(0,0,0,0.3)] backdrop-blur-sm transition-all duration-200
                               hover:border-indigo-400/50 hover:shadow-[0_0_5px_rgba(79,70,229,0.4)]"
+                              aria-label="Symptoms"
                             />
                           </div>
                           <div>
@@ -810,6 +1061,7 @@ Social Determinants:
                               focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50
                               shadow-[inset_0_1px_3px_rgba(0,0,0,0.3)] backdrop-blur-sm transition-all duration-200
                               hover:border-indigo-400/50 hover:shadow-[0_0_5px_rgba(79,70,229,0.4)]"
+                              aria-label="Current Medications"
                             />
                           </div>
                         </div>
@@ -1001,6 +1253,7 @@ Social Determinants:
                               focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50
                               shadow-[inset_0_1px_3px_rgba(0,0,0,0.3)] backdrop-blur-sm transition-all duration-200
                               hover:border-indigo-400/50 hover:shadow-[0_0_5px_rgba(79,70,229,0.4)]"
+                              aria-label="Symptom Management Goal"
                             />
                           </div>
                           
@@ -1019,6 +1272,7 @@ Social Determinants:
                               focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50
                               shadow-[inset_0_1px_3px_rgba(0,0,0,0.3)] backdrop-blur-sm transition-all duration-200
                               hover:border-indigo-400/50 hover:shadow-[0_0_5px_rgba(79,70,229,0.4)]"
+                              aria-label="Quality of Life Goal"
                             />
                           </div>
                           
@@ -1037,6 +1291,7 @@ Social Determinants:
                               focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50
                               shadow-[inset_0_1px_3px_rgba(0,0,0,0.3)] backdrop-blur-sm transition-all duration-200
                               hover:border-indigo-400/50 hover:shadow-[0_0_5px_rgba(79,70,229,0.4)]"
+                              aria-label="Patient Education Goal"
                             />
                           </div>
                         </div>
@@ -1226,10 +1481,10 @@ Social Determinants:
                         goals: {...formData.goals, symptoms: e.target.value}
                       })}
                       className="w-full px-3 py-2 bg-gray-900/90 border border-indigo-500/30 rounded-md text-white text-sm 
-                      focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent 
-                      focus:shadow-[0_0_8px_rgba(79,70,229,0.6)] 
-                      hover:border-indigo-400/50 hover:shadow-[0_0_5px_rgba(79,70,229,0.4)]
-                      shadow-[inset_0_1px_3px_rgba(0,0,0,0.3)] backdrop-blur-sm transition-all duration-200"
+                      focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50
+                      shadow-[inset_0_1px_3px_rgba(0,0,0,0.3)] backdrop-blur-sm transition-all duration-200
+                      hover:border-indigo-400/50 hover:shadow-[0_0_5px_rgba(79,70,229,0.4)]"
+                      aria-label="Symptom Management Goal"
                     />
                   </div>
                   
@@ -1245,10 +1500,10 @@ Social Determinants:
                         goals: {...formData.goals, qualityOfLife: e.target.value}
                       })}
                       className="w-full px-3 py-2 bg-gray-900/90 border border-indigo-500/30 rounded-md text-white text-sm 
-                      focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent 
-                      focus:shadow-[0_0_8px_rgba(79,70,229,0.6)] 
-                      hover:border-indigo-400/50 hover:shadow-[0_0_5px_rgba(79,70,229,0.4)]
-                      shadow-[inset_0_1px_3px_rgba(0,0,0,0.3)] backdrop-blur-sm transition-all duration-200"
+                      focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50
+                      shadow-[inset_0_1px_3px_rgba(0,0,0,0.3)] backdrop-blur-sm transition-all duration-200
+                      hover:border-indigo-400/50 hover:shadow-[0_0_5px_rgba(79,70,229,0.4)]"
+                      aria-label="Quality of Life Goal"
                     />
                   </div>
                   
@@ -1264,10 +1519,10 @@ Social Determinants:
                         goals: {...formData.goals, understanding: e.target.value}
                       })}
                       className="w-full px-3 py-2 bg-gray-900/90 border border-indigo-500/30 rounded-md text-white text-sm 
-                      focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent 
-                      focus:shadow-[0_0_8px_rgba(79,70,229,0.6)] 
-                      hover:border-indigo-400/50 hover:shadow-[0_0_5px_rgba(79,70,229,0.4)]
-                      shadow-[inset_0_1px_3px_rgba(0,0,0,0.3)] backdrop-blur-sm transition-all duration-200"
+                      focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50
+                      shadow-[inset_0_1px_3px_rgba(0,0,0,0.3)] backdrop-blur-sm transition-all duration-200
+                      hover:border-indigo-400/50 hover:shadow-[0_0_5px_rgba(79,70,229,0.4)]"
+                      aria-label="Patient Education Goal"
                     />
                   </div>
                 </div>

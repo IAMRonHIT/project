@@ -398,6 +398,7 @@ const FDAAccordion: React.FC<FDAAccordionProps> = ({ data, onClose }) => {
           <button
             onClick={onClose}
             className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-indigo-500/20 transition-colors relative group"
+            aria-label="Close"
           >
             <X size={18} />
             <span className="absolute -bottom-1 left-0 w-0 h-px bg-indigo-500 group-hover:w-full transition-all duration-300"></span>
@@ -425,6 +426,7 @@ const FDAAccordion: React.FC<FDAAccordionProps> = ({ data, onClose }) => {
                   <button 
                     onClick={() => removeNote(i)}
                     className="ml-2 p-1 opacity-0 group-hover:opacity-100 text-indigo-400 hover:text-indigo-300 transition-opacity"
+                    aria-label="Remove note"
                   >
                     <X size={14} />
                   </button>

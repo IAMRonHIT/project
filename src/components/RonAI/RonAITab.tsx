@@ -8,6 +8,7 @@ import {
   FileQuestion, Stethoscope, MapPin,
   X
 } from 'lucide-react';
+import { NoteIntegration } from '../Note';
 import ModeDropdown, { ModeType } from './ModeDropdown';
 import ProviderSearchModal, { ProviderSearchParams } from './ProviderSearchModal';
 import ProviderMapPreview from './ProviderMapPreview';
@@ -412,7 +413,10 @@ const RonAITab: React.FC<RonAITabProps> = ({
               <h3 className="text-sm font-semibold text-white">Sarah AI</h3>
               <p className="text-xs text-indigo-300/80">Healthcare Assistant</p>
             </div>
-            <button className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-indigo-500/20 transition-colors relative group">
+            <button 
+              className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-indigo-500/20 transition-colors relative group"
+              aria-label="Chat with Sarah AI"
+            >
               <MessageSquare className="w-4 h-4" />
               <span className="absolute -bottom-1 left-0 w-0 h-px bg-indigo-500 group-hover:w-full transition-all duration-300"></span>
             </button>
@@ -522,6 +526,12 @@ const RonAITab: React.FC<RonAITabProps> = ({
                 </div>
               </div>
             )}
+            <NoteIntegration 
+              entityType="Task"
+              buttonPosition="inline"
+              buttonClassName="bg-indigo-700 hover:bg-indigo-800"
+              initialContent={`RonAI Conversation Notes\nDate: ${new Date().toLocaleString()}\n\n`}
+            />
           </div>
         </div>
         
@@ -567,6 +577,7 @@ const RonAITab: React.FC<RonAITabProps> = ({
                   className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-indigo-500/20 transition-colors 
                     disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-gray-400"
                   disabled={externalIsLoading || isProcessing}
+                  aria-label="Attach file"
                 >
                   <Paperclip className="w-[18px] h-[18px]" />
                 </button>
@@ -596,6 +607,7 @@ const RonAITab: React.FC<RonAITabProps> = ({
                       : 'text-gray-400 hover:text-white hover:bg-indigo-500/20'
                   }`}
                   disabled={externalIsLoading || isProcessing}
+                  aria-label={isRecording ? "Stop recording" : "Start voice recording"}
                 >
                   <Mic className="w-[18px] h-[18px]" />
                 </button>
@@ -610,6 +622,7 @@ const RonAITab: React.FC<RonAITabProps> = ({
                   className="p-2 rounded-lg bg-gradient-to-r from-indigo-500 to-indigo-600 text-white 
                     hover:shadow-[0_0_15px_rgba(79,70,229,0.5)] hover:brightness-110 
                     transition-all duration-200 disabled:opacity-50 disabled:hover:brightness-100 disabled:hover:shadow-none"
+                  aria-label="Send message"
                 >
                   <Send className="w-[18px] h-[18px]" />
                 </button>

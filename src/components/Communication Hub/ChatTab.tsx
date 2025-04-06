@@ -57,13 +57,13 @@ const ChatTab: React.FC = () => {
     switch (status) {
       case 'approved':
         return (
-          <Badge variant="success" size="sm" glow icon={<CheckCircle size={12} />}>
+          <Badge variant="success" size="sm" icon={<CheckCircle size={12} />}>
             Approved
           </Badge>
         );
       case 'denied':
         return (
-          <Badge variant="error" size="sm" glow icon={<XCircle size={12} />}>
+          <Badge variant="error" size="sm" icon={<XCircle size={12} />}>
             Denied
           </Badge>
         );
@@ -78,14 +78,17 @@ const ChatTab: React.FC = () => {
     }
   };
 
-  const ActionButton: React.FC<{ icon: React.ReactNode }> = ({ icon }) => (
-    <button className={`
-      p-2 rounded-lg
-      ${isDark ? 'hover:"bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10"-800/50' : 'hover:bg-white/50'}
-      text-gray-400 hover:text-ron-teal-400
-      transition-all duration-200
-      hover:shadow-glow-teal
-    `}>
+  const ActionButton: React.FC<{ icon: React.ReactNode; label: string }> = ({ icon, label }) => (
+    <button 
+      className={`
+        p-2 rounded-lg
+        ${isDark ? 'hover:"bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10"-800/50' : 'hover:bg-white/50'}
+        text-gray-400 hover:text-ron-teal-400
+        transition-all duration-200
+        hover:shadow-glow-teal
+      `}
+      aria-label={label}
+    >
       {icon}
     </button>
   );
@@ -159,9 +162,9 @@ const ChatTab: React.FC = () => {
             transition-all duration-200
           `}>
             <div className="flex gap-1 p-2 border-r border-gray-700/50">
-              <ActionButton icon={<Smile size={20} />} />
-              <ActionButton icon={<FileText size={20} />} />
-              <ActionButton icon={<ImageIcon size={20} />} />
+              <ActionButton icon={<Smile size={20} />} label="Insert emoji" />
+              <ActionButton icon={<FileText size={20} />} label="Attach file" />
+              <ActionButton icon={<ImageIcon size={20} />} label="Insert image" />
             </div>
             <input
               type="text"
@@ -187,6 +190,7 @@ const ChatTab: React.FC = () => {
               `}
               onClick={handleSend}
               disabled={!input.trim()}
+              aria-label="Send message"
             >
               <Send size={20} />
             </button>

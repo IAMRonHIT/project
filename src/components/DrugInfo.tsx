@@ -29,21 +29,17 @@ const DrugInfo: React.FC<DrugInfoProps> = ({ data }) => {
     return <div>No drug information found.</div>;
   }
 
-    // Helper function to format content for markdown rendering
-    const formatContent = (content?: string[] | string | Record<string, any>): string => {
-        if (!content) {
-            return '';
-        }
-
-        if (Array.isArray(content)) {
-            return content.join('\n\n');
-        }
-
-        if (typeof content === 'object') {
-            return '```json\n' + JSON.stringify(content, null, 2) + '\n```';
-        }
-
-        return String(content);
+    // Function to format content for display
+    const formatContent = (content: any): string => {
+      if (typeof content === 'string') {
+        return content;
+      }
+      if (content === null || content === undefined) {
+        return 'Information not available';
+      }
+      
+      // Instead of showing raw JSON, show a formatted message
+      return 'Structured data available - please use the accordion view';
     };
 
     // Helper function to safely render content with potential HTML tables

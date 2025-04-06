@@ -29,25 +29,20 @@ const PubMedAccordionWrapper: React.FC<PubMedAccordionWrapperProps> = ({
   useEffect(() => {
     const formatData = async () => {
       try {
-        console.log('Raw PubMed data:', results);
-        
         // Check if this is a single article or search results
         let formatted;
         if (results.results.articles && Array.isArray(results.results.articles)) {
-          console.log('Formatting as PubMed search results');
           formatted = await formatPubMedResults(results.results);
         } else if (results.results.pmid || results.results.title) {
-          console.log('Formatting as single PubMed article');
           formatted = await formatPubMedArticle(results.results);
         } else {
           // Default format for unknown structures
-          console.log('Unknown PubMed response format, using raw data');
           formatted = {
             type: 'pubmed',
             sections: [
               {
                 title: 'PubMed Response',
-                content: JSON.stringify(results.results, null, 2)
+                content: 'Unable to parse PubMed response. Please try again.'
               }
             ],
             meta: {
@@ -57,10 +52,9 @@ const PubMedAccordionWrapper: React.FC<PubMedAccordionWrapperProps> = ({
           };
         }
         
-        console.log('Formatted PubMed data:', formatted);
         setFormattedData(formatted);
       } catch (error) {
-        console.error('Error formatting PubMed data:', error);
+        // Silent error handling
       } finally {
         setLoading(false);
       }
@@ -127,7 +121,7 @@ const PubMedAccordionWrapper: React.FC<PubMedAccordionWrapperProps> = ({
       
       return fullTextResult;
     } catch (error) {
-      console.error('Error getting full text:', error);
+      // Silent error handling
       throw error;
     }
   };
@@ -139,8 +133,7 @@ const PubMedAccordionWrapper: React.FC<PubMedAccordionWrapperProps> = ({
       await onSaveToPatient(articles);
       // Could show a success message or update UI here
     } catch (error) {
-      console.error('Error saving to patient record:', error);
-      throw error;
+      // Silently handle error
     }
   };
 
@@ -162,7 +155,11 @@ const PubMedAccordionWrapper: React.FC<PubMedAccordionWrapperProps> = ({
         {formattedData.sections.map((section, index) => (
           <div key={index} className="accordion-section">
             <h3>{section.title}</h3>
-            <div dangerouslySetInnerHTML={{ __html: section.content }} />
+            <div className="p-3 whitespace-pre-wrap text-sm">
+              {typeof section.content === 'string' 
+                ? section.content 
+                : 'Content not available in text format'}
+            </div>
           </div>
         ))}
       </div>

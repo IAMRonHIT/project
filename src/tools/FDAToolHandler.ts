@@ -16,7 +16,7 @@ export class FDAToolHandler {
     }
 
     try {
-      const response = await fetch(`http://localhost:3001/api/fda/drug/label?search=${encodeURIComponent(params.query.trim())}`);
+      const response = await fetch(`/api/fda/drug/label?search=${encodeURIComponent(params.query.trim())}`);
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response' }));

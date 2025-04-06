@@ -10,6 +10,7 @@ import CommunicationHub from './components/Communication Hub/CommunicationHub';
 import { Member360View } from './pages/Members/Member360View';
 import { EnhancedCareJourney } from './pages/Members/components/EnhancedCareJourney';
 import PopulationHealthPage from './pages/PopulationHealth/PopulationHealthPage';
+import NoteDemo from './pages/NoteDemo';
 
 function AppRoutes() {
   return (
@@ -46,6 +47,10 @@ function AppRoutes() {
         <Route 
           path="/population-health" 
           element={<PopulationHealthPage />}
+        />
+        <Route 
+          path="/note-demo" 
+          element={<NoteDemo />}
         />
         <Route
           path="/"

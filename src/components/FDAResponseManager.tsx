@@ -33,7 +33,11 @@ interface FDAResponseManagerProps {
 }
 
 const FDAResponseManager: React.FC<FDAResponseManagerProps> = ({ data }) => {
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['⚠️ BOXED WARNING']));
+  // Get sections safely
+  const sections = data?.sections || [];
+  
+  // Track expanded sections
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
 
   const toggleSection = (sectionId: string) => {
     const newExpandedSections = new Set(expandedSections);

@@ -1,3 +1,4 @@
+// Declaration file for image modules
 declare module '*.png' {
   const value: string;
   export default value;

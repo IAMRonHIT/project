@@ -197,6 +197,31 @@ const RonExperience: React.FC = () => {
     if (msg.role === 'assistant') {
       // Try to use ApiResponseHandler first
       const apiResponse = <ApiResponseHandler content={msg.content} />;
+      
+      // Filter out PubMed JSON from display content if needed
+      let displayContent = msg.content;
+      
+      // If we have JSON in the message, try to clean it up
+      const jsonMatch = displayContent.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const jsonStr = jsonMatch[0];
+        try {
+          // Check if this is PubMed JSON
+          const data = JSON.parse(jsonStr);
+          if (data && (data.count !== undefined || data.articles)) {
+            // This is PubMed data, remove it from displayed content
+            displayContent = displayContent.replace(jsonStr, '');
+            
+            // Also remove any "Tool Result:" prefix
+            displayContent = displayContent.replace('Tool Result:', '');
+            
+            // Clean up any empty lines and trim whitespace
+            displayContent = displayContent.replace(/\n\s*\n/g, '\n').trim();
+          }
+        } catch (error) {
+          // If JSON parsing fails, keep original content
+        }
+      }
 
       return (
         <React.Fragment key={idx}>
@@ -216,7 +241,6 @@ const RonExperience: React.FC = () => {
                       type="button"
                       onClick={toggleAccordion}
                       className="ml-2 p-1 rounded-md hover:bg-indigo-500/20 transition-colors"
-                      aria-expanded={isExpanded}
                       aria-label={isExpanded ? "Collapse chain of thought" : "Expand chain of thought"}
                     >
                       {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
@@ -232,15 +256,18 @@ const RonExperience: React.FC = () => {
                 </div>
               )}
               
-              <ReactMarkdown
-                className="prose prose-sm max-w-none prose-invert"
-                remarkPlugins={[remarkGfm]}
-                components={{ code: CodeBlock }}
-              >
-                {msg.isDeepThinking && !msg.isStreaming ? 
-                  extractFinalAnswer(msg.content) : 
-                  msg.content}
-              </ReactMarkdown>
+              {/* Only render markdown if there's still content after filtering */}
+              {displayContent && displayContent.trim() !== '' && (
+                <ReactMarkdown
+                  className="prose prose-sm max-w-none prose-invert"
+                  remarkPlugins={[remarkGfm]}
+                  components={{ code: CodeBlock }}
+                >
+                  {msg.isDeepThinking && !msg.isStreaming ? 
+                    extractFinalAnswer(msg.content) : 
+                    displayContent}
+                </ReactMarkdown>
+              )}
               
               {msg.isStreaming && (
                 <div className="flex justify-center mt-4">
@@ -435,7 +462,7 @@ const RonExperience: React.FC = () => {
   useEffect(() => {
     const fetchPatientData = async () => {
       try {
-        const response = await fetch('/data/Patients/Patients.json');
+        const response = await fetch('/patientdata.json');
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }

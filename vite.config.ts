@@ -6,6 +6,9 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
   publicDir: 'public',
+  optimizeDeps: {
+    exclude: ['ron-ai'], // Exclude the ron-ai directory from optimization
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

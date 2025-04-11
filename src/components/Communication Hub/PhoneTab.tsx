@@ -68,11 +68,12 @@ const PhoneTab: React.FC = () => {
           <h2 className={`text-xl font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
             Sarah Johnson
           </h2>
-          <Badge variant="success" glow className="mb-8">
+          <Badge variant="success" className="mb-8">
             Calling...
           </Badge>
           <button
             onClick={() => setIsCalling(false)}
+            title="End Call"
             className={`
               p-4 rounded-full
               bg-ron-coral-400
@@ -145,6 +146,7 @@ const PhoneTab: React.FC = () => {
               <div className="flex justify-center">
                 <button
                   onClick={handleCall}
+                  title="Initiate Call"
                   className={`
                     p-4 rounded-full
                     bg-ron-teal-400

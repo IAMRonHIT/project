@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { useNote, Highlight, Screenshot, Attachment } from '../contexts/NoteContext';
+import { useNote, Highlight, Screenshot, Attachment, EntityType } from '../contexts/NoteContext';
 import TextHighlighter from './TextHighlighter';
 import ScreenshotCapture from './ScreenshotCapture';
 import NoteMacros from './NoteMacros';
@@ -252,6 +252,61 @@ const NoteComponent: React.FC<NoteComponentProps> = ({
           onScreenshot={handleAddScreenshot}
         />
       )}
+
+      {/* Footer with Attachment Dropdown and Submit Button */}
+      <div className="flex items-center gap-4 px-4 py-3 border-t border-gray-700/50 bg-gray-800/30">
+        <div className="flex-grow">
+          <label htmlFor="note-attachment" className="text-xs text-gray-400 mr-2">Attach to:</label>
+          <select
+            id="note-attachment"
+            value={state.attachedTo?.type || ''}
+            onChange={(e) => {
+              const selectedType = e.target.value as EntityType | '';
+              
+              if (selectedType) {
+                dispatch({ 
+                  type: 'ATTACH_TO_ENTITY', 
+                  attachment: { 
+                    id: uuidv4(),
+                    type: selectedType, 
+                    name: selectedType
+                  } 
+                });
+              } else {
+                dispatch({ type: 'DETACH_FROM_ENTITY' });
+              }
+            }}
+            className="px-2 py-1 text-sm bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+          >
+            <option value="">None</option>
+            <option value="Ticket">Ticket</option>
+            <option value="CareJourney">Care Journey</option>
+            <option value="Auth">Auth</option>
+            <option value="Appeal">Appeal</option>
+            <option value="Claim">Claim</option>
+            <option value="CarePlan">Care Plan</option>
+            <option value="Task">Task</option>
+          </select>
+        </div>
+        <button
+          onClick={handleSave}
+          disabled={!state.isDirty}
+          className="px-4 py-1.5 text-sm font-medium bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          aria-label="Submit Note"
+        >
+          Submit Note
+        </button>
+        <button
+          onClick={handleClose}
+          className="p-2 rounded-md text-gray-400 hover:bg-gray-700/50 hover:text-white border border-transparent"
+          title="Close note"
+          aria-label="Close note"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/>
+          </svg>
+        </button>
+      </div>
     </div>
   );
 };

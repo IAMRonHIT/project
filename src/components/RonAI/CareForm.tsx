@@ -2,6 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, ChevronDown, ChevronUp, Brain, ClipboardCheck, Users, BookOpen, BarChart3, Award, Search, User, FileQuestion, Check } from 'lucide-react';
 import CareImplementation from './CareImplementation';
 import { createPortal } from 'react-dom';
+// Import necessary services
+import { fetchAndFormatFDADrugData } from '../../services/FDAService'; 
+import pubmedService from '../../services/pubmedService'; 
+import { ronAgentService } from '../../services/ronAgentService';
 
 export interface Patient {
   member_id: string;
@@ -183,9 +187,8 @@ const CareForm: React.FC<CareFormProps> = ({ isOpen, onClose, patients, initialM
   const [searchQuery, setSearchQuery] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [openPanels, setOpenPanels] = useState<string[]>(['profile', 'medical', 'social', 'provider', 'goals', 'outputType']);
-  const [isMedRecTest, setIsMedRecTest] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  
+
   // Test medications for medication reconciliation
   const testMedications = [
     "CLOBAZAM 2.5 MG/ML SUSPENSION",
@@ -207,6 +210,7 @@ const CareForm: React.FC<CareFormProps> = ({ isOpen, onClose, patients, initialM
 
   const handlePatientSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const patientId = e.target.value;
+    // Update selected patient state and ensure it's properly set
     setSelectedPatient(patientId);
     
     if (patientId) {
@@ -330,7 +334,9 @@ Social Determinants:
       setResearchData(responseData);
 
       // Open the output section
-      setOpenSections(prev => [...prev, outputType]);
+      if (!openSections.includes('output')) {
+        setOpenSections(prev => [...prev, 'output']);
+      }
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -409,175 +415,54 @@ Social Determinants:
   // Update the handleGenerateGeminiCarePlan function
   const handleGenerateGeminiCarePlan = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    if (!selectedPatient) {
+      setErrorMessage('Please select a patient first.');
+      return;
+    }
+    
     setGeneratingGeminiPlan(true);
-    setErrorMessage(null);
+    setGeneratedCarePlan(null);
+    setErrorMessage(null); // Clear previous errors
+    console.log("Starting Care Plan Generation (Agent Workflow)...");
 
     try {
-      // Get current URL for building absolute URLs
-      const baseUrl = window.location.origin;
-      
-      // Check if we're in medication reconciliation mode
-      const isMedicationReconciliation = outputType === 'medication-reconciliation';
-      
-      // Find the selected patient's complete data
-      const selectedPatientData = patients.find(p => p.member_id === selectedPatient);
-      
-      if (!selectedPatientData) {
-        throw new Error('No patient selected');
-      }
-      
-      // Extract all medications data
-      const medicationsData = {
-        home: [
-          selectedPatientData.medication_1,
-          selectedPatientData.medication_2,
-          selectedPatientData.medication_3,
-          selectedPatientData.medication_4
-        ].filter(Boolean),
-        inpatient: [
-          selectedPatientData.inpatient_med_1,
-          selectedPatientData.inpatient_med_2, 
-          selectedPatientData.inpatient_med_3,
-          selectedPatientData.inpatient_med_4
-        ].filter(Boolean),
-        discharge: [
-          selectedPatientData.Discharged_med_1,
-          selectedPatientData.Discharged_med_2,
-          selectedPatientData.Discharged_med_3,
-          selectedPatientData.Discharged_med_4
-        ].filter(Boolean)
-      };
-      
-      // Extract diagnoses for PubMed search
-      const diagnoses = [
-        selectedPatientData.dx_1,
-        selectedPatientData.dx_2,
-        selectedPatientData.dx_3,
-        selectedPatientData.dx_4
-      ].filter(Boolean).join(' ');
-      
-      // STEP 1: Call Gemini Flash for medication reconciliation
-      console.log('STEP 1: Calling Gemini Flash for medication reconciliation');
-      const medicationRecResult = await fetch(`${baseUrl}/api/gemini-flash/med-reconciliation`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          patientId: selectedPatientData.member_id,
-          patientName: selectedPatientData.member_name,
-          medications: medicationsData,
-          isMedicationReconciliation: true,
-          // If it's a test, include test medications
-          ...(isMedicationReconciliation && isMedRecTest ? {
-            testMedications: {
-              home: testMedications,
-              inpatient: testMedications.slice(0, 2)
-            }
-          } : {})
-        }),
-      }).then(res => {
-        if (!res.ok) throw new Error(`Med Rec API error: ${res.status}`);
-        return res.json();
-      }).catch(err => {
-        console.error('Medication reconciliation error:', err);
-        return null;
-      });
-      
-      // STEP 2: Get PubMed research data for publications
-      console.log('STEP 2: Fetching PubMed research data');
-      const pubMedResult = await fetchPubMedResearch(diagnoses).catch(err => {
-        console.error('PubMed research error:', err);
-        return null;
-      });
-      
-      // If we're just doing med reconciliation, show results and stop
-      if (isMedicationReconciliation && medicationRecResult) {
-        setGeneratedCarePlan(medicationRecResult);
-        setActiveSection('medication-reconciliation');
-        setIsLoading(false);
-        setGeneratingGeminiPlan(false);
-        
-        // Open the output section automatically
-        if (!openSections.includes(outputType)) {
-          setOpenSections(prev => [...prev, outputType]);
-        }
-        
-        return;
-      }
-      
-      // STEP 3: Send to Pro Experimental model with both datasets
-      console.log('STEP 3: Sending to Pro Experimental model');
-      const deepResearchPayload = {
-        patientData: {
-          id: selectedPatientData.member_id,
-          name: selectedPatientData.member_name,
-          age: calculateAge(selectedPatientData.member_dob),
-          gender: selectedPatientData.gender,
-          diagnoses: diagnoses,
-          medications: medicationsData
-        },
-        formData: {
-          patientName: formData.patientName,
-          patientAge: formData.patientAge,
-          patientGender: formData.patientGender,
-          condition: formData.condition,
-          medicalHistory: formData.medicalHistory,
-          symptoms: formData.symptoms,
-          currentMedications: formData.currentMedications,
-          goals: `${formData.goals.symptoms}; ${formData.goals.qualityOfLife}; ${formData.goals.understanding}`
-        },
-        medicationReconciliation: medicationRecResult,
-        pubMedData: pubMedResult,
-        pubMedContext: pubMedResult ? {
-          totalArticles: pubMedResult.articles?.length || 0,
-          fullTextCount: pubMedResult.articlesByAvailability?.fullText?.length || 0,
-          topJournals: pubMedResult.articles
-            ?.map(a => a.journal?.title)
-            ?.filter(Boolean)
-            ?.slice(0, 10) || [],
-          primaryMeshTerms: [...new Set(
-            pubMedResult.articles
-              ?.flatMap(a => a.meshTerms || [])
-              ?.filter(Boolean)
-              ?.slice(0, 20) || []
-          )]
-        } : null,
-        outputType: outputType
-      };
-      
-      console.log('Sending comprehensive payload to deep research:', deepResearchPayload);
-      
-      const deepResearchResponse = await fetch(`${baseUrl}/api/gemini-pro-exp/deepresearch`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(deepResearchPayload),
-      });
+      // Step 1: Fetch data from external services (FDA & PubMed)
+      console.log("Agent Workflow - Fetching external data...");
+      const fdaPromise = fetchAndFormatFDADrugData(formData.currentMedications || 'Aspirin'); // Use a default or handle empty input
+      const pubmedPromise = pubmedService.searchArticles(formData.condition || 'Hypertension'); // Use a default or handle empty input
 
-      if (!deepResearchResponse.ok) {
-        throw new Error(`Deep research API error: ${deepResearchResponse.status}`);
-      }
+      const [fdaResults, pubmedResults] = await Promise.all([fdaPromise, pubmedPromise]);
+      console.log("Agent Workflow - FDA Results:", fdaResults);
+      console.log("Agent Workflow - PubMed Results:", pubmedResults);
 
-      const finalResult = await deepResearchResponse.json();
-      console.log('Final result from Pro Experimental model:', finalResult);
-      
-      // Set results and update UI
-      setGeneratedCarePlan(finalResult);
-      setResearchData(finalResult);
-      setActiveSection('generated-careplan');
-      
-      // Open the output section automatically
-      if (!openSections.includes(outputType)) {
-        setOpenSections(prev => [...prev, outputType]);
-      }
+      // Step 2: Call Medication Reconciliation Agent
+      console.log("Agent Workflow - Calling Medication Reconciliation Agent...");
+      const medicationAnalysis = await ronAgentService.processMedicationReconciliation(fdaResults);
+      console.log("Agent Workflow - Medication Analysis Result:", medicationAnalysis);
+
+      // Step 3: Call Research Analysis Agent
+      console.log("Agent Workflow - Calling Research Analysis Agent...");
+      const researchAnalysis = await ronAgentService.analyzeResearchFindings(pubmedResults);
+      console.log("Agent Workflow - Research Analysis Result:", researchAnalysis);
+
+      // Step 4: Call Component Generation Agent (This is the final output)
+      console.log("Agent Workflow - Calling Component Generation Agent...");
+      const componentGenerationResult = await ronAgentService.generateCarePlanComponent({
+          formData: formData, 
+          medicationReconciliation: medicationAnalysis,
+          researchAnalysis: researchAnalysis,
+      });
+      console.log("Agent Workflow - Final Generated Component Code:", componentGenerationResult);
+
+      // Step 5: Set the final generated component code to state
+      // Assuming componentGenerationResult is the string code we want to display
+      setGeneratedCarePlan(componentGenerationResult); 
+      setActiveSection('output'); // Switch view to output section
+
     } catch (error) {
-      console.error('Error in care plan generation workflow:', error);
-      setErrorMessage(`An error occurred: ${error.message}`);
+      console.error('Error generating care plan via agent workflow:', error);
+      setErrorMessage(`Failed to generate care plan: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
-      setIsLoading(false);
       setGeneratingGeminiPlan(false);
     }
   };
@@ -727,13 +612,13 @@ Social Determinants:
         
         {/* Selected patient display or placeholder */}
         <div 
-          className="w-full px-3 py-2 bg-gray-900/90 border border-indigo-500/30 rounded-md text-white text-sm 
+          className={`w-full px-3 py-2 bg-gray-900/90 border ${selectedPatient ? 'border-indigo-500/70' : 'border-indigo-500/30'} rounded-md text-white text-sm 
           focus:outline-none hover:border-indigo-400/50 hover:shadow-[0_0_5px_rgba(79,70,229,0.4)]
           shadow-[inset_0_1px_3px_rgba(0,0,0,0.3)] backdrop-blur-sm transition-all duration-200
-          flex items-center justify-between cursor-pointer"
+          flex items-center justify-between cursor-pointer ${selectedPatient ? 'ring-1 ring-indigo-500/20' : ''}`}
           onClick={() => setDropdownOpen(!dropdownOpen)}
         >
-          <div className="flex items-center gap-3 truncate">
+          <div className="flex items-center gap-3">
             {selectedPatientData ? (
               <>
                 <PatientAvatar name={selectedPatientData.member_name} highlight />
@@ -761,7 +646,9 @@ Social Determinants:
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       // Only close if clicking outside of the patient selection section
-      if (dropdownOpen && contentRef.current && !contentRef.current.querySelector('.patient-section')?.contains(event.target as Node)) {
+      if (dropdownOpen && contentRef.current && 
+          // Make sure click target is not within the dropdown or its parent elements
+          !contentRef.current.contains(event.target as Node)) {
         setDropdownOpen(false);
       }
     };
@@ -841,7 +728,6 @@ Social Determinants:
           {/* Patient Selection Section */}
           <div
             className={`
-              patient-section
               rounded-lg overflow-hidden
               border border-indigo-500/30 shadow-[0_0_5px_rgba(79,70,229,0.3),inset_0_0_5px_rgba(79,70,229,0.1)]
               shadow-lg shadow-black/10
@@ -895,7 +781,7 @@ Social Determinants:
                     </div>
                     
                     {/* Patients list */}
-                    <div className="max-h-60 overflow-y-auto">
+                    <div className="max-h-60 overflow-y-auto patient-section">
                       {filteredPatients.length === 0 ? (
                         <div className="py-4 px-4 text-sm text-gray-400 text-center flex flex-col items-center gap-2">
                           <FileQuestion size={20} />
@@ -904,16 +790,20 @@ Social Determinants:
                       ) : (
                         filteredPatients.map(patient => (
                           <div
-                            key={patient.member_id}
-                            className={`py-2 px-3 cursor-pointer flex items-center gap-3 transition-colors duration-150
-                            ${selectedPatient === patient.member_id 
-                              ? 'bg-indigo-600/30 border-l-2 border-indigo-500' 
-                              : 'hover:bg-indigo-600/20 border-l-2 border-transparent'}
+                            key={patient.member_id} 
+                            className={`flex items-center gap-3 p-2 cursor-pointer rounded-md transition-colors duration-150 
+                              ${selectedPatient === patient.member_id 
+                                ? 'bg-indigo-600/70 ring-1 ring-indigo-400/50' 
+                                : 'hover:bg-gray-700/60'}
                             `}
                             onClick={() => {
+                              // Update the selected patient state directly
                               setSelectedPatient(patient.member_id);
-                              handlePatientSelect({ target: { value: patient.member_id } } as any);
+                              // Call the handler to update form data
+                              handlePatientSelect({ target: { value: patient.member_id } } as unknown as React.ChangeEvent<HTMLSelectElement>);
+                              // Close dropdown after selection
                               setDropdownOpen(false);
+                              // Clear search query
                               setSearchQuery('');
                             }}
                           >
@@ -1601,6 +1491,13 @@ Social Determinants:
             )}
           </div>
         </div>
+
+        {/* Error message display */}
+        {errorMessage && (
+          <div className="mt-2 p-3 bg-red-900/50 border border-red-700 rounded-md text-red-200 text-sm">
+            <strong>Error:</strong> {errorMessage}
+          </div>
+        )}
       </div>
     </>
   );

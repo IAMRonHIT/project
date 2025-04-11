@@ -69,6 +69,13 @@ const getPdfUrl = (article: PubMedArticle) => {
   return null;
 };
 
+// Helper to get PubMed article URL through our wrapper (for highlighting support)
+const getHighlightablePmcUrl = (pmcid: string) => {
+  const url = `/pubmed-wrapper.html?pmcid=${pmcid}`;
+  console.log(`Using highlightable URL for PMC article: ${url}`);
+  return url;
+};
+
 // Helper to check if an article is likely open access
 const isLikelyOpenAccess = (article: PubMedArticle) => {
   // Use explicit flag if available
@@ -346,14 +353,14 @@ const PubMedResponseManager: React.FC<PubMedResponseManagerProps> = ({ data }) =
                           src={article.doi 
                             ? getDoiUrl(article.doi) 
                             : article.pmcid 
-                              ? `https://www.ncbi.nlm.nih.gov/pmc/articles/${article.pmcid}/`
+                              ? getHighlightablePmcUrl(article.pmcid) // Use highlightable wrapper for PMC articles
                               : getPubMedUrl(article.pmid)
                           }
                           className="w-full h-full"
                           title={`Embedded article: ${article.title}`}
                           allowFullScreen
-                          loading="lazy"
                           onError={() => handleIframeError(articleId)}
+                          data-source={article.pmcid ? `PubMed PMC${article.pmcid}` : article.doi ? 'DOI' : 'PubMed'}
                         ></iframe>
                       )}
                     </div>
@@ -401,7 +408,6 @@ const PubMedResponseManager: React.FC<PubMedResponseManagerProps> = ({ data }) =
                           className="w-full h-full"
                           title={`PDF for article: ${article.title}`}
                           allowFullScreen
-                          loading="lazy"
                           onError={() => handleIframeError(articleId, true)}
                         ></iframe>
                       )}

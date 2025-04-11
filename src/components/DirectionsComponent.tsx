@@ -57,6 +57,8 @@ const DirectionsComponent: React.FC<DirectionsComponentProps> = ({
       setError(null);
       
       try {
+        console.log(`Fetching directions from ${origin} to ${destination} via ${travelMode}`);
+        
         const response = await fetch('/api/directions', {
           method: 'POST',
           headers: {
@@ -69,17 +71,23 @@ const DirectionsComponent: React.FC<DirectionsComponentProps> = ({
           })
         });
         
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         
         if (data.status !== 'OK') {
           setError(data.error_message || 'Failed to get directions');
           setDirections(null);
         } else {
+          console.log('Directions fetched successfully:', data);
           setDirections(data);
         }
       } catch (err) {
-        setError('Error fetching directions');
-        console.error(err);
+        const errorMessage = err instanceof Error ? err.message : 'Error fetching directions';
+        setError(errorMessage);
+        console.error('Error fetching directions:', err);
       } finally {
         setLoading(false);
       }
@@ -91,15 +99,15 @@ const DirectionsComponent: React.FC<DirectionsComponentProps> = ({
   const getTravelModeIcon = (mode: string) => {
     switch (mode) {
       case 'driving':
-        return '🚗';
+        return <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 8l-3-3H7L4 8m16 0H4m16 0v8m0 0H4m16 0l-3 3H7l-3-3M4 8v8m4-9v1m8-1v1"/></svg>;
       case 'walking':
-        return '🚶';
+        return <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 4.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zm-1.5 3l-4 12m-.5-8l4-4 4 4v8m-4-12v20"/></svg>;
       case 'bicycling':
-        return '🚲';
+        return <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 12l-3-9 9 4-4 4 5 9-8-5m-3.5 5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zm14 0a2.5 2.5 0 100-5 2.5 2.5 0 000 5z"/></svg>;
       case 'transit':
-        return '🚌';
+        return <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 16h10M7 12h10M7 8h10M5 22h14a2 2 0 002-2V4a2 2 0 00-2-2H5a2 2 0 00-2 2v16a2 2 0 002 2z"/></svg>;
       default:
-        return '🚗';
+        return <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 8l-3-3H7L4 8m16 0H4m16 0v8m0 0H4m16 0l-3 3H7l-3-3M4 8v8m4-9v1m8-1v1"/></svg>;
     }
   };
 
@@ -122,7 +130,7 @@ const DirectionsComponent: React.FC<DirectionsComponentProps> = ({
           <div className="flex rounded-md overflow-hidden border border-gray-700">
             <button
               onClick={() => setTravelMode('driving')}
-              className={`px-2 py-1 text-sm ${
+              className={`px-2 py-1 flex items-center justify-center ${
                 travelMode === 'driving'
                   ? isDark 
                     ? 'bg-indigo-600 text-white' 
@@ -133,11 +141,13 @@ const DirectionsComponent: React.FC<DirectionsComponentProps> = ({
               }`}
               title="Driving"
             >
-              🚗
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M20 8l-3-3H7L4 8m16 0H4m16 0v8m0 0H4m16 0l-3 3H7l-3-3M4 8v8m4-9v1m8-1v1"/>
+              </svg>
             </button>
             <button
               onClick={() => setTravelMode('walking')}
-              className={`px-2 py-1 text-sm ${
+              className={`px-2 py-1 flex items-center justify-center ${
                 travelMode === 'walking'
                   ? isDark 
                     ? 'bg-indigo-600 text-white' 
@@ -148,11 +158,13 @@ const DirectionsComponent: React.FC<DirectionsComponentProps> = ({
               }`}
               title="Walking"
             >
-              🚶
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M13 4.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zm-1.5 3l-4 12m-.5-8l4-4 4 4v8m-4-12v20"/>
+              </svg>
             </button>
             <button
               onClick={() => setTravelMode('bicycling')}
-              className={`px-2 py-1 text-sm ${
+              className={`px-2 py-1 flex items-center justify-center ${
                 travelMode === 'bicycling'
                   ? isDark 
                     ? 'bg-indigo-600 text-white' 
@@ -163,11 +175,13 @@ const DirectionsComponent: React.FC<DirectionsComponentProps> = ({
               }`}
               title="Bicycling"
             >
-              🚲
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 12l-3-9 9 4-4 4 5 9-8-5m-3.5 5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zm14 0a2.5 2.5 0 100-5 2.5 2.5 0 000 5z"/>
+              </svg>
             </button>
             <button
               onClick={() => setTravelMode('transit')}
-              className={`px-2 py-1 text-sm ${
+              className={`px-2 py-1 flex items-center justify-center ${
                 travelMode === 'transit'
                   ? isDark 
                     ? 'bg-indigo-600 text-white' 
@@ -178,7 +192,9 @@ const DirectionsComponent: React.FC<DirectionsComponentProps> = ({
               }`}
               title="Transit"
             >
-              🚌
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M7 16h10M7 12h10M7 8h10M5 22h14a2 2 0 002-2V4a2 2 0 00-2-2H5a2 2 0 00-2 2v16a2 2 0 002 2z"/>
+              </svg>
             </button>
           </div>
           
@@ -190,6 +206,8 @@ const DirectionsComponent: React.FC<DirectionsComponentProps> = ({
                   ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
                   : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
               }`}
+              aria-label="Close directions"
+              title="Close directions"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

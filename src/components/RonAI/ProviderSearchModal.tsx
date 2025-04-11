@@ -21,6 +21,7 @@ export interface ProviderSearchParams {
   enumerationType?: 'ind' | 'org';
   limit?: number;
   sex?: 'male' | 'female' | 'any'; // Added sex filter
+  patientAddress?: string; // Patient address for sending provider list
 }
 
 const ProviderSearchModal: React.FC<ProviderSearchModalProps> = ({ 
@@ -242,6 +243,23 @@ const ProviderSearchModal: React.FC<ProviderSearchModalProps> = ({
               </div>
             </>
           )}
+          
+          {/* Patient Address field - for all search types */}
+          <div className="mb-4">
+            <label htmlFor="patientAddress" className="block text-xs font-medium text-gray-400 mb-1">Patient Address (For Provider List)</label>
+            <input 
+              type="text"
+              id="patientAddress"
+              name="patientAddress"
+              value={searchParams.patientAddress || ''}
+              onChange={handleInputChange}
+              placeholder="Enter patient address to send provider list"
+              className="w-full px-3 py-2 bg-gray-900/90 border border-indigo-500/30 rounded-md text-white text-sm 
+              focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50
+              shadow-[inset_0_1px_3px_rgba(0,0,0,0.3)] backdrop-blur-sm transition-all duration-200
+              hover:border-indigo-400/50 hover:shadow-[0_0_5px_rgba(79,70,229,0.4)]"
+            />
+          </div>
           
           <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-700/50">
             <button 

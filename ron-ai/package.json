@@ -1,0 +1,27 @@
+{
+  "name": "ron-ai",
+  "version": "1.0.0",
+  "description": "",
+  "exports": {
+    ".": "./src/agents/mastra/index.ts"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "mastra dev"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@ai-sdk/google": "^1.2.3",
+    "@mastra/core": "^0.7.0",
+    "mastra": "^0.4.4",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.14",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}

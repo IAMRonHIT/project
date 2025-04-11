@@ -1,6 +1,6 @@
 # NPI Registry Integration
 
-This document details the integration of the National Provider Identifier (NPI) Registry into the Ron AI platform through Gemini's function calling capabilities.
+This document details the integration of the National Provider Identifier (NPI) Registry into the IntelAgents through Gemini's function calling capabilities.
 
 ## Features
 

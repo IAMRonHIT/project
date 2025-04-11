@@ -1,6 +1,6 @@
 # Deep Thinking Mode
 
-This document details the implementation of Deep Thinking mode in the Ron AI platform, which uses the `gemini-2.0-flash-thinking-exp-01-21` model with enhanced code execution capabilities.
+This document details the implementation of Deep Thinking mode in the IntelAgents, which uses the `gemini-2.0-flash-thinking-exp-01-21` model with enhanced code execution capabilities.
 
 ## Overview
 

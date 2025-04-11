@@ -163,7 +163,7 @@ const CarePlan = () => {
         <div className="mb-6">
           <Link to="/ron-ai" className="flex items-center text-gray-400 hover:text-white transition-colors">
             <ArrowLeft size={16} className="mr-2" />
-            <span>Back to Ron AI</span>
+            <span>Back to IntelAgents</span>
           </Link>
         </div>
         

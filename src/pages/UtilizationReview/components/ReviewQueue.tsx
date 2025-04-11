@@ -1,5 +1,6 @@
 import React from 'react';
-import { StatusBadge } from '@/components/StatusBadge';
+// Remove or replace the StatusBadge import since it can't be found
+// import { StatusBadge } from '@/components/StatusBadge';
 
 export interface ReviewQueueProps {
   searchTerm: string;

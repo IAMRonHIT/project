@@ -275,11 +275,11 @@ const TextHighlighter: React.FC<TextHighlighterProps> = ({
   return (
     <div 
       ref={popoverRef}
-      className="absolute z-50 bg-white shadow-lg rounded-lg p-2 transform -translate-x-1/2 -translate-y-full"
+      className="selection-popover z-50 bg-white shadow-lg rounded-lg p-2 transform -translate-x-1/2 -translate-y-full"
       style={{
-        left: `${selectionPosition.x}px`,
-        top: `${selectionPosition.y}px`,
-      }}
+        '--popover-x': `${selectionPosition.x}px`,
+        '--popover-y': `${selectionPosition.y}px`
+      } as React.CSSProperties}
     >
       <button
         onClick={captureHighlight}

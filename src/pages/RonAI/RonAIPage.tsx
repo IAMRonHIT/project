@@ -2,21 +2,21 @@ import React, { FC } from 'react';
 import RonAIExperience from '../../components/RonAI/RonExperience';
 import PatientDataTest from '../../components/Test/PatientDataTest';
 import { useNotePanel } from '../../hooks';
+import Sidebar from '../../components/Sidebar';
 
 export const RonAIPage: FC = () => {
   const [showTest, setShowTest] = React.useState(false);
   
   const { openNote } = useNotePanel();
   
-  const handleSaveToNotes = () => {
-    // Create nicely formatted notes from the conversation
+  const handleSaveNotes = () => {
     const timestamp = new Date().toLocaleString();
-    let notesContent = `RonAI Conversation Notes\nDate: ${timestamp}\n\n`;
+    let notesContent = `IntelAgents Conversation Notes\nDate: ${timestamp}\n\n`;
     
-    // Since we don't have direct access to the conversation in this component,
-    // we'll just create a simple note template
-    notesContent += `This is a placeholder for RonAI conversation notes.\n`;
-    notesContent += `You can add your notes about this RonAI session here.\n\n`;
+    // Add actual conversation data here
+    // For now, adding placeholder text
+    notesContent += `This is a placeholder for IntelAgents conversation notes.\n`;
+    notesContent += `You can add your notes about this IntelAgents session here.\n\n`;
     
     openNote(notesContent);
   };
@@ -25,11 +25,11 @@ export const RonAIPage: FC = () => {
     <div className="h-full">
       <div className="grid gap-4">
         <div className="flex items-center justify-between bg-ron-light-surface dark:bg-ron-dark-surface p-4 rounded-lg shadow-sm">
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Ron AI</h1>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">IntelAgents</h1>
           
           <div className="flex gap-2">
             <button
-              onClick={handleSaveToNotes}
+              onClick={handleSaveNotes}
               className="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 transition-colors"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

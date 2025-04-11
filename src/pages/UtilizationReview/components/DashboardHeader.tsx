@@ -13,9 +13,11 @@ export function DashboardHeader() {
           isDark ? 'text-white' : 'text-dark-gun-metal'
         }`}>Utilization Management</h1>
         <div className="flex items-center gap-4">
-          <button className={`p-2 rounded-lg ${
-            isDark ? 'hover:bg-white/10' : 'hover:bg-ron-primary/10'
-          } transition-colors`}>
+          <button
+            title="View Notifications"
+            className={`p-2 rounded-lg ${
+              isDark ? 'hover:bg-white/10' : 'hover:bg-ron-primary/10'
+            } transition-colors`}>
             <Bell className={`h-5 w-5 ${
               isDark ? 'text-white' : 'text-dark-gun-metal'
             }`} />

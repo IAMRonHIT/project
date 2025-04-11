@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useNote, Macro } from '../contexts/NoteContext';
 
@@ -13,6 +13,24 @@ const NoteMacros: React.FC<NoteMacrosProps> = ({ onApplyMacro }) => {
   const [macroName, setMacroName] = useState('');
   const [macroContent, setMacroContent] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Handle clicks outside the dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
 
   // Handle adding a new macro
   const handleAddMacro = () => {
@@ -87,7 +105,7 @@ const NoteMacros: React.FC<NoteMacrosProps> = ({ onApplyMacro }) => {
   };
   
   return (
-    <div className="relative">
+    <div className="relative" ref={dropdownRef}>
       {/* Macro dropdown button */}
       <button
         onClick={() => setIsDropdownOpen(!isDropdownOpen)}

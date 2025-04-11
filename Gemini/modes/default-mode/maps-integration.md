@@ -1,6 +1,6 @@
 # Google Maps Integration
 
-This document details the integration of Google Maps services into the Ron AI platform through Gemini's function calling capabilities.
+This document details the integration of Google Maps services into the IntelAgents through Gemini's function calling capabilities.
 
 ## Features
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Search, MapPin, ExternalLink, AlertTriangle, Mail, List } from 'lucide-react';
+import { X, Search, MapPin, ExternalLink, AlertTriangle, Mail, List, Phone, Video, Calendar } from 'lucide-react';
 import { ProviderSearchParams } from './ProviderSearchModal';
 import { 
   searchProviders, 
@@ -278,6 +278,45 @@ const ProviderMapPreview: React.FC<ProviderMapPreviewProps> = ({
                       NPI: {provider.npi}
                     </div>
                   )}
+                  
+                  {/* Action Buttons */}
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {/* Phone Button */}
+                    <button 
+                      className="p-2 rounded-full bg-blue-500 hover:bg-blue-600 text-white transition-colors"
+                      title="Call Provider"
+                      onClick={(e) => { e.stopPropagation(); window.open(`tel:${provider.phone}`); }}
+                    >
+                      <Phone size={16} />
+                    </button>
+                    
+                    {/* Email Button */}
+                    <button 
+                      className="p-2 rounded-full bg-green-500 hover:bg-green-600 text-white transition-colors"
+                      title="Email Provider"
+                      onClick={(e) => { e.stopPropagation(); window.open(`mailto:${provider.email || `contact@${provider.name.toLowerCase().replace(/\s+/g, '')}.com`}`); }}
+                    >
+                      <Mail size={16} />
+                    </button>
+                    
+                    {/* Telehealth Button */}
+                    <button 
+                      className="p-2 rounded-full bg-purple-500 hover:bg-purple-600 text-white transition-colors"
+                      title="Schedule Telehealth"
+                      onClick={(e) => { e.stopPropagation(); console.log('Telehealth scheduling for:', provider.name); /* Placeholder */ }}
+                    >
+                      <Video size={16} />
+                    </button>
+                    
+                    {/* Calendar Button */}
+                    <button 
+                      className="p-2 rounded-full bg-amber-500 hover:bg-amber-600 text-white transition-colors"
+                      title="Schedule Appointment"
+                      onClick={(e) => { e.stopPropagation(); console.log('Calendar scheduling for:', provider.name); /* Placeholder */ }}
+                    >
+                      <Calendar size={16} />
+                    </button>
+                  </div>
                 </div>
               ))
             ) : (

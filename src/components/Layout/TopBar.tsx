@@ -1,3 +1,4 @@
+import React from 'react';
 import { Menu, Bell, Moon, Sun, Search, MessageSquare, Settings } from 'lucide-react';
 import { UserProfile } from './UserProfile';
 import { useTheme } from '../../hooks/useTheme';
@@ -39,13 +40,14 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick, onThemeToggle }) => {
           type="button"
           className="lg:hidden -m-2.5 p-2.5 text-white/80 hover:text-white transition-colors"
           onClick={onMenuClick}
+          title="Open menu"
         >
           <Menu className="h-6 w-6" />
         </button>
 
         {/* Left side spacer for desktop */}
         <div className="hidden lg:block lg:w-20">
-          <Badge variant="info" glow size="sm">RON AI</Badge>
+          <Badge variant="info" size="sm">IntelAgents</Badge>
         </div>
 
         {/* Center section - Search */}

@@ -1,6 +1,6 @@
 # FDA API Integration
 
-This document details the integration of FDA APIs into the Ron AI platform through Gemini's function calling capabilities.
+This document details the integration of FDA APIs into the IntelAgents through Gemini's function calling capabilities.
 
 ## Supported APIs
 

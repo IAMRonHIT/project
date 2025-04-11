@@ -139,4 +139,10 @@
     z-index: 2;
     pointer-events: none;
   }
+
+  .selection-popover {
+    position: absolute;
+    left: var(--popover-x);
+    top: var(--popover-y);
+  }
 }

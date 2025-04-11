@@ -1,6 +1,6 @@
 # Ron AI Gemini Integration
 
-This documentation covers the integration of Gemini models into the Ron AI platform, with mode-specific model selection and capabilities.
+This documentation covers the integration of Gemini models into the IntelAgents, with mode-specific model selection and capabilities.
 
 ## Mode-Specific Model Selection
 

@@ -1,6 +1,6 @@
 # Streaming Implementation
 
-This document details the streaming implementation for Gemini models in the Ron AI platform.
+This document details the streaming implementation for Gemini models in the IntelAgents.
 
 ## Overview
 

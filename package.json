@@ -44,6 +44,8 @@
     "katex": "^0.16.21",
     "lucide-react": "^0.344.0",
     "marked": "^15.0.7",
+    "mongodb": "^6.15.0",
+    "mongoose": "^8.13.2",
     "openai": "^4.89.0",
     "postcss": "^8.4.49",
     "prettier": "^3.4.1",

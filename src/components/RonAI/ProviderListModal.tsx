@@ -1,8 +1,8 @@
-import React, { useState, useRef } from 'react';
-import { X, Mail, Calendar, MapPin, Phone, ExternalLink, Check, ChevronDown, ChevronUp, Navigation } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { X, Mail, Calendar, MapPin, Phone, ExternalLink, Check, ChevronDown, ChevronUp, Navigation, Send, CheckCircle } from 'lucide-react';
 import { Provider, getSpecialtyDisplayName } from '../../services/providerService';
-import GoogleMapsComponent from '../../components/GoogleMapsComponent';
 import DirectionsComponent from '../../components/DirectionsComponent';
+import ProviderMap from './ProviderMap';
 
 interface ProviderListModalProps {
   isOpen: boolean;
@@ -32,6 +32,10 @@ const ProviderListModal: React.FC<ProviderListModalProps> = ({
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
   const [showDirections, setShowDirections] = useState<string | null>(null); // Track which provider's directions are shown
+  
+  // Initialize all state variables at the top level
+  const [isSending, setIsSending] = useState(false);
+  const [sentSuccess, setSentSuccess] = useState(false);
   
   // For email functionality
   const emailSubjectRef = useRef<HTMLInputElement>(null);
@@ -94,6 +98,20 @@ Accepting New Patients: ${provider.accepting ? 'Yes' : 'No'}
     window.open(mailtoLink, '_blank');
   };
   
+  // Handle sending provider list
+  const handleSendProviderList = () => {
+    setIsSending(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+      setIsSending(false);
+      setSentSuccess(true);
+      
+      // Reset success message after a few seconds
+      setTimeout(() => setSentSuccess(false), 3000);
+    }, 1500);
+  };
+  
   // Generate dates for the next 14 days
   const generateDates = (): Date[] => {
     const dates: Date[] = [];
@@ -137,11 +155,6 @@ Accepting New Patients: ${provider.accepting ? 'Yes' : 'No'}
     const hourNum = parseInt(hour);
     
     return `${hourNum % 12 || 12}:${minute} ${hourNum >= 12 ? 'PM' : 'AM'}`;
-  };
-  
-  // Get directions URL
-  const getDirectionsUrl = (address: string) => {
-    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
   };
   
   // Handle showing directions
@@ -188,7 +201,8 @@ Accepting New Patients: ${provider.accepting ? 'Yes' : 'No'}
         <div className="flex-1 overflow-y-auto p-4">
           {/* Email Form */}
           <div className="mb-6 bg-gray-800/40 border border-indigo-500/20 rounded-lg p-4">
-            <h3 className="text-white font-medium mb-3">Email Provider List</h3>
+            <h3 className="text-white font-medium mb-3">Provider List Actions</h3>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <label htmlFor="email-to" className="block text-xs font-medium text-gray-400 mb-1">
@@ -221,10 +235,46 @@ Accepting New Patients: ${provider.accepting ? 'Yes' : 'No'}
                 />
               </div>
             </div>
-            <div className="flex justify-end">
+            
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+              <div className="w-full md:w-auto">
+                {patientAddress && (
+                  <button
+                    onClick={handleSendProviderList}
+                    disabled={isSending || providers.length === 0}
+                    className={`w-full md:w-auto py-2 px-4 rounded-md flex items-center justify-center gap-2 ${
+                      isSending ? 'bg-gray-700 cursor-not-allowed' : 
+                      sentSuccess ? 'bg-green-600' : 'bg-blue-600 hover:bg-blue-700'
+                    } text-white transition-colors`}
+                  >
+                    {isSending ? (
+                      <>
+                        <div className="h-4 w-4 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
+                        <span>Sending...</span>
+                      </>
+                    ) : sentSuccess ? (
+                      <>
+                        <CheckCircle size={16} />
+                        <span>Provider List Sent!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send size={16} />
+                        <span>Send to Patient</span>
+                      </>
+                    )}
+                  </button>
+                )}
+                {patientAddress && (
+                  <p className="text-xs text-gray-400 mt-2">
+                    Send to: {patientAddress}
+                  </p>
+                )}
+              </div>
+              
               <button
                 onClick={handleEmailList}
-                className="flex items-center gap-1 py-2 px-4 rounded-md text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+                className="flex items-center justify-center gap-1 py-2 px-4 w-full md:w-auto rounded-md text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
               >
                 <Mail size={16} />
                 <span>Send Email</span>
@@ -236,26 +286,22 @@ Accepting New Patients: ${provider.accepting ? 'Yes' : 'No'}
           <div className="mb-6 bg-gray-800/40 border border-indigo-500/20 rounded-lg p-4">
             <h3 className="text-white font-medium mb-3">Provider Locations</h3>
             <div className="h-[300px] rounded-lg overflow-hidden">
-              <GoogleMapsComponent 
-                apiKey={(import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || ''}
-                locations={providers.map((provider, index) => {
-                  const fallbackPosition = {
-                    lat: 40.7608 + (Math.random() * 0.04 - 0.02),
-                    lng: -111.8910 + (Math.random() * 0.04 - 0.02)
-                  };
-                  
-                  return {
-                    id: provider.id,
-                    position: provider.location || fallbackPosition,
-                    title: provider.name,
-                    population: parseInt(provider.npi?.slice(-4) || '0') || 1,
-                    healthIndex: 80
-                  };
-                })}
-                selectedLocationId={selectedLocationId}
-                onLocationSelect={(id) => {
+              <ProviderMap 
+                providers={providers}
+                selectedProviderId={selectedLocationId || undefined}
+                onProviderSelect={(id) => {
                   setSelectedLocationId(id);
+                  // Find provider in the list
+                  const selectedProvider = providers.find(p => p.id === id);
+                  if (selectedProvider) {
+                    // Scroll to the provider in the list
+                    document.getElementById(`provider-${id}`)?.scrollIntoView({
+                      behavior: 'smooth',
+                      block: 'center'
+                    });
+                  }
                 }}
+                patientAddress={patientAddress}
               />
             </div>
           </div>
@@ -316,11 +362,12 @@ Accepting New Patients: ${provider.accepting ? 'Yes' : 'No'}
                       onClick={() => handleShowDirections(provider.id)}
                       className={`flex-1 flex items-center justify-center gap-1 py-2 px-3 rounded-md text-sm font-medium ${
                         showDirections === provider.id
-                          ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                          ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-[0_0_8px_rgba(79,70,229,0.6)]'
                           : 'bg-gray-800 text-white hover:bg-gray-700'
-                      } transition-colors`}
+                      } transition-all duration-200`}
+                      title={showDirections === provider.id ? "Hide directions" : "Show directions"}
                     >
-                      <Navigation size={14} />
+                      <Navigation size={14} className={showDirections === provider.id ? "text-indigo-200" : ""} />
                       <span>{showDirections === provider.id ? 'Hide Directions' : 'Directions'}</span>
                     </button>
                     
@@ -356,6 +403,7 @@ Accepting New Patients: ${provider.accepting ? 'Yes' : 'No'}
               {providers.map(provider => (
                 <div 
                   key={provider.id}
+                  id={`provider-${provider.id}`}
                   className="p-4 hover:bg-white/5 transition-colors"
                 >
                   <div className="flex justify-between items-start mb-2">
@@ -410,17 +458,19 @@ Accepting New Patients: ${provider.accepting ? 'Yes' : 'No'}
                       onClick={() => handleShowDirections(provider.id)}
                       className={`flex-1 flex items-center justify-center gap-1 py-2 px-3 rounded-md text-sm font-medium ${
                         showDirections === provider.id
-                          ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                          ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-[0_0_8px_rgba(79,70,229,0.6)]'
                           : 'bg-gray-800 text-white hover:bg-gray-700'
-                      } transition-colors`}
+                      } transition-all duration-200`}
+                      title={showDirections === provider.id ? "Hide directions" : "Show directions"}
                     >
-                      <Navigation size={14} />
+                      <Navigation size={14} className={showDirections === provider.id ? "text-indigo-200" : ""} />
                       <span>{showDirections === provider.id ? 'Hide Directions' : 'Directions'}</span>
                     </button>
                     
                     <button
                       onClick={() => handleBookAppointment(provider)}
-                      className="flex-1 flex items-center justify-center gap-1 py-2 px-3 rounded-md text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+                      className="flex-1 flex items-center justify-center gap-1 py-2 px-3 rounded-md text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 shadow-[0_0_5px_rgba(79,70,229,0.4)] hover:shadow-[0_0_8px_rgba(79,70,229,0.6)] transition-all duration-200"
+                      title="Book appointment"
                     >
                       <Calendar size={14} />
                       <span>Book</span>

@@ -31,11 +31,13 @@ interface ResearchAccordionProps {
     gender: string;
     condition: string;
   };
+  researchReport?: string | null;
 }
 
 const ResearchAccordion: React.FC<ResearchAccordionProps> = ({
   sections,
-  patientInfo
+  patientInfo,
+  researchReport
 }) => {
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
   const toggleSection = (sectionId: string) => {
@@ -219,8 +221,25 @@ const ResearchAccordion: React.FC<ResearchAccordionProps> = ({
             )}
           </div>
         ))}
+        {researchReport && (
+          <div
+            className={`
+              rounded-lg overflow-hidden
+              border border-indigo-500/30 shadow-[0_0_5px_rgba(79,70,229,0.3),inset_0_0_5px_rgba(79,70,229,0.1)]
+              shadow-lg shadow-black/10
+              bg-gradient-to-b from-indigo-900/10 via-purple-900/10 to-indigo-900/10
+              transition-all duration-200
+            `}
+          >
+            <div className="p-3">
+              <h3 className="text-sm font-medium text-white mb-2">Deep Research Report</h3>
+              <div className="text-sm text-gray-300 whitespace-pre-wrap">
+                {researchReport}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-
     </div>
   );
 };

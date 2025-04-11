@@ -20,7 +20,7 @@ export class ToolHandler {
   private npiHandler: NPIToolHandler;
   private pubmedHandler: PubMedToolHandler;
   constructor(config: ToolHandlerConfig) {
-    this.fdaHandler = new FDAToolHandler;
+    this.fdaHandler = new FDAToolHandler(); // FDA handler doesn't need an API key in constructor as it uses fetch
     this.mapsHandler = new MapsToolHandler({ apiKey: config.GOOGLE_MAPS_API_KEY });
     this.npiHandler = new NPIToolHandler(); // Correct: Removed argument as constructor expects none
     this.pubmedHandler = new PubMedToolHandler({ apiKey: config.PUBMED_API_KEY }); // Correct: Restored argument
@@ -32,10 +32,7 @@ export class ToolHandler {
 
     try {
       switch (namespace) {
-        case 'searchDrugLabel':
-        case 'searchDeviceLabel':
-        case 'searchNDC':
-        case 'searchRecalls':
+        case 'searchDrugLabel': // Main function name in fdaToolDefinitions
           return this.fdaHandler.handleToolCall(toolCall);
 
         case 'searchHealthcareFacilities':

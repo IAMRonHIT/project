@@ -1217,7 +1217,7 @@ Social Determinants:
                         ${openPanels.includes('outputType') ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}
                       >
                         <div className="p-3 grid grid-cols-1 gap-2 text-white">
-                          {(['careplan', 'education', 'strategy', 'population', 'quality'] as OutputType[]).map((type) => (
+                          {(['careplan', 'education', 'strategy', 'population', 'quality', 'medication-reconciliation'] as OutputType[]).map((type) => (
                             <label 
                               key={type} 
                               className={`

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, memo } from 'react';
 import { Brain, Headphones, Search, User, MapPin, Bot, ChevronDown, Pill } from 'lucide-react';
 import realtimeAudioService from '../../services/realtimeAudioService';
 
-export type ModeType = 'default' | 'deep-thinking' | 'realtime-audio' | 'medication-reconciliation' | 'patient-content' | 'provider-search';
+export type ModeType = 'default' | 'deep-thinking' | 'realtime-audio' | 'deep-research' | 'patient-content' | 'provider-search';
 
 interface ModeOption {
   id: ModeType;
@@ -55,9 +55,9 @@ const ModeDropdown = memo(function ModeDropdown({
       textColor: 'text-purple-600'
     },
     {
-      id: 'medication-reconciliation',
-      label: 'Medication Reconciliation',
-      icon: <Pill size={14} />,
+      id: 'deep-research',
+      label: 'Deep Research',
+      icon: <Search size={14} />,
       bgColor: 'bg-blue-600',
       hoverBgColor: 'hover:bg-blue-700',
       textColor: 'text-blue-600'
@@ -113,7 +113,6 @@ const ModeDropdown = memo(function ModeDropdown({
         setIsOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -121,6 +120,7 @@ const ModeDropdown = memo(function ModeDropdown({
   }, []);
 
   const activeOption = modeOptions.find(option => option.id === activeMode) || modeOptions[0];
+  const ariaExpanded = isOpen ? "true" : "false";
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -131,7 +131,6 @@ const ModeDropdown = memo(function ModeDropdown({
         } ${activeOption.bgColor} ${activeOption.hoverBgColor} text-white ${className}`}
         onClick={handleToggleDropdown}
         aria-haspopup="listbox"
-        aria-expanded={isOpen}
         disabled={isDisabled}
       >
         <span className="flex items-center justify-center w-4 h-4">{activeOption.icon}</span>
@@ -146,26 +145,28 @@ const ModeDropdown = memo(function ModeDropdown({
         <div 
           className="absolute z-50 min-w-full whitespace-nowrap bottom-full mb-1 bg-gray-800 border border-gray-700 rounded-lg shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1),0_-2px_4px_-1px_rgba(0,0,0,0.06)] overflow-hidden origin-bottom animate-slide-up"
           role="listbox"
+          aria-label="Mode Selection Dropdown"
         >
-          {[...modeOptions].reverse().map((option) => (
-            <button
-              key={option.id}
-              role="option"
-              aria-selected={activeMode === option.id}
-              className={`flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
-                activeMode === option.id 
-                  ? `${option.bgColor} text-white`
-                  : `text-gray-300 hover:${option.textColor} hover:bg-gray-700`
-              }`}
-              onClick={() => handleOptionClick(option.id)}
-            >
-              <span className="flex items-center justify-center w-4 h-4">{option.icon}</span>
-              <span>{option.label.toUpperCase()}</span>
-            </button>
-          ))}
+          {[...modeOptions].reverse().map((option) => {
+            return (
+              <button
+                key={option.id}
+                role="option"
+                className={`flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+                  option.id === activeMode 
+                    ? `${option.bgColor} text-white`
+                    : `text-gray-300 hover:${option.textColor} hover:bg-gray-700`
+                }`}
+                onClick={() => handleOptionClick(option.id)}
+              >
+                <span className="flex items-center justify-center w-4 h-4">{option.icon}</span>
+                <span>{option.label.toUpperCase()}</span>
+              </button>
+            );
+          })}
         </div>
       )}
-    </div>
+</div>
   );
 });
 

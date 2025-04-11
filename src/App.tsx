@@ -9,7 +9,7 @@ import { RonAIPage } from './pages/RonAI/RonAIPage';
 import CommunicationHub from './components/Communication Hub/CommunicationHub';
 import { Member360View } from './pages/Members/Member360View';
 import { EnhancedCareJourney } from './pages/Members/components/EnhancedCareJourney';
-import PopulationHealthPage from './pages/PopulationHealth/PopulationHealthPage';
+import KanbanPage from './pages/Kanban/KanbanPage';
 import NoteDemo from './pages/NoteDemo';
 
 function AppRoutes() {
@@ -45,8 +45,8 @@ function AppRoutes() {
           element={<RonAIPage />}
         />
         <Route 
-          path="/population-health" 
-          element={<PopulationHealthPage />}
+          path="/kanban" 
+          element={<KanbanPage />}
         />
         <Route 
           path="/note-demo" 

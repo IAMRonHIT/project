@@ -3,7 +3,7 @@ import {
   Users, Building2, Bot, ClipboardCheck, Heart, Activity,
   FileText, MessageSquareMore, BarChart3, Settings, GraduationCap,
   HelpCircle, ShieldCheck, Home, ChevronLeft, ChevronRight,
-  MapPin
+  MapPin, Trello as Kanban
 } from 'lucide-react';
 import { NavItem } from './NavItem';
 import Logo from '../Logo';
@@ -21,7 +21,7 @@ const mainNavItems = [
   { icon: Users, label: 'Members', to: '/members' },
   { icon: Building2, label: 'Providers', to: '/providers' },
   { icon: Bot, label: 'Ron AI', to: '/ron-ai' },
-  { icon: Activity, label: 'Population Health', to: '/population-health' },
+  { icon: Kanban, label: 'Kanban', to: '/kanban' },
   { icon: MessageSquareMore, label: 'Communication Hub', to: '/communication' },
   { icon: BarChart3, label: 'Reports', to: '/reports' },
 ];

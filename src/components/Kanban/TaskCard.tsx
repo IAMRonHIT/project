@@ -1,138 +1,72 @@
-import React, { useState } from 'react';
-import { MoreVertical, User, Pencil, Users, UserCircle, Trash2 } from 'lucide-react';
-import type { Task } from '../types/task';
-import type { themes } from '../lib/themes';
-import { taskTypeConfig } from '../utils/taskTypeConfig';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from './ui/dropdown-menu';
+import React from 'react';
+import { Task } from '../../types/task';
 
 interface TaskCardProps {
   task: Task;
-  theme: typeof themes[keyof typeof themes];
+  theme: any;
 }
 
-export function TaskCard({ task, theme }: TaskCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-
+export const TaskCard: React.FC<TaskCardProps> = ({ task, theme }) => {
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData('taskId', task.id);
-    setIsDragging(true);
   };
 
-  const handleDragEnd = () => {
-    setIsDragging(false);
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'HIGH':
+        return 'bg-red-500';
+      case 'MEDIUM':
+        return 'bg-yellow-500';
+      case 'LOW':
+        return 'bg-green-500';
+      default:
+        return 'bg-gray-500';
+    }
   };
-
-  const typeConfig = taskTypeConfig[task.issueType];
-  const TaskIcon = typeConfig?.icon || User;
 
   return (
-    <div 
-      className={`
-        relative w-full min-h-[180px]
-        rounded-lg p-5 border cursor-move
-        ${theme === 'dark' ? 'bg-[#1E293B] hover:bg-[#1E293B]/90' : 'bg-white hover:bg-white/90'}
-        ${isDragging 
-          ? 'shadow-[0_0_30px_rgba(0,255,255,0.3)] border-[#00FFFF]/60 scale-[1.02] rotate-1' 
-          : 'border-gray-200 dark:border-[#1E3448] hover:scale-[1.02] hover:shadow-lg'
-        }
-        transition-all duration-200 ease-out group
-      `}
+    <div
+      className={`rounded-lg p-4 border ${theme.border} ${theme.card} ${theme.cardHover} cursor-pointer shadow-sm`}
       draggable
       onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      onClick={() => setIsExpanded(!isExpanded)}
     >
-      <div className="relative">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-[#1E2D3D]">
-              {task.profilePicture ? (
-                <img
-                  src={task.profilePicture}
-                  alt={task.patientName}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <User className="w-7 h-7 text-[#B0C7D1]" />
-              )}
-            </div>
-            <div>
-              <h3 className={`text-xl font-bold ${theme.text}`}>{task.patientName}</h3>
-              <div className="flex items-center gap-2">
-                <p className={`text-sm ${theme.textSecondary}`}>DOB: {task.patientDOB}</p>
-                <span className={`text-sm ${theme.textSecondary}`}>|</span>
-                <p className={`text-sm ${theme.textSecondary}`}>{task.ticketNumber}</p>
-              </div>
-            </div>
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger className="p-2 hover:bg-cyan-500/10 rounded-full transition-colors">
-              <MoreVertical className="w-5 h-5 text-cyan-400" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem className="gap-2">
-                <Pencil className="w-4 h-4" />
-                <span>Edit</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="gap-2">
-                <Users className="w-4 h-4" />
-                <span>Reassign</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="gap-2">
-                <UserCircle className="w-4 h-4" />
-                <span>Patient Profile</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="gap-2">
-                <Users className="w-4 h-4" />
-                <span>View Stakeholders</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                className="gap-2 text-red-400 focus:text-red-300 focus:bg-red-900/20"
-              >
-                <Trash2 className="w-4 h-4" />
-                <span>Delete Issue</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+      <div className="flex items-start justify-between mb-2">
+        <span className={`text-xs px-2 py-1 rounded-full ${theme.border} border ${theme.text} opacity-70`}>
+          {task.ticketNumber}
+        </span>
+        <div className={`h-3 w-3 rounded-full ${getPriorityColor(task.priority)}`}></div>
+      </div>
+      
+      <h4 className={`font-semibold mb-2 ${theme.text}`}>{task.title}</h4>
+      
+      <p className={`text-sm mb-3 line-clamp-2 ${theme.text} opacity-80`}>
+        {task.description}
+      </p>
 
-        <div className="flex items-center gap-3 mb-3">
-          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-            task.priority === 'HIGH' ? 'priority-high' :
-            task.priority === 'MEDIUM' ? 'priority-medium' :
-            'priority-low'
-          }`}>
-            {task.priority}
-          </span>
-          <span className={`px-3 py-1 rounded-full text-xs ${theme.textSecondary} bg-cyan-950/50`}>
-            Due {task.dueDate}
+      <div className="flex justify-between items-center">
+        <div className="flex items-center space-x-2">
+          {task.profilePicture ? (
+            <img 
+              src={task.profilePicture} 
+              alt={task.patientName} 
+              className="w-6 h-6 rounded-full"
+            />
+          ) : (
+            <div className={`w-6 h-6 rounded-full ${theme.accent} flex items-center justify-center`}>
+              <span className="text-white text-xs">
+                {task.patientName.split(' ').map(n => n[0]).join('')}
+              </span>
+            </div>
+          )}
+          <span className={`text-xs ${theme.text} opacity-80`}>
+            {task.patientName}
           </span>
         </div>
-
-        <p className={`${theme.textSecondary} text-sm mb-4`}>{task.description}</p>
-
-        {isExpanded && task.actions && (
-          <div className="space-y-4 mt-6" onClick={(e) => e.stopPropagation()}>
-            {task.actions.map((action) => (
-              <button
-                key={action.type}
-                className={`w-full px-4 py-2 ${theme.buttonBg} ${theme.buttonText} rounded-lg text-sm font-medium transition-all duration-300 ${theme.buttonHover}`}
-              >
-                {action.type}
-              </button>
-            ))}
-          </div>
-        )}
+        
+        <span className={`text-xs ${theme.text} opacity-70`}>
+          {task.dueDate}
+        </span>
       </div>
     </div>
   );
-}
+};

@@ -6,6 +6,7 @@ interface ImportMetaEnv {
   readonly VITE_FDA_API_KEY: string;
   readonly VITE_GOOGLE_MAPS_API_KEY: string;
   readonly VITE_PUBMED_API_KEY: string;
+  readonly VITE_PERPLEXITY_API_KEY: string; // Added Perplexity API Key
   [key: string]: string;
 }
 

@@ -2,7 +2,15 @@ import React, { useState, useRef, useEffect, memo } from 'react';
 import { Brain, Headphones, Search, User, MapPin, Bot, ChevronDown, Pill } from 'lucide-react';
 import realtimeAudioService from '../../services/realtimeAudioService';
 
-export type ModeType = 'default' | 'deep-thinking' | 'realtime-audio' | 'deep-research' | 'patient-content' | 'provider-search';
+export type ModeType = 
+  | 'default' 
+  | 'deep-thinking' // This is Gemini Deep Thinking
+  | 'realtime-audio' 
+  | 'deep-research' // This might be a general research, will add specific Perplexity research
+  | 'patient-content' 
+  | 'provider-search'
+  | 'perplexity-reasoning' // Perplexity Sonar Reasoning Pro
+  | 'perplexity-research'; // Perplexity Sonar Deep Research
 
 interface ModeOption {
   id: ModeType;
@@ -77,6 +85,22 @@ const ModeDropdown = memo(function ModeDropdown({
       bgColor: 'bg-sky-500',
       hoverBgColor: 'hover:bg-sky-600',
       textColor: 'text-sky-500'
+    },
+    {
+      id: 'perplexity-reasoning',
+      label: 'Perplexity Reasoning',
+      icon: <Brain size={14} />, // Using Brain icon for reasoning
+      bgColor: 'bg-cyan-600',
+      hoverBgColor: 'hover:bg-cyan-700',
+      textColor: 'text-cyan-600'
+    },
+    {
+      id: 'perplexity-research',
+      label: 'Perplexity Research',
+      icon: <Search size={14} />, // Using Search icon for research
+      bgColor: 'bg-indigo-600',
+      hoverBgColor: 'hover:bg-indigo-700',
+      textColor: 'text-indigo-600'
     },
   ];
 

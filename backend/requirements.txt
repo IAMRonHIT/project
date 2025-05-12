@@ -1,0 +1,9 @@
+google-generativeai
+fastapi
+uvicorn[standard]
+python-dotenv
+websockets
+opencv-python
+pyaudio
+pillow
+mss

@@ -9,8 +9,10 @@ import { RonAIPage } from './pages/RonAI/RonAIPage';
 import CommunicationHub from './components/Communication Hub/CommunicationHub';
 import { Member360View } from './pages/Members/Member360View';
 import { EnhancedCareJourney } from './pages/Members/components/EnhancedCareJourney';
+import EnhancedKanbanPage from './pages/Kanban/EnhancedKanbanPage';
 import KanbanPage from './pages/Kanban/KanbanPage';
 import NoteDemo from './pages/NoteDemo';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function AppRoutes() {
   return (
@@ -44,9 +46,13 @@ function AppRoutes() {
           path="/ron-ai"
           element={<RonAIPage />}
         />
-        <Route 
-          path="/kanban" 
-          element={<KanbanPage />}
+        <Route
+          path="/kanban"
+          element={
+            <ErrorBoundary>
+              <EnhancedKanbanPage />
+            </ErrorBoundary>
+          }
         />
         <Route 
           path="/note-demo" 

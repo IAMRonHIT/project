@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo, FC } from 'react';
 import { useGeminiStream, toolDefinitions } from '../../hooks/useGeminiStream';
+import { getPerplexityResponse, PerplexityResponse, Citation } from '../../services/perplexityService'; // Added Citation
+import SourcesAccordion from './SourcesAccordion'; // Added SourcesAccordion
 import { createToolHandler } from '../../services/ToolHandler';
 import { env } from '../../config/environment';
 import realtimeAudioService, { ConnectionState } from '../../services/realtimeAudioService';
@@ -50,6 +52,10 @@ interface Message {
   mode?: ModeType;
   isDeepThinking?: boolean;
   isAudio?: boolean;
+  reasoningMarkdown?: string; // For Perplexity reasoning
+  jsonData?: any; // For Perplexity JSON output
+  citations?: Citation[]; // For Perplexity sources
+  isPerplexity?: boolean; // Flag for Perplexity messages
 }
 
 // Component for copying code blocks
@@ -130,7 +136,7 @@ const RonExperience: React.FC = () => {
     stopStream,
     isStreaming,
     error: streamError
-  } = useGeminiStream(isDeepThinking ? 'deep-thinking' : 'default');
+  } = useGeminiStream(activeMode === 'deep-thinking' ? 'deep-thinking' : 'default'); // Use activeMode for Gemini stream
 
   // Initialize tool handler
   const toolHandler = useMemo(() => createToolHandler({
@@ -233,15 +239,20 @@ const RonExperience: React.FC = () => {
             <div className="max-w-[80%] rounded-lg p-4 bg-gray-900/90 border border-indigo-500/30 text-gray-100 mr-auto 
               shadow-[0_0_10px_rgba(79,70,229,0.2)] hover:shadow-[0_0_15px_rgba(79,70,229,0.3)] 
               backdrop-blur-sm transition-all duration-200">
-              {msg.isDeepThinking && (
+              {(msg.isDeepThinking || msg.isPerplexity) && (
                 <div className="mb-3 text-indigo-400 font-semibold flex items-center">
-                  <span>🤔 Using Gemini Deep Thinking Model</span>
-                  {!msg.isStreaming && (
+                  <span>
+                    🤔 
+                    {msg.isDeepThinking && ' Using Gemini Deep Thinking Model'}
+                    {msg.isPerplexity && activeMode === 'perplexity-reasoning' && ' Using Perplexity Sonar Reasoning Pro'}
+                    {msg.isPerplexity && activeMode === 'perplexity-research' && ' Using Perplexity Sonar Deep Research'}
+                  </span>
+                  {!msg.isStreaming && (msg.isDeepThinking || (msg.isPerplexity && msg.reasoningMarkdown)) && (
                     <button 
                       type="button"
                       onClick={toggleAccordion}
                       className="ml-2 p-1 rounded-md hover:bg-indigo-500/20 transition-colors"
-                      aria-label={isExpanded ? "Collapse chain of thought" : "Expand chain of thought"}
+                      aria-label={isExpanded ? "Collapse reasoning" : "Expand reasoning"}
                     >
                       {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                     </button>
@@ -249,24 +260,48 @@ const RonExperience: React.FC = () => {
                 </div>
               )}
               
+              {/* Gemini Chain of Thought */}
               {msg.isDeepThinking && !msg.isStreaming && isExpanded && (
                 <div className="border-l-2 border-indigo-500 pl-3 mb-4 text-indigo-300/80 italic text-sm transition-all duration-300">
-                  <p className="font-semibold mb-1">Chain of Thought:</p>
+                  <p className="font-semibold mb-1">Gemini Chain of Thought:</p>
                   {formatChainOfThought(msg.content)}
                 </div>
               )}
+
+              {/* Perplexity Reasoning */}
+              {msg.isPerplexity && msg.reasoningMarkdown && !msg.isStreaming && isExpanded && (
+                 <div className="border-l-2 border-teal-500 pl-3 mb-4 text-teal-300/80 text-sm transition-all duration-300">
+                  <p className="font-semibold mb-1">Perplexity Reasoning Process:</p>
+                  <ReactMarkdown className="prose prose-sm max-w-none prose-invert" remarkPlugins={[remarkGfm]} components={{ code: CodeBlock }}>
+                    {msg.reasoningMarkdown}
+                  </ReactMarkdown>
+                </div>
+              )}
               
-              {/* Only render markdown if there's still content after filtering */}
-              {displayContent && displayContent.trim() !== '' && (
+              {/* Main content display */}
+              {displayContent && displayContent.trim() !== '' && (!msg.isPerplexity || (msg.isPerplexity && !msg.jsonData && !msg.citations)) && (
                 <ReactMarkdown
                   className="prose prose-sm max-w-none prose-invert"
                   remarkPlugins={[remarkGfm]}
                   components={{ code: CodeBlock }}
                 >
-                  {msg.isDeepThinking && !msg.isStreaming ? 
-                    extractFinalAnswer(msg.content) : 
-                    displayContent}
+                  {msg.isDeepThinking && !msg.isStreaming ? extractFinalAnswer(msg.content) : displayContent}
                 </ReactMarkdown>
+              )}
+
+              {/* Perplexity JSON Data (if any and not handled by ApiResponseHandler) */}
+              {msg.isPerplexity && msg.jsonData && (
+                <div className="mt-2 p-2 bg-gray-800 rounded">
+                  <p className="font-semibold text-sm text-gray-400 mb-1">Structured Data:</p>
+                  <pre className="text-xs whitespace-pre-wrap break-all">
+                    {JSON.stringify(msg.jsonData, null, 2)}
+                  </pre>
+                </div>
+              )}
+
+              {/* Perplexity Sources Accordion */}
+              {msg.isPerplexity && msg.citations && msg.citations.length > 0 && !msg.isStreaming && (
+                <SourcesAccordion sources={msg.citations} />
               )}
               
               {msg.isStreaming && (
@@ -316,100 +351,140 @@ const RonExperience: React.FC = () => {
       role: 'user',
       content: currentMessage,
       id: `user-${Date.now()}`,
-      mode: activeMode
+      mode: activeMode,
     };
     setMessages(prev => [...prev, userMessage]);
     
-    const message = currentMessage;
+    const messageToProcess = currentMessage;
     setCurrentMessage('');
 
-    try {
-      let currentResponse = '';
-      
-      await startStream(
-        message,
-        (token) => {
-          currentResponse += token;
-          setMessages(prev => {
-            const newMessages = [...prev];
-            const lastIndex = newMessages.length - 1;
-            if (lastIndex >= 0 && newMessages[lastIndex].role === 'assistant') {
-              newMessages[lastIndex] = {
-                ...newMessages[lastIndex],
-                content: currentResponse,
-                isStreaming: true
-              };
-            } else {
-              newMessages.push({
-                role: 'assistant',
-                content: currentResponse,
-                isStreaming: true,
-                id: `assistant-${Date.now()}`,
-                mode: activeMode,
-                isDeepThinking: activeMode === 'deep-thinking'
-              });
-            }
-            return newMessages;
-          });
-        },
-        (structuredResult) => {
-          setFdaAccordionData(structuredResult);
-        },
-        activeMode === 'deep-thinking' ? undefined : Object.values(toolDefinitions)
-      );
+    // Assistant message placeholder
+    const assistantMessageId = `assistant-${Date.now()}`;
+    const assistantPlaceholder: Message = {
+      role: 'assistant',
+      content: '',
+      isStreaming: true,
+      id: assistantMessageId,
+      mode: activeMode,
+      isDeepThinking: activeMode === 'deep-thinking',
+      isPerplexity: activeMode === 'perplexity-reasoning' || activeMode === 'perplexity-research',
+    };
+    setMessages(prev => [...prev, assistantPlaceholder]);
 
-      setMessages(prev => {
-        const newMessages = [...prev];
-        const lastIndex = newMessages.length - 1;
-        if (lastIndex >= 0 && newMessages[lastIndex].role === 'assistant') {
-          newMessages[lastIndex] = {
-            ...newMessages[lastIndex],
-            isStreaming: false
-          };
+    try {
+      if (activeMode === 'perplexity-reasoning' || activeMode === 'perplexity-research') {
+        const modelName = activeMode === 'perplexity-reasoning' ? 'sonar-reasoning-pro' : 'sonar-deep-research';
+        let systemPrompt = "";
+        if (activeMode === 'perplexity-reasoning') {
+          systemPrompt = "You are an advanced AI assistant capable of deep reasoning. Provide comprehensive and well-reasoned answers. Include your thought process in <think> tags.";
+        } else if (activeMode === 'perplexity-research') {
+          systemPrompt = "You are an AI assistant specialized in deep research. Provide detailed, comprehensive, and well-sourced information. If possible, offer insights into your research process or key findings within <think> tags.";
         }
-        return newMessages;
-      });
+        
+        // For Perplexity, we don't stream token by token in this setup, but get the full response.
+        // The 'isStreaming' flag will be set to false once the response is received.
+        const perplexityResult: PerplexityResponse = await getPerplexityResponse(
+          messageToProcess,
+          modelName,
+          systemPrompt
+          // No schema for now, as per user feedback for deep-research and no specific schema for reasoning yet
+        );
+
+        setMessages(prev => prev.map(msg => 
+          msg.id === assistantMessageId 
+          ? {
+              ...msg,
+              content: perplexityResult.jsonData ? JSON.stringify(perplexityResult.jsonData) : (perplexityResult.rawResponse.replace(/<think>[\s\S]*?<\/think>/, '').trim() || perplexityResult.error || "No content from Perplexity."),
+              reasoningMarkdown: perplexityResult.reasoningMarkdown,
+              jsonData: perplexityResult.jsonData,
+              citations: perplexityResult.citations, // Store citations
+              isStreaming: false,
+              isPerplexity: true, // ensure this is set
+              mode: activeMode, // ensure mode is set
+            }
+          : msg
+        ));
+        if (perplexityResult.error) {
+          console.error(`Perplexity API Error (${modelName}):`, perplexityResult.error);
+        }
+
+      } else { // Gemini or other modes
+        let currentResponse = '';
+        await startStream(
+          messageToProcess,
+          (token) => {
+            currentResponse += token;
+            setMessages(prev => prev.map(msg => 
+              msg.id === assistantMessageId
+              ? { ...msg, content: currentResponse, isStreaming: true }
+              : msg
+            ));
+          },
+          (structuredResult) => {
+            // This is for Gemini tool calls, might need adjustment if Perplexity provides similar structured results outside JSON schema
+            setFdaAccordionData(structuredResult); 
+            // If Perplexity has structured data, it's in jsonData
+          },
+          activeMode === 'deep-thinking' ? undefined : Object.values(toolDefinitions)
+        );
+
+        setMessages(prev => prev.map(msg => 
+          msg.id === assistantMessageId
+          ? { ...msg, isStreaming: false }
+          : msg
+        ));
+      }
     } catch (error) {
-      console.error('Error in stream:', error);
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        mode: activeMode
-      }]);
+      console.error('Error in handleSubmit:', error);
+      setMessages(prev => prev.map(msg => 
+        msg.id === assistantMessageId
+        ? { 
+            ...msg, 
+            content: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            isStreaming: false,
+          }
+        : msg
+      ));
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Toggle deep thinking mode
+  // Toggle deep thinking mode (now refers to Gemini's deep thinking)
   const toggleDeepThinking = () => {
-    setIsDeepThinking(prev => {
-      const newValue = !prev;
-      if (newValue) {
-        stopStream();
-      }
-      return newValue;
-    });
-    if (isConversationMode) {
-      setIsConversationMode(false);
+    // This function might need to be re-evaluated if "deep thinking" becomes a generic concept
+    // For now, it controls Gemini's deep thinking. Perplexity modes are selected via onModeChange.
+    if (activeMode !== 'deep-thinking') {
+      handleModeChange('deep-thinking');
+    } else {
+      handleModeChange('default'); // Or whatever the previous/default mode was
     }
   };
   
   // Toggle conversation mode
   const toggleConversationMode = () => {
+    // This also seems tied to a specific type of interaction, ensure it makes sense with Perplexity modes
     setIsConversationMode(prev => !prev);
-    if (isDeepThinking) {
-      setIsDeepThinking(false);
+    if (activeMode === 'deep-thinking' || activeMode === 'perplexity-reasoning' || activeMode === 'perplexity-research') {
+      // Potentially switch back to a default mode if conversation mode is toggled off
+      // For now, it just toggles a state.
     }
   };
 
   // Handle mode change
   const handleModeChange = (mode: ModeType) => {
     setActiveMode(mode);
+    setIsDeepThinking(mode === 'deep-thinking'); // Sync isDeepThinking with Gemini's deep-thinking mode
     
-    // Handle provider search mode specifically
     if (mode === 'provider-search') {
       setIsProviderSearchModalOpen(true);
+    } else {
+      setIsProviderSearchModalOpen(false); // Close if switching to other modes
+      setIsProviderMapVisible(false); // Also hide map
+    }
+    // Stop Gemini stream if switching away from a Gemini mode
+    if (mode !== 'default' && mode !== 'deep-thinking' && isStreaming) {
+      stopStream();
     }
   };
 

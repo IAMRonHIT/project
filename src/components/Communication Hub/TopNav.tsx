@@ -1,110 +1,52 @@
 import React from 'react';
-import { Search, Bell, Settings, User } from 'lucide-react';
-import { Badge } from '../Badge';
-import { useTheme } from '../../hooks/useTheme';
+import { Search, Bell, Settings, User, MessageSquare } from 'lucide-react';
 
 const TopNav: React.FC = () => {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
-
   return (
-    <div className={`
-      flex items-center px-6 py-3
-      bg-gradient-to-r from-black/50 via-transparent to-black/50
-      backdrop-blur-sm border-b border-ron-teal-400/20
-    `}>
-      <div className="flex items-center gap-4">
-        <Badge variant="info" glow size="sm">Communication Hub</Badge>
+    <div className="p-4 border-b border-indigo-500/30 flex items-center justify-between bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 relative">
+      {/* Decorative elements */}
+      <div className="absolute left-0 top-0 w-1/3 h-0.5 bg-gradient-to-r from-indigo-500/80 to-transparent"></div>
+      <div className="absolute right-0 bottom-0 w-1/4 h-0.5 bg-gradient-to-l from-teal-500/80 to-transparent"></div>
+
+      {/* Title and Logo */}
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-500/20 to-teal-500/20 border border-indigo-500/30 shadow-[0_0_15px_rgba(79,70,229,0.3)]">
+          <MessageSquare className="w-5 h-5 text-indigo-400" />
+        </div>
+        <div>
+          <h1 className="text-lg font-semibold text-white">Communication Hub</h1>
+          <p className="text-xs text-indigo-300/80">Healthcare Team Collaboration</p>
+        </div>
       </div>
 
-      <div className="flex items-center flex-1 mx-6">
-        <div className="relative w-full max-w-2xl">
-          <div className={`
-            relative rounded-lg overflow-hidden
-            ${isDark ? 'bg-black/50' : 'bg-white/50'}
-            backdrop-blur-sm
-            border
-            ${isDark 
-              ? 'border-ron-teal-400/20 focus-within:border-ron-teal-400/40' 
-              : 'border-ron-teal-200/50 focus-within:border-ron-teal-400/60'
-            }
-            transition-all duration-200
-            focus-within:shadow-glow-teal
-          `}>
+      {/* Search Bar */}
+      <div className="flex-1 max-w-2xl mx-6">
+        <div className="relative">
+          <div className="relative rounded-xl overflow-hidden bg-gray-900/90 border border-indigo-500/30 transition-all duration-200 focus-within:border-indigo-400/50 focus-within:shadow-[0_0_10px_rgba(79,70,229,0.4)] backdrop-blur-sm">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
               <Search className="h-4 w-4 text-gray-400" />
             </div>
             <input
               type="text"
               placeholder="Search conversations..."
-              className={`
-                block w-full pl-10 pr-3 py-2
-                bg-transparent text-sm
-                ${isDark ? 'text-white' : 'text-gray-900'}
-                placeholder:text-gray-400
-                focus:outline-none
-              `}
+              className="block w-full pl-10 pr-3 py-2.5 bg-transparent text-sm text-white placeholder:text-gray-500 focus:outline-none"
             />
           </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        <button className={`
-          relative p-2 rounded-lg
-          ${isDark 
-            ? 'bg-ron-teal-400/5 hover:bg-ron-teal-400/10' 
-            : 'bg-ron-teal-50/50 hover:bg-ron-teal-50'
-          }
-          text-white/80 hover:text-white
-          transition-all duration-200
-          backdrop-blur-sm
-          hover:shadow-glow-teal
-          border border-transparent
-          ${isDark 
-            ? 'hover:border-ron-teal-400/20' 
-            : 'hover:border-ron-teal-200/50'
-          }
-        `}>
+      {/* Action Buttons */}
+      <div className="flex items-center gap-2">
+        <button className="relative p-2 rounded-lg text-gray-400 hover:text-white hover:bg-indigo-500/20 transition-colors" aria-label="Notifications">
           <Bell className="h-5 w-5" />
-          <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-ron-coral-400 shadow-glow-coral animate-pulse" />
+          <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-indigo-500 shadow-[0_0_5px_rgba(79,70,229,0.5)] animate-pulse"></span>
         </button>
 
-        <button className={`
-          p-2 rounded-lg
-          ${isDark 
-            ? 'bg-ron-teal-400/5 hover:bg-ron-teal-400/10' 
-            : 'bg-ron-teal-50/50 hover:bg-ron-teal-50'
-          }
-          text-white/80 hover:text-white
-          transition-all duration-200
-          backdrop-blur-sm
-          hover:shadow-glow-teal
-          border border-transparent
-          ${isDark 
-            ? 'hover:border-ron-teal-400/20' 
-            : 'hover:border-ron-teal-200/50'
-          }
-        `}>
+        <button className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-indigo-500/20 transition-colors" aria-label="Settings">
           <Settings className="h-5 w-5" />
         </button>
 
-        <button className={`
-          p-2 rounded-lg
-          ${isDark 
-            ? 'bg-ron-teal-400/5 hover:bg-ron-teal-400/10' 
-            : 'bg-ron-teal-50/50 hover:bg-ron-teal-50'
-          }
-          text-white/80 hover:text-white
-          transition-all duration-200
-          backdrop-blur-sm
-          hover:shadow-glow-teal
-          border border-transparent
-          ${isDark 
-            ? 'hover:border-ron-teal-400/20' 
-            : 'hover:border-ron-teal-200/50'
-          }
-        `}>
+        <button className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-indigo-500/20 transition-colors" aria-label="User profile">
           <User className="h-5 w-5" />
         </button>
       </div>

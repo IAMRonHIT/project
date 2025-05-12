@@ -4,9 +4,7 @@ import EmailTab from './EmailTab';
 import PhoneTab from './PhoneTab';
 import VideoTab from './VideoTab';
 import DocumentsTab from './Documents';
-import { Badge } from '../Badge';
 import { MessageSquare, Mail, Phone, Video, FileText } from 'lucide-react';
-import { useTheme } from '../../hooks/useTheme';
 
 type Tab = 'chat' | 'email' | 'phone' | 'video' | 'documents';
 
@@ -19,8 +17,6 @@ interface TabConfig {
 
 const CenterPanel: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('chat');
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
 
   const tabs: TabConfig[] = React.useMemo(() => [
     {
@@ -56,34 +52,32 @@ const CenterPanel: React.FC = () => {
   ], []); // Memoize tabs configuration
 
   return (
-    <div className={`
-      flex-1 flex flex-col
-      ${isDark ? 'bg-black' : 'bg-white/80'}
-      backdrop-blur-xl
-    `}>
-      <div className={`
-        flex space-x-4 p-4
-        bg-gradient-to-r from-black/50 via-transparent to-black/50
-        backdrop-blur-sm border-b border-ron-teal-400/20
-      `}>
-        {tabs.map((tab) => (
-          <Badge
-            key={tab.id}
-            variant={activeTab === tab.id ? 'success' : 'default'}
-            glow={activeTab === tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className="cursor-pointer"
-            icon={tab.icon}
-            size="sm"
-          >
-            {tab.label}
-          </Badge>
-        ))}
+    <div className="flex-1 flex flex-col min-h-0">
+      {/* Tabs Navigation */}
+      <div className="flex p-3 border-b border-indigo-500/30 bg-gray-900/70">
+        <div className="flex space-x-2">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-3 py-2 rounded-lg flex items-center gap-2 transition-all duration-200 ${activeTab === tab.id
+                ? 'bg-indigo-600/20 text-white border border-indigo-500/30 shadow-[0_0_15px_rgba(79,70,229,0.15)]'
+                : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+            >
+              <div className={activeTab === tab.id ? 'text-indigo-400' : ''}>
+                {tab.icon}
+              </div>
+              <span className="text-sm font-medium">{tab.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
-      <div className="flex-1 p-4 bg-gradient-to-b from-black/50 to-transparent">
-        {/* Keep video component mounted to prevent unnecessary reinitializations */}
+
+      {/* Content Area */}
+      <div className="flex-1 overflow-hidden bg-gradient-to-b from-gray-900/30 to-gray-800/30">
+        {/* Keep all components mounted to prevent unnecessary reinitializations, but only show active */}
         {tabs.map(tab => (
-          <div key={tab.id} style={{ display: activeTab === tab.id ? 'block' : 'none' }}>
+          <div key={tab.id} className={`h-full ${activeTab === tab.id ? 'block' : 'hidden'}`}>
             {tab.component}
           </div>
         ))}

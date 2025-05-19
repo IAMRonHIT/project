@@ -14,7 +14,7 @@ export function Accordion({ title, children, defaultOpen = false, className = ''
   return (
     <div className={`border-b border-gray-200 dark:border-white/10 ${className}`}>
       <button
-        className="w-full px-4 py-3 flex items-center justify-between hover:"bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10"-50 dark:hover:bg-white/5 transition-colors"
+        className="w-full px-4 py-3 flex items-center justify-between bg-black backdrop-blur-xl rounded-xl p-8 shadow-soft hover:shadow-glow transition-all duration-300 relative overflow-hidden border border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
         onClick={() => setIsOpen(!isOpen)}
       >
         <span className="font-medium text-sm text-gray-900 dark:text-white">{title}</span>

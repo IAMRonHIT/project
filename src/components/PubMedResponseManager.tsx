@@ -48,21 +48,39 @@ const getDoiUrl = (doi: string) => {
   return `http://doi.org/${doi}`;
 };
 
-// Helper to create PDF URL for open access articles
+// Helper to create PDF URL for open access articles with multiple sources
 const getPdfUrl = (article: PubMedArticle) => {
   // If the article already has a pdfUrl, use it (ensuring it's HTTP)
   if (article.pdfUrl) {
     return article.pdfUrl.replace('https://', 'http://');
   }
   
-  // Try to generate a PMC URL for potential open access article
-  if (article.pmid) {
-    return `http://www.ncbi.nlm.nih.gov/pmc/articles/pmid/${article.pmid}/pdf/`;
+  // PMCID is the most reliable source for full text PDFs
+  if (article.pmcid) {
+    return `https://www.ncbi.nlm.nih.gov/pmc/articles/${article.pmcid}/pdf/`;
   }
   
-  // Fallback to DOI-based URL if available
+  // Try to generate a PMC URL for potential open access article via PMID
+  if (article.pmid) {
+    return `https://www.ncbi.nlm.nih.gov/pmc/articles/pmid/${article.pmid}/pdf/`;
+  }
+  
+  // DOI-based URLs can work for many scientific publications
   if (article.doi) {
-    return `http://sci-hub.se/${article.doi}`;
+    // Try multiple possible sources for DOI resolution
+    if (article.doi.includes('10.1371')) {
+      // PLOS journals
+      return `https://journals.plos.org/plosone/article/file?id=${article.doi.split('/').pop()}&type=printable`;
+    } else if (article.doi.includes('10.3389')) {
+      // Frontiers journals
+      return `https://www.frontiersin.org/articles/${article.doi.replace('doi.org/', '')}/pdf`;
+    } else if (article.doi.includes('10.1186')) {
+      // BMC journals
+      return `https://bmcmedicine.biomedcentral.com/counter/pdf/${article.doi}`;
+    } else {
+      // General DOI-based URL as a fallback
+      return `https://sci-hub.se/${article.doi}`;
+    }
   }
   
   // No PDF URL available
@@ -76,7 +94,7 @@ const getHighlightablePmcUrl = (pmcid: string) => {
   return url;
 };
 
-// Helper to check if an article is likely open access
+// Helper to check if an article is likely open access or embeddable
 const isLikelyOpenAccess = (article: PubMedArticle) => {
   // Use explicit flag if available
   if (article.isOpenAccess !== undefined) {
@@ -90,13 +108,30 @@ const isLikelyOpenAccess = (article: PubMedArticle) => {
     journalTitle.includes('plos') || 
     journalTitle.includes('bmc') ||
     journalTitle.includes('peerj') ||
-    journalTitle.includes('frontiers')
+    journalTitle.includes('frontiers') ||
+    journalTitle.includes('nature') ||
+    journalTitle.includes('science') ||
+    journalTitle.includes('journal') ||
+    journalTitle.includes('advances') ||
+    journalTitle.includes('medicine')
   ) {
     return true;
   }
   
   // Check for PMC ID as an indicator of potential open access
   if (article.journal && article.journal.pmc) {
+    return true;
+  }
+  
+  // Check if article has identifiers that typically indicate availability
+  if (article.pmcid || (article.doi && article.doi.length > 5)) {
+    return true;
+  }
+  
+  // Check publication year - older articles are more likely to be available
+  const pubYear = article.publicationDate ? 
+    parseInt(String(article.publicationDate).substring(0, 4)) : null;
+  if (pubYear && pubYear < 2019) {
     return true;
   }
   
@@ -116,23 +151,85 @@ const PubMedResponseManager: React.FC<PubMedResponseManagerProps> = ({ data }) =
   // Track expanded article PMIDs
   const [expandedPmids, setExpandedPmids] = useState<Set<string | number>>(new Set());
   
-  // Keep embeddedPdfs state for PDF view toggle
-  const [embeddedPdfs, setEmbeddedPdfs] = useState<Set<string | number>>(new Set());
+  // Keep track of the current view type (article, pdf, or null) for each article
+  const [currentView, setCurrentView] = useState<Record<string | number, 'article' | 'pdf' | null>>({});
   
   // Track PDF download states
   const [downloadStatus, setDownloadStatus] = useState<Record<string | number, 'idle' | 'loading' | 'success' | 'error'>>({});
 
-  // Track iframe load errors
-  const [iframeErrors, setIframeErrors] = useState<Record<string | number, boolean>>({});
+  // Track iframe load errors and retry attempts
+  const [iframeLoadError, setIframeLoadError] = useState<Record<string | number, boolean>>({});
+  const [iframeRetryCount, setIframeRetryCount] = useState<Record<string | number, number>>({});
+  const [alternateSourceIndex, setAlternateSourceIndex] = useState<Record<string | number, number>>({});
   
-  // Handle iframe load errors
-  const handleIframeError = (articleId: string | number, isPdf: boolean = false) => {
-    setIframeErrors(prev => ({ ...prev, [`${articleId}-${isPdf ? 'pdf' : 'article'}`]: true }));
+  // Handle iframe load errors with fallback sources
+  const handleIframeError = (articleId: string | number, article: PubMedArticle) => {
+    // Mark this iframe as having an error
+    setIframeLoadError(prev => ({ ...prev, [articleId]: true }));
+    
+    // Increment retry counter for this article
+    setIframeRetryCount(prev => {
+      const currentCount = prev[articleId] || 0;
+      return { ...prev, [articleId]: currentCount + 1 };
+    });
+    
+    // If we haven't exceeded max retries, try an alternate source
+    if ((iframeRetryCount[articleId] || 0) < 3) {
+      setAlternateSourceIndex(prev => {
+        const currentIndex = prev[articleId] || 0;
+        return { ...prev, [articleId]: currentIndex + 1 };
+      });
+      
+      // Reset the error state so we can try again with a new source
+      setTimeout(() => {
+        setIframeLoadError(prev => ({ ...prev, [articleId]: false }));
+      }, 500);
+    }
   };
   
-  // Reset iframe error when toggling
-  const resetIframeError = (articleId: string | number, isPdf: boolean = false) => {
-    setIframeErrors(prev => ({ ...prev, [`${articleId}-${isPdf ? 'pdf' : 'article'}`]: false }));
+  // Reset iframe error and retry counters
+  const resetIframeError = (articleId: string | number) => {
+    setIframeLoadError(prev => ({ ...prev, [articleId]: false }));
+    setIframeRetryCount(prev => ({ ...prev, [articleId]: 0 }));
+    setAlternateSourceIndex(prev => ({ ...prev, [articleId]: 0 }));
+  };
+  
+  // Get appropriate article URL with fallbacks based on retry count
+  const getArticleUrl = (article: PubMedArticle, sourceIndex: number = 0): string => {
+    const sources = [
+      // Primary source based on identifiers
+      article.doi ? getDoiUrl(article.doi) :
+        article.pmcid ? `https://www.ncbi.nlm.nih.gov/pmc/articles/${article.pmcid}/` :
+          getPubMedUrl(article.pmid),
+      
+      // First fallback - direct PubMed URL
+      getPubMedUrl(article.pmid),
+      
+      // Second fallback - try PMC if available
+      article.pmcid ? `https://www.ncbi.nlm.nih.gov/pmc/articles/${article.pmcid}/` : null,
+      
+      // Third fallback - try direct DOI resolver
+      article.doi ? `https://doi.org/${article.doi}` : null,
+      
+      // Fourth fallback - try Unpaywall if DOI available
+      article.doi ? `https://api.unpaywall.org/v2/${article.doi}?email=user@example.com` : null,
+    ].filter(Boolean) as string[]; // Remove null entries and cast to string[]
+    
+    // Use the source at the current index, or the first source if index is out of bounds
+    return sources[sourceIndex % sources.length] || sources[0];
+  };
+  
+  // Helper function to ensure iframe src is always string | undefined (never null)
+  const getIframeSrc = (article: PubMedArticle, viewType: 'article' | 'pdf' | null, pdfUrl: string | null, sourceIndex: number = 0): string | undefined => {
+    if (viewType === 'pdf') {
+      // For PDF view, use the PDF URL or undefined if null
+      return pdfUrl || undefined;
+    } else if (viewType === 'article') {
+      // For article view, use our article URL getter which guarantees a string
+      return getArticleUrl(article, sourceIndex);
+    }
+    // Default case
+    return undefined;
   };
 
   // No articles case
@@ -146,37 +243,56 @@ const PubMedResponseManager: React.FC<PubMedResponseManagerProps> = ({ data }) =
       const next = new Set(prev);
       if (next.has(pmid)) {
         next.delete(pmid);
-        // Also close PDF view if article is collapsed
-        setEmbeddedPdfs(prevPdfs => {
-          const nextPdfs = new Set(prevPdfs);
-          nextPdfs.delete(pmid);
-          return nextPdfs;
-        });
-        // Reset iframe errors
+        setCurrentView(prev => ({ ...prev, [pmid]: null })); // Collapse view
         resetIframeError(pmid);
-        resetIframeError(pmid, true);
       } else {
         next.add(pmid);
+        // Always attempt to display the article content when expanded
+        const articleData = displayArticles.find(a => (a.pmid || articles.indexOf(a)) === pmid);
+        
+        // Attempt to show article view in more cases - virtually any article can potentially be embedded
+        if (articleData) {
+          // Check if this article is potentially embeddable using our enhanced detection function
+          const potentiallyEmbeddable = isLikelyOpenAccess(articleData);
+          
+          // If the article has any properties that indicate it might be embeddable, try to show it
+          if (potentiallyEmbeddable || 
+              articleData.hasFullText === true || 
+              articleData.doi || 
+              articleData.isOpenAccess || 
+              (articleData.pmcid && articleData.pmcid !== '') ||
+              articleData.pmid) {
+            
+            // Default to article view for almost all cases
+            setCurrentView(prev => ({ ...prev, [pmid]: 'article' as 'article' }));
+          } else {
+            // Only fall back to null (abstract only) if we have absolutely no way to try embedding
+            setCurrentView(prev => ({ ...prev, [pmid]: null }));
+          }
+        } else {
+          setCurrentView(prev => ({ ...prev, [pmid]: null }));
+        }
+        resetIframeError(pmid);
       }
       return next;
     });
   };
   
-  // Toggle PDF view
-  const togglePdfView = (pmid: string | number, event: React.MouseEvent) => {
+  // Toggle between PDF and Article view in the single iframe
+  const toggleContentView = (pmid: string | number, event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
     
-    setEmbeddedPdfs(prev => {
-      const next = new Set(prev);
-      if (next.has(pmid)) {
-        next.delete(pmid);
-        // Reset PDF iframe error
-        resetIframeError(pmid, true);
+    setCurrentView((prev: Record<string | number, 'article' | 'pdf' | null>): Record<string | number, 'article' | 'pdf' | null> => {
+      const currentPmidView = prev[pmid];
+      resetIframeError(pmid);
+
+      if (currentPmidView === 'pdf') {
+        return { ...prev, [pmid]: 'article' as 'article' };
       } else {
-        next.add(pmid);
+        // This covers 'article' or initially null/undefined for this pmid
+        return { ...prev, [pmid]: 'pdf' as 'pdf' };
       }
-      return next;
     });
   };
   
@@ -263,7 +379,7 @@ const PubMedResponseManager: React.FC<PubMedResponseManagerProps> = ({ data }) =
               
               {/* Article Details */}
               {expandedPmids.has(articleId) && (
-                <div className="p-4 pt-0 bg-gray-800/30">
+                <div className="p-4 pt-0"> {/* Removed bg-gray-800/30 */}
                   {/* Article Actions */}
                   <div className="mb-4 flex items-center flex-wrap gap-3">
                     {/* External Link Button */}
@@ -281,17 +397,17 @@ const PubMedResponseManager: React.FC<PubMedResponseManagerProps> = ({ data }) =
                     {/* PDF Buttons - Only show for potential open access articles */}
                     {pdfUrl && (
                       <>
-                        {/* View PDF Button */}
+                        {/* Toggle Content View (PDF/Article) Button */}
                         <button
-                          onClick={(e) => togglePdfView(articleId, e)}
+                          onClick={(e) => toggleContentView(articleId, e)}
                           className={`inline-flex items-center gap-2 px-4 py-2 
                             text-white rounded-md transition-colors shadow-lg hover:shadow-xl
-                            ${embeddedPdfs.has(articleId) 
-                              ? 'bg-green-800 hover:bg-green-900' 
-                              : 'bg-green-600 hover:bg-green-700'}`}
+                            ${currentView[articleId] === 'pdf' 
+                              ? 'bg-indigo-600 hover:bg-indigo-700' // Style for "View Article"
+                              : 'bg-green-600 hover:bg-green-700'}`} // Style for "View PDF"
                         >
-                          {embeddedPdfs.has(articleId) 
-                            ? <><Minimize2 size={16} /> Hide PDF</>
+                          {currentView[articleId] === 'pdf' 
+                            ? <><BookOpen size={16} /> View Article</>
                             : <><FileText size={16} /> View PDF</>
                           }
                         </button>
@@ -326,46 +442,57 @@ const PubMedResponseManager: React.FC<PubMedResponseManagerProps> = ({ data }) =
                       PMID: <span className="font-medium">{article.pmid || 'N/A'}</span> {article.doi ? '• Via DOI' : '• Via PubMed'}
                     </span>
                   </div>
-                  
-                  {/* Conditionally show Embedded Article View based on full text availability */}
-                  {(article.hasFullText === true || article.doi || article.isOpenAccess || (article.pmcid && article.pmcid !== '')) ? (
-                    <div className="mb-4 border border-blue-500/30 rounded-lg overflow-hidden h-[500px] bg-white">
-                      {iframeErrors[`${articleId}-article`] ? (
+
+                  {/* Single Iframe for Article or PDF View */}
+                  {currentView[articleId] && (
+                    <div className="mb-4 border border-blue-500/30 rounded-lg overflow-hidden h-[600px] bg-white">
+                      {iframeLoadError[articleId] ? (
                         <div className="w-full h-full flex flex-col items-center justify-center bg-gray-800">
-                          <div className="text-red-400 mb-2">Failed to load article</div>
-                          <p className="text-sm text-gray-400 mb-4">The article source refused to connect or cannot be embedded.</p>
+                          <div className="text-red-400 mb-2">
+                            Failed to load {currentView[articleId] === 'pdf' ? 'PDF' : 'article'}
+                          </div>
+                          <p className="text-sm text-gray-400 mb-4">
+                            The {currentView[articleId] === 'pdf' ? 'PDF' : 'article'} source refused to connect or cannot be embedded.
+                          </p>
                           <a 
-                            href={article.doi 
-                              ? getDoiUrl(article.doi) 
-                              : article.pmcid 
-                                ? `https://www.ncbi.nlm.nih.gov/pmc/articles/${article.pmcid}/`
-                                : getPubMedUrl(article.pmid)
+                            href={
+                              currentView[articleId] === 'pdf' 
+                                ? (pdfUrl || undefined) // Convert null to undefined
+                                : article.doi 
+                                  ? getDoiUrl(article.doi) 
+                                  : article.pmcid 
+                                    ? `https://www.ncbi.nlm.nih.gov/pmc/articles/${article.pmcid}/`
+                                    : getPubMedUrl(article.pmid)
                             }
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
+                            className={`px-4 py-2 text-white rounded-md ${
+                              currentView[articleId] === 'pdf' 
+                                ? 'bg-green-600 hover:bg-green-700' 
+                                : 'bg-blue-600 hover:bg-blue-700'
+                            }`}
                           >
-                            Open in New Tab
+                            Open {currentView[articleId] === 'pdf' ? 'PDF' : 'Article'} in New Tab
                           </a>
                         </div>
                       ) : (
                         <iframe 
-                          src={article.doi 
-                            ? getDoiUrl(article.doi) 
-                            : article.pmcid 
-                              ? getHighlightablePmcUrl(article.pmcid) // Use highlightable wrapper for PMC articles
-                              : getPubMedUrl(article.pmid)
-                          }
+                          src={getIframeSrc(article, currentView[articleId], pdfUrl, alternateSourceIndex[articleId] || 0)}
                           className="w-full h-full"
-                          title={`Embedded article: ${article.title}`}
+                          title={`${currentView[articleId] === 'pdf' ? 'PDF' : 'Article'}: ${article.title}`}
                           allowFullScreen
-                          onError={() => handleIframeError(articleId)}
-                          data-source={article.pmcid ? `PubMed PMC${article.pmcid}` : article.doi ? 'DOI' : 'PubMed'}
+                          onError={() => handleIframeError(articleId, article)}
+                          sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                          referrerPolicy="no-referrer"
+                          key={`${articleId}-${currentView[articleId]}-${alternateSourceIndex[articleId] || 0}`} // Force re-render on src or alternate source change
                         ></iframe>
                       )}
                     </div>
-                  ) : (
-                    <div className="mb-4 p-4 border border-blue-500/30 rounded-lg bg-gray-800/80">
+                  )}
+
+                  {/* Show message if no viewable content (neither article nor PDF can be shown in iframe) */}
+                  {!currentView[articleId] && (article.hasFullText !== true && !article.doi && !article.isOpenAccess && (!article.pmcid || article.pmcid === '')) && (
+                     <div className="mb-4 p-4 border border-blue-500/30 rounded-lg bg-gray-800/80">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-blue-300">
                           <FileText size={16} />
@@ -383,34 +510,6 @@ const PubMedResponseManager: React.FC<PubMedResponseManagerProps> = ({ data }) =
                       <p className="mt-2 text-sm text-gray-400">
                         Full text is not available for embedding. Only the abstract is available for this article.
                       </p>
-                    </div>
-                  )}
-                  
-                  {/* Embedded PDF View - Toggle state */}
-                  {embeddedPdfs.has(articleId) && pdfUrl && (
-                    <div className="mb-4 border border-blue-500/30 rounded-lg overflow-hidden h-[600px] bg-white">
-                      {iframeErrors[`${articleId}-pdf`] ? (
-                        <div className="w-full h-full flex flex-col items-center justify-center bg-gray-800">
-                          <div className="text-red-400 mb-2">Failed to load PDF</div>
-                          <p className="text-sm text-gray-400 mb-4">The PDF source refused to connect or cannot be embedded.</p>
-                          <a 
-                            href={pdfUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md"
-                          >
-                            Open PDF in New Tab
-                          </a>
-                        </div>
-                      ) : (
-                        <iframe 
-                          src={pdfUrl}
-                          className="w-full h-full"
-                          title={`PDF for article: ${article.title}`}
-                          allowFullScreen
-                          onError={() => handleIframeError(articleId, true)}
-                        ></iframe>
-                      )}
                     </div>
                   )}
                   

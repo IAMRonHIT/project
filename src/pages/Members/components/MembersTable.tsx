@@ -64,7 +64,22 @@ const members: Member[] = [
   }
 ];
 
-export function MembersTable() {
+interface MembersTableProps {
+  columnNames?: {
+    memberHeader?: string;
+    priorityHeader?: string;
+    statusHeader?: string;
+    riskScoreHeader?: string;
+    lastContactHeader?: string;
+    nextActionHeader?: string;
+    actionsHeader?: string;
+  };
+  // Potentially add a prop for the 'Search members...' placeholder too if needed
+}
+
+export function MembersTable(props: MembersTableProps = {}) {
+  const { columnNames = {} } = props;
+
   const [isDark] = React.useState(() => document.documentElement.classList.contains('dark'));
   const navigate = useNavigate();
 
@@ -101,37 +116,37 @@ export function MembersTable() {
               <th className={`px-6 py-4 text-left text-sm font-semibold ${
                 isDark ? 'text-white/90' : 'text-dark-gun-metal/90'
               }`}>
-                Member
+                {columnNames.memberHeader || 'Member'}
               </th>
               <th className={`px-6 py-4 text-left text-sm font-semibold ${
                 isDark ? 'text-white/90' : 'text-dark-gun-metal/90'
               }`}>
-                Priority
+                {columnNames.priorityHeader || 'Priority'}
               </th>
               <th className={`px-6 py-4 text-left text-sm font-semibold ${
                 isDark ? 'text-white/90' : 'text-dark-gun-metal/90'
               }`}>
-                Status
+                {columnNames.statusHeader || 'Status'}
               </th>
               <th className={`px-6 py-4 text-left text-sm font-semibold ${
                 isDark ? 'text-white/90' : 'text-dark-gun-metal/90'
               }`}>
-                Risk Score
+                {columnNames.riskScoreHeader || 'Risk Score'}
               </th>
               <th className={`px-6 py-4 text-left text-sm font-semibold ${
                 isDark ? 'text-white/90' : 'text-dark-gun-metal/90'
               }`}>
-                Last Contact
+                {columnNames.lastContactHeader || 'Last Contact'}
               </th>
               <th className={`px-6 py-4 text-left text-sm font-semibold ${
                 isDark ? 'text-white/90' : 'text-dark-gun-metal/90'
               }`}>
-                Next Action
+                {columnNames.nextActionHeader || 'Next Action'}
               </th>
               <th className={`px-6 py-4 text-left text-sm font-semibold ${
                 isDark ? 'text-white/90' : 'text-dark-gun-metal/90'
               }`}>
-                Actions
+                {columnNames.actionsHeader || 'Actions'}
               </th>
             </tr>
           </thead>

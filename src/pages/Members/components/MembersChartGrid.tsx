@@ -25,7 +25,30 @@ const ChartCard: React.FC<ChartCardProps> = ({ title, icon: Icon, children }) =>
   );
 };
 
-export function MembersChartGrid() {
+interface MembersChartGridProps {
+  chartTitles?: {
+    satisfaction?: string;
+    journeyProgress?: string;
+    resourceUtilization?: string;
+    carePlanDistribution?: string;
+    activityPatterns?: string;
+    healthAssessment?: string;
+  };
+  seriesNames?: {
+    journeyMembers?: string;
+    utilization?: string;
+    plans?: string;
+    activityMon?: string;
+    activityWed?: string;
+    activityFri?: string;
+    assessmentScore?: string;
+  };
+  // Add other specific label props if needed, e.g., for axis categories
+}
+
+export function MembersChartGrid(props: MembersChartGridProps = {}) {
+  const { chartTitles = {}, seriesNames = {} } = props;
+
   // Member Satisfaction Gauge Chart Data
   const gaugeOptions = {
     chart: { 
@@ -188,7 +211,7 @@ export function MembersChartGrid() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Member Satisfaction Gauge */}
-      <ChartCard title="Member Satisfaction" icon={Users}>
+      <ChartCard title={chartTitles.satisfaction || "Member Satisfaction"} icon={Users}>
         <Chart
           type="radialBar"
           series={[94]}
@@ -198,11 +221,11 @@ export function MembersChartGrid() {
       </ChartCard>
 
       {/* Care Journey Funnel */}
-      <ChartCard title="Care Journey Progress" icon={Activity}>
+      <ChartCard title={chartTitles.journeyProgress || "Care Journey Progress"} icon={Activity}>
         <Chart
           type="bar"
           series={[{
-            name: 'Members',
+            name: seriesNames.journeyMembers || 'Members',
             data: [120, 180, 250, 400]
           }]}
           options={funnelOptions}
@@ -211,11 +234,11 @@ export function MembersChartGrid() {
       </ChartCard>
 
       {/* Resource Utilization Area */}
-      <ChartCard title="Resource Utilization" icon={Clock}>
+      <ChartCard title={chartTitles.resourceUtilization || "Resource Utilization"} icon={Clock}>
         <Chart
           type="area"
           series={[{
-            name: 'Utilization',
+            name: seriesNames.utilization || 'Utilization',
             data: [45, 52, 38, 45, 19, 23]
           }]}
           options={areaOptions}
@@ -223,12 +246,13 @@ export function MembersChartGrid() {
         />
       </ChartCard>
 
+
       {/* Care Plan Distribution Bar */}
-      <ChartCard title="Care Plan Distribution" icon={FileCheck}>
+      <ChartCard title={chartTitles.carePlanDistribution || "Care Plan Distribution"} icon={FileCheck}>
         <Chart
           type="bar"
           series={[{
-            name: 'Plans',
+            name: seriesNames.plans || 'Plans',
             data: [44, 55, 41, 67, 22]
           }]}
           options={barOptions}
@@ -237,20 +261,20 @@ export function MembersChartGrid() {
       </ChartCard>
 
       {/* Member Activity Patterns */}
-      <ChartCard title="Activity Patterns" icon={Brain}>
+      <ChartCard title={chartTitles.activityPatterns || "Activity Patterns"} icon={Brain}>
         <Chart
           type="bar"
           series={[
             {
-              name: 'Mon',
+              name: seriesNames.activityMon || 'Mon',
               data: [30, 20, 10, 5]
             },
             {
-              name: 'Wed',
+              name: seriesNames.activityWed || 'Wed',
               data: [45, 35, 25, 15]
             },
             {
-              name: 'Fri',
+              name: seriesNames.activityFri || 'Fri',
               data: [50, 40, 30, 20]
             }
           ]}
@@ -260,11 +284,11 @@ export function MembersChartGrid() {
       </ChartCard>
 
       {/* Health Assessment Radar */}
-      <ChartCard title="Health Assessment" icon={Heart}>
+      <ChartCard title={chartTitles.healthAssessment || "Health Assessment"} icon={Heart}>
         <Chart
           type="radar"
           series={[{
-            name: 'Score',
+            name: seriesNames.assessmentScore || 'Score',
             data: [80, 75, 85, 70, 90]
           }]}
           options={radarOptions}

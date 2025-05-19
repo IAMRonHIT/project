@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, memo } from 'react';
-import { Brain, Headphones, Search, User, MapPin, Bot, ChevronDown, Pill } from 'lucide-react';
+import { Brain, Headphones, Search, User, MapPin, Bot, ChevronDown, Pill, FileCode } from 'lucide-react';
 import realtimeAudioService from '../../services/realtimeAudioService';
+import SandboxIDE from './SandboxIDE';
 
 export type ModeType = 
   | 'default' 
@@ -10,7 +11,8 @@ export type ModeType =
   | 'patient-content' 
   | 'provider-search'
   | 'perplexity-reasoning' // Perplexity Sonar Reasoning Pro
-  | 'perplexity-research'; // Perplexity Sonar Deep Research
+  | 'perplexity-research' // Perplexity Sonar Deep Research
+  | 'one-click-builds';
 
 interface ModeOption {
   id: ModeType;
@@ -35,6 +37,7 @@ const ModeDropdown = memo(function ModeDropdown({
   className = ''
 }: ModeDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isSandboxOpen, setIsSandboxOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const modeOptions: ModeOption[] = [
@@ -79,6 +82,14 @@ const ModeDropdown = memo(function ModeDropdown({
       textColor: 'text-amber-500'
     },
     {
+      id: 'one-click-builds',
+      label: 'One Click Builds',
+      icon: <FileCode size={14} />,
+      bgColor: 'bg-green-500',
+      hoverBgColor: 'hover:bg-green-600',
+      textColor: 'text-green-500'
+    },
+    {
       id: 'provider-search',
       label: 'Provider Search',
       icon: <MapPin size={14} />,
@@ -120,10 +131,20 @@ const ModeDropdown = memo(function ModeDropdown({
         console.error('Error starting realtime audio session:', error);
         onChange('default');
       }
+    } else if (mode === 'patient-content' || mode === 'one-click-builds') {
+      if (realtimeAudioService.connectionState !== 'disconnected') {
+        realtimeAudioService.stopSession();
+      }
+      console.log(`Opening ${mode} mode with SandboxIDE`);
+      // Directly open the SandboxIDE when patient-content mode is selected
+      setIsSandboxOpen(true);
+      onChange(mode);
     } else {
       if (realtimeAudioService.connectionState !== 'disconnected') {
         realtimeAudioService.stopSession();
       }
+      // Close the SandboxIDE if any other mode is selected
+      setIsSandboxOpen(false);
       console.log('Calling onChange with mode:', mode);
       onChange(mode);
     }
@@ -147,7 +168,17 @@ const ModeDropdown = memo(function ModeDropdown({
   const ariaExpanded = isOpen ? "true" : "false";
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <>
+      {/* SandboxIDE */}
+      <SandboxIDE 
+        isOpen={isSandboxOpen} /* Retained for potential internal SandboxIDE logic */
+        onClose={() => setIsSandboxOpen(false)} /* Retained for potential internal SandboxIDE logic */
+        isVisible={isSandboxOpen} 
+        onVisibilityChange={(visible) => setIsSandboxOpen(visible)} 
+        currentMode={activeMode} 
+      />
+      
+      <div className="relative" ref={dropdownRef}>
       <button
         type="button"
         className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-colors ${
@@ -191,6 +222,7 @@ const ModeDropdown = memo(function ModeDropdown({
         </div>
       )}
 </div>
+    </>
   );
 });
 

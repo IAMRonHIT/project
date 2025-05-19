@@ -23,7 +23,32 @@ const ChartCard: React.FC<ChartCardProps> = ({ title, icon: Icon, children }) =>
   );
 };
 
-export function ProvidersChartGrid() {
+interface ProvidersChartGridProps {
+  chartTitles?: {
+    satisfaction?: string; // Was Network Satisfaction, for Appeals: Active Appeals
+    distribution?: string; // Was Provider Distribution, for Appeals: Appeal Categories/Types
+    growth?: string;       // Was Contract Status, for Appeals: Appeals Volume Trend
+    quality?: string;      // Was Quality Metrics
+    responseTimes?: string;// Was Response Times
+    coverage?: string;     // Was Network Coverage
+    // Potentially a new title for 'Appeal Status' if a chart is dedicated to it
+  };
+  seriesNames?: {
+    distributionProviders?: string; // For Provider Distribution chart series
+    growthActiveContracts?: string; // For Contract Status chart series
+    qualityScore?: string;          // For Quality Metrics series
+    responseTimesHours?: string;    // For Response Times series
+    coverage?: string;              // For Network Coverage series
+  };
+  // Add other specific label props if needed, e.g., for axis categories like Provider Distribution
+  xAxisCategories?: {
+    distribution?: string[]; // For Provider Distribution categories
+  };
+}
+
+export function ProvidersChartGrid(props: ProvidersChartGridProps = {}) {
+  const { chartTitles = {}, seriesNames = {}, xAxisCategories = {} } = props;
+
   // Network Satisfaction Gauge Chart Data
   const gaugeOptions = {
     chart: { 
@@ -93,7 +118,7 @@ export function ProvidersChartGrid() {
     dataLabels: { enabled: false },
     colors: ['#00F0FF'],
     xaxis: {
-      categories: ['Primary', 'Cardiology', 'Neurology', 'Oncology', 'Pediatrics'],
+      categories: xAxisCategories.distribution || ['Primary', 'Cardiology', 'Neurology', 'Oncology', 'Pediatrics'],
       labels: { style: { colors: '#fff' } }
     },
     yaxis: { labels: { style: { colors: '#fff' } } }
@@ -186,7 +211,7 @@ export function ProvidersChartGrid() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Network Satisfaction Gauge */}
-      <ChartCard title="Network Satisfaction" icon={Trophy}>
+      <ChartCard title={chartTitles.satisfaction || "Network Satisfaction"} icon={Trophy}>
         <Chart
           type="radialBar"
           series={[92]}
@@ -196,11 +221,11 @@ export function ProvidersChartGrid() {
       </ChartCard>
 
       {/* Provider Distribution */}
-      <ChartCard title="Provider Distribution" icon={Building2}>
+      <ChartCard title={chartTitles.distribution || "Provider Distribution"} icon={Building2}>
         <Chart
           type="bar"
           series={[{
-            name: 'Providers',
+            name: seriesNames.distributionProviders || 'Providers',
             data: [450, 280, 220, 180, 150]
           }]}
           options={distributionOptions}
@@ -209,11 +234,11 @@ export function ProvidersChartGrid() {
       </ChartCard>
 
       {/* Contract Status */}
-      <ChartCard title="Contract Status" icon={Activity}>
+      <ChartCard title={chartTitles.growth || "Contract Status"} icon={Activity}>
         <Chart
           type="area"
           series={[{
-            name: 'Active Contracts',
+            name: seriesNames.growthActiveContracts || 'Active Contracts',
             data: [1500, 1650, 1750, 1800, 1850, 1924]
           }]}
           options={contractOptions}
@@ -222,11 +247,11 @@ export function ProvidersChartGrid() {
       </ChartCard>
 
       {/* Quality Metrics */}
-      <ChartCard title="Quality Metrics" icon={StarIcon}>
+      <ChartCard title={chartTitles.quality || "Quality Metrics"} icon={StarIcon}>
         <Chart
           type="radar"
           series={[{
-            name: 'Score',
+            name: seriesNames.qualityScore || 'Score',
             data: [85, 90, 82, 88, 86]
           }]}
           options={qualityOptions}
@@ -235,11 +260,11 @@ export function ProvidersChartGrid() {
       </ChartCard>
 
       {/* Response Times */}
-      <ChartCard title="Response Times" icon={Clock}>
+      <ChartCard title={chartTitles.responseTimes || "Response Times"} icon={Clock}>
         <Chart
           type="bar"
           series={[{
-            name: 'Hours',
+            name: seriesNames.responseTimesHours || 'Hours',
             data: [1.2, 1.8, 2.1, 2.4]
           }]}
           options={responseOptions}
@@ -248,11 +273,11 @@ export function ProvidersChartGrid() {
       </ChartCard>
 
       {/* Network Coverage */}
-      <ChartCard title="Network Coverage" icon={Share2}>
+      <ChartCard title={chartTitles.coverage || "Network Coverage"} icon={Share2}>
         <Chart
           type="bar"
           series={[{
-            name: 'Coverage',
+            name: seriesNames.coverage || 'Coverage',
             data: [95, 88, 75, 60]
           }]}
           options={coverageOptions}

@@ -3,6 +3,8 @@ import os
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+from fastapi import Query
+import importlib
 
 # Add the parent directory of 'backend' to sys.path to allow root .env loading
 # and to find the venv.gemini module
@@ -43,8 +45,7 @@ app.add_middleware(
     allow_headers=["*"], # Allows all headers
 )
 
-from fastapi import Query
-import importlib
+# Import routers will happen after app initialization
 
 @app.get("/api/test-gemini")
 async def test_gemini_endpoint(mode: str = Query(default=None)):
@@ -65,6 +66,21 @@ async def test_gemini_endpoint(mode: str = Query(default=None)):
     except Exception as e:
         print(f"Error in test_gemini_endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+# Import and include routers
+try:
+    from routes.execute_code import router as execute_code_router
+    app.include_router(execute_code_router)
+    print("Code execution endpoint loaded successfully")
+except ImportError as e:
+    print(f"Error importing execute_code router: {e}")
+
+try:
+    from routes.export_component import router as export_component_router
+    app.include_router(export_component_router)
+    print("Export component endpoint loaded successfully")
+except ImportError as e:
+    print(f"Error importing export_component router: {e}")
 
 if __name__ == "__main__":
     import uvicorn

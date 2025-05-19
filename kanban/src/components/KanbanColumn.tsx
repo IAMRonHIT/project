@@ -41,7 +41,7 @@ export function KanbanColumn({ title, tasks, status, onTaskMove, theme }: Kanban
       <div className="mb-4 p-4 relative backdrop-blur-sm z-10">
         <div className="flex items-center justify-between">
           <h2 className={`text-xl font-semibold ${theme.columnText}`}>
-            <span className={theme === 'dark' ? 'text-[#00FFFF] text-glow' : 'text-cyan-500'}>
+            <span className="text-cyan-500">
               {title}
             </span>
           </h2>
@@ -61,7 +61,7 @@ export function KanbanColumn({ title, tasks, status, onTaskMove, theme }: Kanban
         onDrop={handleDrop}
       >
         {tasks.map(task => (
-          <TaskCard key={task.id} task={task} theme={theme} />
+          <TaskCard key={task.id} task={task} />
         ))}
       </div>
     </div>

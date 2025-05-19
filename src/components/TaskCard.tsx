@@ -1,71 +1,80 @@
 import React, { useState } from 'react';
-import { LucideIcon, User, Pencil, Users, UserCircle, Trash2, MoreVertical } from 'lucide-react';
+import { LucideIcon, User, Pencil, Users, UserCircle, Trash2, MoreVertical, Calendar, Clock } from 'lucide-react';
 import { 
   DropdownMenu, 
   DropdownMenuTrigger, 
   DropdownMenuContent, 
   DropdownMenuItem,
   DropdownMenuSeparator
-} from '../ui/dropdown-menu'; // Adjust the import path as needed
-import { Task, TaskTypeConfig } from '../types/task';
+} from './ui/dropdown-menu';
+import { Task } from '../types/task';
 import type { themes } from '../lib/themes';
 
-// Move the task type configuration to the component file
+// Define TaskTypeConfig interface here since it's not in the types file
+export interface TaskTypeConfig {
+  [key: string]: {
+    icon: LucideIcon;
+    color: string;
+    bgColor: string;
+  };
+}
+
+// Task type configuration with more appropriate icons
 export const taskTypeConfig: TaskTypeConfig = {
   'Authorization': {
-    icon: User,
+    icon: UserCircle,
     color: 'text-blue-500',
-    bgColor: 'bg-blue-50'
+    bgColor: 'bg-blue-100'
   },
   'Treatment Task': {
     icon: User,
     color: 'text-green-500',
-    bgColor: 'bg-green-50'
+    bgColor: 'bg-green-100'
   },
   'Care Plan': {
-    icon: User,
+    icon: Users,
     color: 'text-purple-500',
-    bgColor: 'bg-purple-50'
+    bgColor: 'bg-purple-100'
   },
   'Benefit/Eligibility Inquiry': {
-    icon: User,
+    icon: UserCircle,
     color: 'text-orange-500',
-    bgColor: 'bg-orange-50'
+    bgColor: 'bg-orange-100'
   },
   'In Office Appointment': {
-    icon: User,
+    icon: Calendar,
     color: 'text-teal-500',
-    bgColor: 'bg-teal-50'
+    bgColor: 'bg-teal-100'
   },
   'Telehealth': {
     icon: User,
     color: 'text-indigo-500',
-    bgColor: 'bg-indigo-50'
+    bgColor: 'bg-indigo-100'
   },
   'Form Request': {
-    icon: User,
+    icon: Pencil,
     color: 'text-gray-500',
-    bgColor: 'bg-gray-50'
+    bgColor: 'bg-gray-100'
   },
   'New Voicemail': {
     icon: User,
     color: 'text-red-500',
-    bgColor: 'bg-red-50'
+    bgColor: 'bg-red-100'
   },
   'New Email': {
     icon: User,
     color: 'text-yellow-500',
-    bgColor: 'bg-yellow-50'
+    bgColor: 'bg-yellow-100'
   },
   'New Chat': {
     icon: User,
     color: 'text-pink-500',
-    bgColor: 'bg-pink-50'
+    bgColor: 'bg-pink-100'
   },
   'New Document': {
     icon: User,
     color: 'text-cyan-500',
-    bgColor: 'bg-cyan-50'
+    bgColor: 'bg-cyan-100'
   }
 };
 
@@ -81,11 +90,18 @@ export function TaskCard({ task, theme }: TaskCardProps) {
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData('taskId', task.id);
     setIsDragging(true);
-    e.currentTarget.style.opacity = '1';
   };
 
   const handleDragEnd = () => {
     setIsDragging(false);
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch(priority) {
+      case 'HIGH': return 'bg-red-100 text-red-800';
+      case 'MEDIUM': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-green-100 text-green-800';
+    }
   };
 
   const typeConfig = taskTypeConfig[task.issueType];
@@ -94,106 +110,93 @@ export function TaskCard({ task, theme }: TaskCardProps) {
   return (
     <div 
       className={`
-        relative w-full min-h-[180px] ${theme.cardBg}
-        rounded-xl p-4 border cursor-move
+        relative w-full ${theme.cardBg}
+        rounded-lg p-3 border cursor-move
         ${isDragging 
-          ? 'shadow-[0_0_30px_rgba(6,182,212,0.4)] border-cyan-400/80 scale-[1.02] rotate-1' 
-          : `${theme.shadow} ${theme.border} hover:border-gray-300 hover:scale-[1.01]`
+          ? 'shadow-md border-cyan-400/50' 
+          : `shadow-sm ${theme.border} hover:shadow-md`
         }
-        transition-all duration-300 ease-out backdrop-blur-sm
+        transition-all duration-200
       `}
       draggable
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onClick={() => setIsExpanded(!isExpanded)}
     >
-      {/* Content */}
-      <div className="relative">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full overflow-hidden">
-              {task.profilePicture ? (
-                <img
-                  src={task.profilePicture}
-                  alt={task.patientName}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <User className="w-7 h-7 text-cyan-500" />
-              )}
-            </div>
-            <div>
-              <h3 className={`text-lg font-bold ${theme.text}`}>{task.patientName}</h3>
-              <div className="flex items-center gap-2">
-                <p className={`text-sm ${theme.textSecondary}`}>DOB: {task.patientDOB}</p>
-                <span className={`text-sm ${theme.textSecondary}`}>|</span>
-                <p className={`text-sm ${theme.textSecondary}`}>{task.ticketNumber}</p>
-              </div>
-            </div>
+      {/* Task Header */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${typeConfig?.bgColor}`}>
+            <TaskIcon className={`w-4 h-4 ${typeConfig?.color}`} />
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger className="p-1 hover:bg-cyan-500/10 rounded-full transition-colors group outline-none">
-              <MoreVertical className={`w-5 h-5 ${theme.textSecondary} group-hover:${theme.text} transition-colors`} />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem className="gap-2">
-                <Pencil className="w-4 h-4" />
-                <span>Edit</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="gap-2">
-                <Users className="w-4 h-4" />
-                <span>Reassign</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="gap-2">
-                <UserCircle className="w-4 h-4" />
-                <span>Patient Profile</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="gap-2">
-                <Users className="w-4 h-4" />
-                <span>View Stakeholders</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                className="gap-2 text-red-400 focus:text-red-300 focus:bg-red-900/20"
-              >
-                <Trash2 className="w-4 h-4" />
-                <span>Delete Issue</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div>
+            <h3 className={`text-sm font-medium ${theme.text}`}>{task.patientName}</h3>
+            <span className={`text-xs ${theme.textSecondary}`}>{task.ticketNumber}</span>
+          </div>
         </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full">
+            <MoreVertical className={`w-4 h-4 ${theme.textSecondary}`} />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem className="gap-2 text-xs">
+              <Pencil className="w-3 h-3" />
+              <span>Edit</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="gap-2 text-xs">
+              <Users className="w-3 h-3" />
+              <span>Reassign</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="gap-2 text-xs">
+              <UserCircle className="w-3 h-3" />
+              <span>Patient Profile</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="gap-2 text-xs text-red-500">
+              <Trash2 className="w-3 h-3" />
+              <span>Delete</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
-        {/* Task Info Row */}
-        <div className="flex items-center gap-3 mb-3">
-          <TaskIcon className={`w-5 h-5 ${theme.text}`} />
-          <span className={`text-sm ${theme.text}`}>{task.issueType}</span>
-          <span className={`px-3 py-1 ${theme.buttonBg} ${theme.buttonText} rounded-full text-xs tracking-wide`}>
-            {task.priority}
-          </span>
-          <span className={`px-3 py-1 ${theme.buttonBg} ${theme.buttonText} rounded-full text-xs tracking-wide`}>
-            Due {task.dueDate}
-          </span>
+      {/* Task Type & Info */}
+      <div className="mb-2">
+        <span className={`text-xs font-medium ${theme.text}`}>{task.issueType}</span>
+      </div>
+
+      {/* Description - Only show first line with ellipsis */}
+      <p className={`${theme.textSecondary} text-xs mb-3 line-clamp-2`}>
+        {task.description}
+      </p>
+
+      {/* Footer with badges */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1">
+          <Clock className={`w-3 h-3 ${theme.textSecondary}`} />
+          <span className={`text-xs ${theme.textSecondary}`}>{task.dueDate}</span>
         </div>
+        <span className={`px-2 py-0.5 text-xs rounded-full ${getPriorityColor(task.priority)}`}>
+          {task.priority}
+        </span>
+      </div>
 
-        {/* Description */}
-        <p className={`${theme.textSecondary} text-sm mb-4 leading-relaxed`}>{task.description}</p>
-
-        {/* Actions */}
-        {isExpanded && task.actions && (
-          <div className="flex flex-col gap-4 mt-4" onClick={(e) => e.stopPropagation()}>
+      {/* Expanded Actions */}
+      {isExpanded && task.actions && (
+        <div className="mt-3 pt-2 border-t border-gray-100 dark:border-gray-800" onClick={(e) => e.stopPropagation()}>
+          <div className="flex gap-2 flex-wrap">
             {task.actions.map((action) => (
               <button
                 key={action.type}
-                className={`w-full px-4 py-2 ${theme.buttonBg} ${theme.buttonText} rounded-lg text-sm font-medium transition-all duration-300 border ${theme.buttonBorder}`}
+                className={`px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded text-xs font-medium transition-colors hover:bg-gray-200 dark:hover:bg-gray-700`}
               >
                 {action.type}
               </button>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
-} 
+}

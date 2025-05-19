@@ -122,7 +122,7 @@ interface PerplexityRequestPayload {
     json_schema: { schema: any };
   };
   search?: {
-    search_context_size?: 'low' | 'medium' | 'high';
+    search_context_size?: 'high';
     country?: string; // e.g., 'US'
   };
   domains?: string[]; // e.g., ["medlineplus.gov", "mayoclinic.org"]

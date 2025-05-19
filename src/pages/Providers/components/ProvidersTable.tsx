@@ -1,7 +1,7 @@
-
 import { MapPin, ArrowUpRight, Phone, Mail, Calendar } from "lucide-react";
 import { RatingBadge } from "@/components/RatingBadge";
-import { ProviderStatusBadge } from "@/components/ProviderStatusBadge";
+import React from 'react';
+import { ProviderStatusBadge } from '@/components/ProviderStatusBadge';
 import { NetworkTierBadge } from "@/components/NetworkTierBadge";
 
 interface Provider {
@@ -16,29 +16,44 @@ interface Provider {
   nextAvailable: string;
 }
 
-export function ProvidersTable() {
+interface ProvidersTableProps {
+  searchTerm?: string; // Added to match usage in Providers/index.tsx
+  selectedFilters?: string[]; // Added to match usage in Providers/index.tsx
+  columnNames?: {
+    providerHeader?: string;
+    ratingHeader?: string;
+    statusHeader?: string;
+    networkTierHeader?: string;
+    contactHeader?: string;
+    nextAvailableHeader?: string;
+  };
+}
+
+export function ProvidersTable(props: ProvidersTableProps = {}) {
+  const { columnNames = {} } = props;
+
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full divide-y divide-gray-200">
         <thead>
           <tr>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Provider
+              {columnNames.providerHeader || 'Provider'}
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Rating
+              {columnNames.ratingHeader || 'Rating'}
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Status
+              {columnNames.statusHeader || 'Status'}
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Network Tier
+              {columnNames.networkTierHeader || 'Network Tier'}
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Contact
+              {columnNames.contactHeader || 'Contact'}
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Next Available
+              {columnNames.nextAvailableHeader || 'Next Available'}
             </th>
           </tr>
         </thead>

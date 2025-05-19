@@ -1,29 +1,60 @@
-import { ESLint } from 'eslint';
-import parser from '@typescript-eslint/parser';
-import plugin from '@typescript-eslint/eslint-plugin';
-import globals from 'globals';
-import reactHooks from 'eslint-plugin-react-hooks';
-import reactRefresh from 'eslint-plugin-react-refresh';
+import typescriptPlugin from '@typescript-eslint/eslint-plugin';
+import typescriptParser from '@typescript-eslint/parser';
 
 export default [
   {
-    ignores: ['dist'],
-    files: ['**/*.{ts,tsx}'],
+    ignores: ['dist/**', 'venv/**', 'node_modules/**', 'backend/**', 'kanban/**', 'openai-realtime-console/**', 'ron-ai/**'],
+  },
+  {
+    files: ['**/*.js'],
     languageOptions: {
       ecmaVersion: 2020,
-      globals: globals.browser,
-    },
-    plugins: {
-      'react-hooks': reactHooks,
-      'react-refresh': reactRefresh,
-      '@typescript-eslint': plugin,
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+        window: 'readonly',
+        document: 'readonly',
+        require: 'readonly',
+        module: 'readonly',
+        exports: 'readonly',
+        __dirname: 'readonly',
+        fetch: 'readonly',
+      },
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module'
+      }
     },
     rules: {
-      ...reactHooks.configs.recommended.rules,
-      'react-refresh/only-export-components': [
-        'warn',
-        { allowConstantExport: true },
-      ],
+      'no-unused-vars': 'warn',
+      'no-undef': 'warn',
+    },
+  },
+  {
+    files: ['**/*.{ts,tsx}'],
+    languageOptions: {
+      parser: typescriptParser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+        window: 'readonly',
+        document: 'readonly',
+      },
+    },
+    plugins: {
+      '@typescript-eslint': typescriptPlugin,
+    },
+    rules: {
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': 'warn',
+      'no-undef': 'off',
     },
   },
 ];

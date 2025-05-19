@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kanban Task Card Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #f3f4f6;
+      padding: 2rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .task-card {
+      background-color: white;
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+      border: 1px solid #e5e7eb;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      transition: all 0.2s;
+      cursor: move;
+    }
+    .task-card:hover {
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .dark-mode .task-card {
+      background-color: #1e293b;
+      border-color: #334155;
+      color: #e2e8f0;
+    }
+    .avatar {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 9999px;
+      overflow: hidden;
+      background-color: #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .dark-mode .avatar {
+      background-color: #334155;
+    }
+    .priority-high {
+      background-color: #fee2e2;
+      color: #b91c1c;
+    }
+    .priority-medium {
+      background-color: #fef3c7;
+      color: #b45309;
+    }
+    .priority-low {
+      background-color: #d1fae5;
+      color: #065f46;
+    }
+    .theme-toggle {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      background-color: #1e293b;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+    }
+    .dark-mode .theme-toggle {
+      background-color: #f3f4f6;
+      color: #1e293b;
+    }
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" onclick="toggleTheme()">Toggle Dark Mode</button>
+  
+  <div class="container">
+    <h1 class="text-2xl font-bold mb-6">Updated Task Card Design</h1>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Card 1 -->
+      <div class="task-card">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2">
+            <div class="avatar">
+              <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop&crop=faces&q=80" 
+                  alt="Patient" class="w-full h-full object-cover">
+            </div>
+            <div>
+              <h3 class="text-sm font-medium text-gray-900 dark:text-white">JANE DOE</h3>
+              <span class="text-xs text-gray-500 dark:text-gray-400">TKT-2024-001</span>
+            </div>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500">
+            <circle cx="12" cy="12" r="1"></circle>
+            <circle cx="12" cy="5" r="1"></circle>
+            <circle cx="12" cy="19" r="1"></circle>
+          </svg>
+        </div>
+
+        <div class="mb-2">
+          <span class="text-xs font-medium text-gray-900 dark:text-white">Authorization</span>
+        </div>
+
+        <p class="text-gray-500 dark:text-gray-400 text-xs mb-3 line-clamp-2">
+          Post appointment follow-up assigned; prior authorization and scheduling assistance.
+        </p>
+
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span class="text-xs text-gray-500 dark:text-gray-400">Today</span>
+          </div>
+          <span class="px-2 py-0.5 text-xs rounded-full priority-high">
+            HIGH
+          </span>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="task-card">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2">
+            <div class="avatar">
+              <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=faces&q=80" 
+                  alt="Patient" class="w-full h-full object-cover">
+            </div>
+            <div>
+              <h3 class="text-sm font-medium text-gray-900 dark:text-white">JOHN SMITH</h3>
+              <span class="text-xs text-gray-500 dark:text-gray-400">TKT-2024-002</span>
+            </div>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500">
+            <circle cx="12" cy="12" r="1"></circle>
+            <circle cx="12" cy="5" r="1"></circle>
+            <circle cx="12" cy="19" r="1"></circle>
+          </svg>
+        </div>
+
+        <div class="mb-2">
+          <span class="text-xs font-medium text-gray-900 dark:text-white">Treatment Task</span>
+        </div>
+
+        <p class="text-gray-500 dark:text-gray-400 text-xs mb-3 line-clamp-2">
+          Review and document recent laboratory results for diabetes screening.
+        </p>
+
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span class="text-xs text-gray-500 dark:text-gray-400">Tomorrow</span>
+          </div>
+          <span class="px-2 py-0.5 text-xs rounded-full priority-medium">
+            MEDIUM
+          </span>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="task-card">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2">
+            <div class="avatar">
+              <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=faces&q=80" 
+                  alt="Patient" class="w-full h-full object-cover">
+            </div>
+            <div>
+              <h3 class="text-sm font-medium text-gray-900 dark:text-white">ROBERT JOHNSON</h3>
+              <span class="text-xs text-gray-500 dark:text-gray-400">TKT-2024-003</span>
+            </div>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500">
+            <circle cx="12" cy="12" r="1"></circle>
+            <circle cx="12" cy="5" r="1"></circle>
+            <circle cx="12" cy="19" r="1"></circle>
+          </svg>
+        </div>
+
+        <div class="mb-2">
+          <span class="text-xs font-medium text-gray-900 dark:text-white">Care Plan</span>
+        </div>
+
+        <p class="text-gray-500 dark:text-gray-400 text-xs mb-3 line-clamp-2">
+          Perform medication reconciliation for post-discharge patient. This might include reviewing current medications and making necessary adjustments.
+        </p>
+
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span class="text-xs text-gray-500 dark:text-gray-400">Today</span>
+          </div>
+          <span class="px-2 py-0.5 text-xs rounded-full priority-low">
+            LOW
+          </span>
+        </div>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="task-card">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2">
+            <div class="avatar">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-sm font-medium text-gray-900 dark:text-white">SARAH WILLIAMS</h3>
+              <span class="text-xs text-gray-500 dark:text-gray-400">TKT-2024-004</span>
+            </div>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500">
+            <circle cx="12" cy="12" r="1"></circle>
+            <circle cx="12" cy="5" r="1"></circle>
+            <circle cx="12" cy="19" r="1"></circle>
+          </svg>
+        </div>
+
+        <div class="mb-2">
+          <span class="text-xs font-medium text-gray-900 dark:text-white">Benefit/Eligibility Inquiry</span>
+        </div>
+
+        <p class="text-gray-500 dark:text-gray-400 text-xs mb-3 line-clamp-2">
+          Verify insurance coverage for upcoming procedure.
+        </p>
+
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span class="text-xs text-gray-500 dark:text-gray-400">Next Week</span>
+          </div>
+          <span class="px-2 py-0.5 text-xs rounded-full priority-low">
+            LOW
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleTheme() {
+      document.body.classList.toggle('dark-mode');
+    }
+  </script>
+</body>
+</html>

@@ -1,7 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { GeminiStreamService } from '../services/GeminiStreamService';
-import { getGeminiConfig } from '../config/gemini';
-import { ModeType } from '../services/GeminiModelRouter';
+import { getGeminiAuth, geminiConfig, GeminiProfileName, GeminiProfileSettings } from '../config/gemini';
+// Import ModeType from ModeDropdown but alias it to DropdownModeType
+import { ModeType as DropdownModeType } from '../components/RonAI/ModeDropdown';
+
+
 
 interface StreamError {
   code: string;
@@ -30,7 +33,14 @@ interface ToolDefinition {
   };
 }
 
-export function useGeminiStream(mode: ModeType) {
+export function useGeminiStream(mode: DropdownModeType) {
+  // Refs for callbacks to keep startStream stable
+  const onTokenRef = useRef<((token: string) => void) | null>(null);
+  const onStructuredResultRef = useRef<((result: any) => void) | null>(null);
+  const onCompleteRef = useRef<((() => void)) | null>(null);
+  const onErrorRef = useRef<((error: StreamError) => void) | null>(null);
+  const onToolCallRef = useRef<((toolCall: any) => Promise<any>) | null>(null);
+  const toolsRef = useRef<ToolDefinition[] | undefined>(undefined);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<StreamError | null>(null);
   const streamService = useRef<GeminiStreamService>();
@@ -38,7 +48,7 @@ export function useGeminiStream(mode: ModeType) {
 
   useEffect(() => {
     try {
-      const config = getGeminiConfig();
+      const config = getGeminiAuth();
       streamService.current = new GeminiStreamService(config);
     } catch (err) {
       setError({
@@ -54,15 +64,47 @@ export function useGeminiStream(mode: ModeType) {
 
   const startStream = useCallback(async (
     content: string,
-    onToken: (token: string) => void, // For regular text
-    onStructuredResult?: (result: any) => void, // For structured data like FDA
-    tools?: ToolDefinition[]
+    optionsProp: {
+      onToken: (token: string) => void;
+      onStructuredResult?: (result: any) => void;
+      onComplete?: () => void;
+      onError?: (error: StreamError) => void;
+      onToolCall?: (toolCall: any) => Promise<any>;
+      tools?: ToolDefinition[];
+    }
   ) => {
+    // Update refs with the latest callbacks from optionsProp
+    // This ensures the stream uses the most current handlers even if startStream itself isn't re-memoized
+    onTokenRef.current = optionsProp.onToken;
+    onStructuredResultRef.current = optionsProp.onStructuredResult || null;
+    onCompleteRef.current = optionsProp.onComplete || null;
+    onErrorRef.current = optionsProp.onError || null;
+    onToolCallRef.current = optionsProp.onToolCall || null;
+    toolsRef.current = optionsProp.tools;
+
+    let profileName: GeminiProfileName = 'default';
+    if (mode === 'patient-content' || mode === 'one-click-builds') {
+      profileName = 'codingPro';
+    } else if (mode === 'realtime-audio') {
+      // Special handling for 'realtime-audio' if it doesn't map to 'default' or 'codingPro'
+      // For now, let's assume it uses 'default' settings, or we might need a specific profile for it.
+      // This might require adding a 'realtimeAudio' profile to geminiConfig if its settings differ significantly.
+      profileName = 'realtimeAudio';
+    }
+
+    const selectedProfile = geminiConfig[profileName];
+
+    if (!selectedProfile) {
+      const err = { code: 'CONFIG_ERROR', message: `Profile '${profileName}' not found in geminiConfig.` };
+      setError(err);
+      if (onErrorRef.current) onErrorRef.current(err);
+      return;
+    }
+
     if (!streamService.current) {
-      setError({
-        code: 'SERVICE_ERROR',
-        message: 'Gemini service not initialized'
-      });
+      const err = { code: 'SERVICE_ERROR', message: 'Gemini service not initialized' };
+      setError(err);
+      if (onErrorRef.current) onErrorRef.current(err);
       return;
     }
 
@@ -71,40 +113,51 @@ export function useGeminiStream(mode: ModeType) {
     abortController.current = new AbortController();
 
     try {
-      await streamService.current.createStream(mode, content, {
-        onToken,
-        onError: (err) => {
-          setError(err);
-          setIsStreaming(false);
-        },
-        onComplete: () => setIsStreaming(false),
-        onToolCall: async (toolCall) => {
-          if (mode === 'default') { // Only execute tools in default mode for now
-            try {
-              const result = await executeToolCall(toolCall);
-              
-              // Check if the result is structured data (from FDA tool)
-              if (toolCall.function.name === 'searchDrugLabel' && typeof result === 'object' && result !== null && onStructuredResult) {
-                onStructuredResult(result); // Pass structured data to the specific callback
-              } else {
-                // For other tools or if no specific handler, format as text
-                const resultString = typeof result === 'string' ? result : JSON.stringify(result, null, 2);
-                onToken(`\n*Tool Result (${toolCall.function.name}):*\n\`\`\`json\n${resultString}\n\`\`\`\n`);
+      await streamService.current.createStream(
+        selectedProfile, // Pass the full profile settings
+        content,
+        {
+          onToken: (token) => onTokenRef.current && onTokenRef.current(token),
+          onError: (err) => {
+            setError(err);
+            setIsStreaming(false);
+            if (onErrorRef.current) onErrorRef.current(err);
+          },
+          onComplete: () => {
+            setIsStreaming(false);
+            if (onCompleteRef.current) onCompleteRef.current();
+          },
+          onToolCall: async (toolCallData) => {
+            if (onToolCallRef.current) {
+              await onToolCallRef.current(toolCallData);
+            } else if (profileName === 'codingPro') { // Only execute tools locally for codingPro, other profiles might have onToolCallRef or different handling
+              try {
+                const result = await executeToolCall(toolCallData);
+                if (toolCallData.function.name === 'searchDrugLabel' && typeof result === 'object' && result !== null && onStructuredResultRef.current) {
+                  onStructuredResultRef.current(result);
+                } else {
+                  const resultString = typeof result === 'string' ? result : JSON.stringify(result, null, 2);
+                  if (onTokenRef.current) onTokenRef.current(`\n*Tool Result (${toolCallData.function.name}):*\n\`\`\`json\n${resultString}\n\`\`\`\n`);
+                }
+              } catch (err) {
+                const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+                if (onTokenRef.current) onTokenRef.current(`\n*Tool Error (${toolCallData.function.name}):* ${errorMsg}\n`);
               }
-            } catch (err) {
-              onToken(`\n*Tool Error (${toolCall.function.name}):* ${err instanceof Error ? err.message : 'Unknown error'}\n`);
             }
-          }
-        }
-      }, tools as import("c:/Users/thunt/demo/project/src/types/tool").ToolDefinition[] | undefined);
+          },
+        },
+        toolsRef.current as import('../types/tool').ToolDefinition[] | undefined
+      );
     } catch (err) {
-      setError({
+      const errorResponse = {
         code: 'STREAM_INIT_ERROR',
         message: err instanceof Error ? err.message : 'Failed to start stream'
-      });
+      };
+      setError(errorResponse);
       setIsStreaming(false);
+      if (onErrorRef.current) onErrorRef.current(errorResponse);
     }
-  }, [mode]);
+  }, [mode]); // Dependency array now only includes 'mode'
 
   const stopStream = useCallback(() => {
     abortController.current?.abort();

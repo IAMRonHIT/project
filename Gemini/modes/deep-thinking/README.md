@@ -18,7 +18,7 @@ export const deepThinkingConfig = {
   settings: {
     temperature: 0.9,
     topP: 1,
-    maxOutputTokens: 4096,
+    maxOutputTokens: 8192,
     features: {
       codeExecution: true,
       streaming: true,

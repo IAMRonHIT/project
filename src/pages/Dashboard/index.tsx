@@ -9,7 +9,7 @@ import { ProvidersChartGrid } from '../Providers/components/ProvidersChartGrid';
 import { ProvidersTable } from '../Providers/components/ProvidersTable';
 import { Badge } from '../../components/Badge';
 import { useTheme } from '../../hooks/useTheme';
-import { MessageSquare, Activity, ClipboardCheck, TrendingUp, PieChart, BarChart, ListChecks } from 'lucide-react';
+import { MessageSquare, Activity, ClipboardCheck, TrendingUp, PieChart, BarChart, ListChecks, Target, CheckCircle, CalendarDays, ListTodo } from 'lucide-react';
 import Chart from 'react-apexcharts'; // Added for ClaimsView charts
 import { TasksView } from '../../components/TasksView/TasksView';
 
@@ -116,7 +116,95 @@ const ClaimsView: React.FC = () => {
     </div>
   );
 };
-const CarePlansView = () => <div className="p-4"><h1 className="text-2xl font-semibold text-white">Care Plans Dashboard</h1><p className="text-white/60">Content for care plans will be displayed here.</p></div>;
+// --- CarePlansView Component (Expanded) ---
+interface CarePlansChartGridProps {
+  chartTitles?: {
+    adherenceRate?: string;
+    byStatus?: string;
+    averageDuration?: string;
+    taskCompletion?: string;
+  };
+  // Add seriesNames or other props if needed for customization
+}
+
+const CarePlansChartGrid: React.FC<CarePlansChartGridProps> = (props = {}) => {
+  const { chartTitles = {} } = props;
+  const isDark = document.documentElement.classList.contains('dark');
+
+  const gaugeOptions: ApexCharts.ApexOptions = {
+    chart: { type: 'radialBar', offsetY: -20, foreColor: isDark ? '#fff' : '#333' },
+    plotOptions: {
+      radialBar: {
+        startAngle: -135, endAngle: 135, hollow: { margin: 0, size: '70%', background: 'transparent' },
+        track: { background: isDark ? '#4A5568' : '#E2E8F0', strokeWidth: '67%', margin: 0 },
+        dataLabels: {
+          name: { show: false }, 
+          value: { offsetY: 5, fontSize: '22px', color: isDark ? '#fff' : '#333', formatter: (val) => val + '%' }
+        }
+      }
+    },
+    fill: { type: 'gradient', gradient: { shade: 'dark', type: 'horizontal', colorStops: [{ offset: 0, color: '#34D399' }, { offset: 100, color: '#A78BFA' }] } },
+    stroke: { lineCap: 'round' },
+    labels: ['Adherence'],
+  };
+
+  const donutChartOptions: ApexCharts.ApexOptions = {
+    chart: { type: 'donut', background: 'transparent', foreColor: isDark ? '#fff' : '#333' },
+    labels: ['Active', 'Completed', 'Pending Review', 'Cancelled'],
+    colors: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'],
+    legend: { position: 'bottom', labels: { colors: isDark ? '#fff' : '#333' } },
+    tooltip: { theme: isDark ? 'dark' : 'light' },
+    dataLabels: { enabled: true, style: { colors: ['#fff'] }, formatter: (val: number, opts: any) => opts.w.globals.series[opts.seriesIndex] },
+  };
+
+  const barChartOptions: ApexCharts.ApexOptions = {
+    chart: { type: 'bar', background: 'transparent', toolbar: { show: false }, foreColor: isDark ? '#fff' : '#333' },
+    plotOptions: { bar: { horizontal: false, columnWidth: '50%', borderRadius: 5 } },
+    dataLabels: { enabled: false },
+    colors: ['#6366F1'],
+    xaxis: { categories: ['Diabetes Mgmt', 'Cardiac Rehab', 'Post-Op Recovery', 'Mental Wellness'], labels: { style: { colors: isDark ? '#A0AEC0' : '#4A5568' } } },
+    yaxis: { title: { text: 'Avg Duration (Weeks)', style: { color: isDark ? '#A0AEC0' : '#4A5568' } }, labels: { style: { colors: isDark ? '#A0AEC0' : '#4A5568' } } },
+    grid: { borderColor: isDark ? '#4A5568' : '#E2E8F0' },
+    tooltip: { theme: isDark ? 'dark' : 'light', y: { formatter: (val) => val + ' weeks' } },
+  };
+  
+  const horizontalBarOptions: ApexCharts.ApexOptions = {
+    chart: { type: 'bar', background: 'transparent', toolbar: { show: false }, foreColor: isDark ? '#fff' : '#333' },
+    plotOptions: { bar: { horizontal: true, barHeight: '50%', borderRadius: 5, distributed: true } }, // Distributed for varied colors
+    colors: ['#22D3EE', '#A3E635', '#FACC15', '#FB923C', '#F472B6'], // Example colors
+    dataLabels: { enabled: true, textAnchor: 'start', style: { colors: [isDark ? '#fff' : '#333'] }, formatter: (val) => val + '%', offsetX: 0, dropShadow: { enabled: true } },
+    xaxis: { categories: ['Medication Reminders', 'Dietary Adjustments', 'Exercise Routine', 'Symptom Tracking', 'Follow-up Appts'], labels: { style: { colors: isDark ? '#A0AEC0' : '#4A5568' } }, max: 100 },
+    yaxis: { labels: { style: { colors: isDark ? '#A0AEC0' : '#4A5568' } } },
+    grid: { borderColor: isDark ? '#4A5568' : '#E2E8F0', xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } } },
+    tooltip: { theme: isDark ? 'dark' : 'light', x: { formatter: (val) => val + '%' } },
+  };
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+      <ChartCard title={chartTitles.adherenceRate || 'Care Plan Adherence Rate'} icon={Target}>
+        <Chart type="radialBar" series={[76]} options={gaugeOptions} height={300} />
+      </ChartCard>
+      <ChartCard title={chartTitles.byStatus || 'Care Plans by Status'} icon={CheckCircle}>
+        <Chart type="donut" series={[60, 25, 10, 5]} options={donutChartOptions} height={300} />
+      </ChartCard>
+      <ChartCard title={chartTitles.averageDuration || 'Average Care Plan Duration'} icon={CalendarDays}>
+        <Chart type="bar" series={[{ name: 'Avg Weeks', data: [12, 16, 8, 24] }]} options={barChartOptions} height={300} />
+      </ChartCard>
+      <ChartCard title={chartTitles.taskCompletion || 'Task Completion Rate'} icon={ListTodo}>
+        <Chart type="bar" series={[{ name: 'Completion %', data: [90, 75, 82, 60, 95] }]} options={horizontalBarOptions} height={300} />
+      </ChartCard>
+    </div>
+  );
+};
+
+const CarePlansView: React.FC = () => {
+  return (
+    <div className="p-4 space-y-0">
+      <h1 className="text-2xl font-semibold text-white">Care Plans Dashboard</h1>
+      <CarePlansChartGrid />
+    </div>
+  );
+};
 const AppointmentsView = () => <div className="p-4"><h1 className="text-2xl font-semibold text-white">Appointments Dashboard</h1><p className="text-white/60">Content for appointments will be displayed here.</p></div>;
 const AgentsView = () => <div className="p-4"><h1 className="text-2xl font-semibold text-white">Agents Dashboard</h1><p className="text-white/60">Content for agents will be displayed here.</p></div>;
 

@@ -54,21 +54,33 @@ const CommunicationHub: React.FC = () => {
   ];
 
   return (
-    <div className="h-full w-full flex flex-col overflow-hidden bg-gradient-to-b from-gray-900 to-gray-800 text-gray-100">
+    <div className={`h-full w-full flex flex-col overflow-hidden ${
+      isDark 
+        ? 'bg-gradient-to-b from-gray-900 to-gray-800 text-gray-100' 
+        : 'bg-gradient-to-b from-gray-50 to-white text-gray-900'
+    }`}>
       <TopNav />
       <div className="flex-1 flex min-h-0">
         {/* Left Sidebar - Scrollable */}
-        <div className="w-80 min-h-0 overflow-y-auto border-r border-indigo-500/30">
+        <div className={`w-80 min-h-0 overflow-y-auto border-r ${
+          isDark ? 'border-indigo-500/30' : 'border-gray-200'
+        }`}>
           <LeftSideBar notifications={notifications} tasks={tasks} />
         </div>
 
         {/* Center Panel - Keep message bar in view */}
-        <div className="flex-1 flex flex-col min-h-0 bg-gradient-to-b from-gray-900/90 via-gray-800/90 to-gray-900/90 backdrop-blur-sm">
+        <div className={`flex-1 flex flex-col min-h-0 ${
+          isDark 
+            ? 'bg-gradient-to-b from-gray-900/90 via-gray-800/90 to-gray-900/90 backdrop-blur-sm' 
+            : 'bg-white'
+        }`}>
           <CenterPanel />
         </div>
 
         {/* Right Sidebar - Scrollable */}
-        <div className="w-80 min-h-0 overflow-y-auto border-l border-indigo-500/30">
+        <div className={`w-80 min-h-0 overflow-y-auto border-l ${
+          isDark ? 'border-indigo-500/30' : 'border-gray-200'
+        }`}>
           <RightSideBar />
         </div>
       </div>

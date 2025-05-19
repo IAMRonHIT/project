@@ -9,7 +9,7 @@ import { ProvidersChartGrid } from '../Providers/components/ProvidersChartGrid';
 import { ProvidersTable } from '../Providers/components/ProvidersTable';
 import { Badge } from '../../components/Badge';
 import { useTheme } from '../../hooks/useTheme';
-import { MessageSquare, Activity, ClipboardCheck, TrendingUp, PieChart, BarChart, ListChecks, Target, CheckCircle, CalendarDays, ListTodo } from 'lucide-react';
+import { MessageSquare, Activity, ClipboardCheck, TrendingUp, PieChart, BarChart, ListChecks, Target, CheckCircle, CalendarDays, ListTodo, CalendarPlus, UserCheck, UserX } from 'lucide-react';
 import Chart from 'react-apexcharts'; // Added for ClaimsView charts
 import { TasksView } from '../../components/TasksView/TasksView';
 
@@ -214,7 +214,90 @@ const CarePlansView: React.FC = () => {
     </div>
   );
 };
-const AppointmentsView = () => <div className="p-4"><h1 className="text-2xl font-semibold text-white">Appointments Dashboard</h1><p className="text-white/60">Content for appointments will be displayed here.</p></div>;
+// --- AppointmentsView Component (Expanded) ---
+interface AppointmentsChartGridProps {
+  chartTitles?: {
+    scheduledVsCompleted?: string;
+    typeDistribution?: string;
+    noShowRate?: string;
+    upcomingVolume?: string;
+  };
+  // seriesNames, etc. as needed
+}
+
+const AppointmentsChartGrid: React.FC<AppointmentsChartGridProps> = (props = {}) => {
+  const { chartTitles = {} } = props;
+  const isDark = document.documentElement.classList.contains('dark');
+
+  const groupedBarOptions: ApexCharts.ApexOptions = {
+    chart: { type: 'bar', background: 'transparent', toolbar: { show: false }, foreColor: isDark ? '#fff' : '#333' },
+    plotOptions: { bar: { horizontal: false, columnWidth: '60%', borderRadius: 5 } },
+    dataLabels: { enabled: false },
+    stroke: { show: true, width: 2, colors: ['transparent'] },
+    colors: ['#8B5CF6', '#22D3EE'], // Purple for Scheduled, Cyan for Completed
+    xaxis: { categories: ['Week 1', 'Week 2', 'Week 3', 'Week 4'], labels: { style: { colors: isDark ? '#A0AEC0' : '#4A5568' } } },
+    yaxis: { title: { text: 'Count', style: { color: isDark ? '#A0AEC0' : '#4A5568' } }, labels: { style: { colors: isDark ? '#A0AEC0' : '#4A5568' } } },
+    legend: { position: 'top', horizontalAlign: 'left', labels: { colors: isDark ? '#fff' : '#333' } },
+    grid: { borderColor: isDark ? '#4A5568' : '#E2E8F0' },
+    tooltip: { theme: isDark ? 'dark' : 'light' },
+  };
+
+  const donutOptions: ApexCharts.ApexOptions = {
+    chart: { type: 'donut', background: 'transparent', foreColor: isDark ? '#fff' : '#333' },
+    labels: ['New Patient', 'Follow-up', 'Annual Check', 'Telehealth', 'Specialist'],
+    colors: ['#F97316', '#0EA5E9', '#10B981', '#6366F1', '#EC4899'],
+    legend: { position: 'bottom', labels: { colors: isDark ? '#fff' : '#333' } },
+    tooltip: { theme: isDark ? 'dark' : 'light' },
+    dataLabels: { enabled: true, style: { colors: ['#fff'] }, formatter: (val: number, opts: any) => opts.w.globals.series[opts.seriesIndex] },
+  };
+
+  const lineChartOptions: ApexCharts.ApexOptions = {
+    chart: { type: 'line', background: 'transparent', toolbar: { show: false }, foreColor: isDark ? '#fff' : '#333' },
+    stroke: { curve: 'smooth', width: 3 },
+    colors: ['#EF4444'], // Red for No-Show Rate
+    xaxis: { categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May'], labels: { style: { colors: isDark ? '#A0AEC0' : '#4A5568' } } },
+    yaxis: { title: { text: 'No-Show Rate (%)', style: { color: isDark ? '#A0AEC0' : '#4A5568' } }, labels: { style: { colors: isDark ? '#A0AEC0' : '#4A5568' }, formatter: (val) => val + '%' } },
+    grid: { borderColor: isDark ? '#4A5568' : '#E2E8F0' },
+    tooltip: { theme: isDark ? 'dark' : 'light', y: { formatter: (val) => val + '%' } },
+  };
+  
+  const barChartOptions: ApexCharts.ApexOptions = {
+    chart: { type: 'bar', background: 'transparent', toolbar: { show: false }, foreColor: isDark ? '#fff' : '#333' },
+    plotOptions: { bar: { horizontal: false, columnWidth: '55%', borderRadius: 5 } },
+    dataLabels: { enabled: false },
+    colors: ['#3B82F6'],
+    xaxis: { categories: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], labels: { style: { colors: isDark ? '#A0AEC0' : '#4A5568' } } },
+    yaxis: { title: { text: 'Appointments', style: { color: isDark ? '#A0AEC0' : '#4A5568' } }, labels: { style: { colors: isDark ? '#A0AEC0' : '#4A5568' } } },
+    grid: { borderColor: isDark ? '#4A5568' : '#E2E8F0' },
+    tooltip: { theme: isDark ? 'dark' : 'light' },
+  };
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+      <ChartCard title={chartTitles.scheduledVsCompleted || 'Scheduled vs. Completed'} icon={UserCheck}>
+        <Chart type="bar" series={[{ name: 'Scheduled', data: [50, 60, 70, 55] }, { name: 'Completed', data: [45, 50, 62, 48] }]} options={groupedBarOptions} height={350} />
+      </ChartCard>
+      <ChartCard title={chartTitles.typeDistribution || 'Appointment Types'} icon={PieChart}>
+        <Chart type="donut" series={[30, 25, 20, 15, 10]} options={donutOptions} height={350} />
+      </ChartCard>
+      <ChartCard title={chartTitles.noShowRate || 'No-Show Rate Trend'} icon={UserX}>
+        <Chart type="line" series={[{ name: 'No-Show %', data: [8, 7, 9, 6, 7] }]} options={lineChartOptions} height={350} />
+      </ChartCard>
+      <ChartCard title={chartTitles.upcomingVolume || 'Upcoming Appointments (Next 7 Days)'} icon={CalendarPlus}>
+        <Chart type="bar" series={[{ name: 'Count', data: [15, 22, 18, 25, 20, 10, 12] }]} options={barChartOptions} height={350} />
+      </ChartCard>
+    </div>
+  );
+};
+
+const AppointmentsView: React.FC = () => {
+  return (
+    <div className="p-4 space-y-0">
+      <h1 className="text-2xl font-semibold text-white">Appointments Dashboard</h1>
+      <AppointmentsChartGrid />
+    </div>
+  );
+};
 const AgentsView = () => <div className="p-4"><h1 className="text-2xl font-semibold text-white">Agents Dashboard</h1><p className="text-white/60">Content for agents will be displayed here.</p></div>;
 
 

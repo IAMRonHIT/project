@@ -143,7 +143,16 @@ const CarePlansChartGrid: React.FC<CarePlansChartGridProps> = (props = {}) => {
         }
       }
     },
-    fill: { type: 'gradient', gradient: { shade: 'dark', type: 'horizontal', colorStops: [{ offset: 0, color: '#34D399' }, { offset: 100, color: '#A78BFA' }] } },
+    fill: {
+      type: 'gradient',
+      gradient: {
+        shade: 'dark',
+        type: 'horizontal',
+        gradientToColors: ['#A78BFA'], // End color
+        stops: [0, 100] // Percentages for start and end colors
+      }
+    },
+    colors: ['#34D399'], // Start color
     stroke: { lineCap: 'round' },
     labels: ['Adherence'],
   };

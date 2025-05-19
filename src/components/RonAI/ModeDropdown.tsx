@@ -1,17 +1,15 @@
 import React, { useState, useRef, useEffect, memo } from 'react';
-import { Brain, Headphones, Search, User, MapPin, Bot, ChevronDown, Pill, FileCode } from 'lucide-react';
+import { Brain, Headphones, Search, User, MapPin, Bot, ChevronDown, FileCode } from 'lucide-react';
 import realtimeAudioService from '../../services/realtimeAudioService';
 import SandboxIDE from './SandboxIDE';
 
 export type ModeType = 
-  | 'default' 
-  | 'deep-thinking' // This is Gemini Deep Thinking
+  | 'default' // Ron AI - Will use gemini-2.5-flash-preview-04-17
   | 'realtime-audio' 
-  | 'deep-research' // This might be a general research, will add specific Perplexity research
   | 'patient-content' 
-  | 'provider-search'
-  | 'perplexity-reasoning' // Perplexity Sonar Reasoning Pro
-  | 'perplexity-research' // Perplexity Sonar Deep Research
+  | 'provider-search' // Will connect to NPI API / Google Maps
+  | 'deep-thinking-sonar' // Formerly 'perplexity-reasoning', label "Deep Thinking", model sonar-reasoning-pro
+  | 'deep-research-sonar' // Formerly 'perplexity-research', label "Deep Research", model sonar-deep-research
   | 'one-click-builds';
 
 interface ModeOption {
@@ -49,14 +47,7 @@ const ModeDropdown = memo(function ModeDropdown({
       hoverBgColor: 'hover:bg-pink-600',
       textColor: 'text-pink-500'
     },
-    {
-      id: 'deep-thinking',
-      label: 'Deep Thinking',
-      icon: <Brain size={14} />,
-      bgColor: 'bg-teal-500',
-      hoverBgColor: 'hover:bg-teal-600',
-      textColor: 'text-teal-500'
-    },
+    // 'deep-thinking' option removed
     {
       id: 'realtime-audio',
       label: 'Realtime Audio',
@@ -65,14 +56,7 @@ const ModeDropdown = memo(function ModeDropdown({
       hoverBgColor: 'hover:bg-purple-700',
       textColor: 'text-purple-600'
     },
-    {
-      id: 'deep-research',
-      label: 'Deep Research',
-      icon: <Search size={14} />,
-      bgColor: 'bg-blue-600',
-      hoverBgColor: 'hover:bg-blue-700',
-      textColor: 'text-blue-600'
-    },
+    // 'deep-research' option removed
     {
       id: 'patient-content',
       label: 'Patient Content',
@@ -98,16 +82,16 @@ const ModeDropdown = memo(function ModeDropdown({
       textColor: 'text-sky-500'
     },
     {
-      id: 'perplexity-reasoning',
-      label: 'Perplexity Reasoning',
+      id: 'deep-thinking-sonar', // Formerly 'perplexity-reasoning'
+      label: 'Deep Thinking',
       icon: <Brain size={14} />, // Using Brain icon for reasoning
       bgColor: 'bg-cyan-600',
       hoverBgColor: 'hover:bg-cyan-700',
       textColor: 'text-cyan-600'
     },
     {
-      id: 'perplexity-research',
-      label: 'Perplexity Research',
+      id: 'deep-research-sonar', // Formerly 'perplexity-research'
+      label: 'Deep Research',
       icon: <Search size={14} />, // Using Search icon for research
       bgColor: 'bg-indigo-600',
       hoverBgColor: 'hover:bg-indigo-700',
@@ -123,28 +107,33 @@ const ModeDropdown = memo(function ModeDropdown({
 
   const handleOptionClick = async (mode: ModeType) => {
     console.log('Mode selected:', mode);
+
+    // Stop audio if running and not the target mode
+    if (mode !== 'realtime-audio' && realtimeAudioService.connectionState !== 'disconnected') {
+      realtimeAudioService.stopSession();
+    }
+
     if (mode === 'realtime-audio') {
       try {
         await realtimeAudioService.startSession();
+        setIsSandboxOpen(false); // Ensure sandbox is closed for audio mode
         onChange(mode);
       } catch (error) {
         console.error('Error starting realtime audio session:', error);
-        onChange('default');
+        setIsSandboxOpen(false);
+        onChange('default'); // Revert to default on error
       }
-    } else if (mode === 'patient-content' || mode === 'one-click-builds') {
-      if (realtimeAudioService.connectionState !== 'disconnected') {
-        realtimeAudioService.stopSession();
-      }
+    } else if (mode === 'one-click-builds') {
       console.log(`Opening ${mode} mode with SandboxIDE`);
-      // Directly open the SandboxIDE when patient-content mode is selected
       setIsSandboxOpen(true);
       onChange(mode);
+    } else if (mode === 'patient-content') {
+      console.log(`Switching to ${mode} mode, ensuring SandboxIDE is closed.`);
+      setIsSandboxOpen(false); // Explicitly close Sandbox for patient-content
+      onChange(mode);
     } else {
-      if (realtimeAudioService.connectionState !== 'disconnected') {
-        realtimeAudioService.stopSession();
-      }
-      // Close the SandboxIDE if any other mode is selected
-      setIsSandboxOpen(false);
+      // For all other modes (default, deep-thinking-sonar, deep-research-sonar, provider-search)
+      setIsSandboxOpen(false); // Ensure sandbox is closed
       console.log('Calling onChange with mode:', mode);
       onChange(mode);
     }
@@ -165,7 +154,7 @@ const ModeDropdown = memo(function ModeDropdown({
   }, []);
 
   const activeOption = modeOptions.find(option => option.id === activeMode) || modeOptions[0];
-  const ariaExpanded = isOpen ? "true" : "false";
+  // const ariaExpanded = isOpen ? "true" : "false"; // Removed as it's unused, aria-expanded set directly
 
   return (
     <>
@@ -186,6 +175,7 @@ const ModeDropdown = memo(function ModeDropdown({
         } ${activeOption.bgColor} ${activeOption.hoverBgColor} text-white ${className}`}
         onClick={handleToggleDropdown}
         aria-haspopup="listbox"
+        aria-expanded={isOpen}
         disabled={isDisabled}
       >
         <span className="flex items-center justify-center w-4 h-4">{activeOption.icon}</span>

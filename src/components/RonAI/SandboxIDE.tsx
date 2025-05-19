@@ -368,7 +368,12 @@ const SandboxIDEPanelContent: React.FC<SandboxIDEProps> = ({
         }
         // Check for HTML preview content from Python execution
         if (result.html_preview && typeof result.html_preview === 'string') {
-          setPreviewContent(result.html_preview);
+          // Ensure the console interceptor script is part of the HTML for console message capturing
+          setPreviewContent(consoleInterceptorScript + result.html_preview);
+          // Ensure the preview is shown if HTML content is available
+          if (!showBrowserPreview) {
+            setShowBrowserPreview(true);
+          }
         }
         if (result.execution_error) { // Specific error from the Python script itself, if backend distinguishes it
             terminalInstance.current?.writeln(`\n${'\u001b[31m'}Python script error: ${result.execution_error}${ '\u001b[0m'}`);

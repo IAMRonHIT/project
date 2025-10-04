@@ -1,9 +1,15 @@
-#!/usr/bin/env python3
 """
-Implementation of a real-time audio and video interaction client for Gemini Live API.
+Please implement this file
+## Documentation
+Quickstart: https://github.com/google-gemini/cookbook/blob/main/quickstarts/Get_started_LiveAPI.py
 
-Setup:
-  pip install google-genai opencv-python pyaudio pillow mss
+## Setup
+
+To install the dependencies for this script, run:
+
+```
+pip install google-genai opencv-python pyaudio pillow mss
+```
 """
 
 import os
@@ -16,13 +22,11 @@ import cv2
 import pyaudio
 import PIL.Image
 import mss
-import mss.tools
 
 import argparse
 
 from google import genai
 from google.genai import types
-
 
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
